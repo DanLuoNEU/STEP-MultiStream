@@ -41,7 +41,14 @@ except ImportError:
 
 args.image_size = (WIDTH, HEIGHT)
 label_dict = {}
-if args.num_classes == 60:
+if args.num_classes == 3:
+    label_map = os.path.join(args.data_root, 'label/ava_finetune.pbtxt')
+    categories, class_whitelist = read_labelmap(open(label_map, 'r'))
+    classes = [(val['id'], val['name']) for val in categories]
+    id2class = {c[0]: c[1] for c in classes}    # gt class id (1~3) --> class name
+    for i, c in enumerate(sorted(list(class_whitelist))):
+        label_dict[i] = c
+elif args.num_classes == 60:
     label_map = os.path.join(args.data_root, 'label/ava_action_list_v2.1_for_activitynet_2018.pbtxt')
     categories, class_whitelist = read_labelmap(open(label_map, 'r'))
     classes = [(val['id'], val['name']) for val in categories]
@@ -52,7 +59,6 @@ else:
     for i in range(80):
         label_dict[i] = i+1
 
-
 ## set random seeds
 np.random.seed(args.man_seed)
 torch.manual_seed(args.man_seed)
@@ -60,6 +66,8 @@ if args.cuda:
     torch.cuda.manual_seed_all(args.man_seed)
 
 #args.device = torch.device("cuda:0" if args.cuda and torch.cuda.is_available() else "cpu")
+os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"]="0,1,2,3"  # specify which GPU(s) to be used
 gpu_count = torch.cuda.device_count()
 torch.backends.cudnn.benchmark=True
 
@@ -79,10 +87,10 @@ def main():
 
     print('Loading Dataset...')
     augmentation = TubeAugmentation(args.image_size, args.means, args.stds, do_flip=args.do_flip, do_crop=args.do_crop, do_photometric=args.do_photometric, scale=args.scale_norm, do_erase=args.do_erase)
-    log_file.write("Data agumentation: "+ str(augmentation))
+    log_file.write("Data augmentation: "+ str(augmentation))
 
     train_dataset = AVADataset(args.data_root, 'train', args.input_type, args.T, args.NUM_CHUNKS[args.max_iter], args.fps, augmentation, stride=1, num_classes=args.num_classes, foreground_only=True)
-    val_dataset = AVADataset(args.data_root, 'val', args.input_type, args.T, args.NUM_CHUNKS[args.max_iter], args.fps, BaseTransform(args.image_size, args.means, args.stds,args.scale_norm), stride=1, num_classes=args.num_classes, foreground_only=False)
+    val_dataset = AVADataset(args.data_root, 'val', args.input_type, args.T, args.NUM_CHUNKS[args.max_iter], args.fps, BaseTransform(args.image_size, args.means, args.stds,args.scale_norm), stride=1, num_classes=args.num_classes, foreground_only=True)
 
     if args.milestones[0] == -1:
         args.milestones = [int(np.ceil(len(train_dataset) / args.batch_size) * args.max_epochs)]
@@ -104,9 +112,11 @@ def main():
     nets['roi_net'] = ROINet(args.pool_mode, args.pool_size)
 
     # detection network
+    ic_t = 0
     for i in range(args.max_iter):
         if args.det_net == "two_branch":
             nets['det_net%d' % i] = TwoBranchNet(args, cls_only=True)
+            ic_t = nets['det_net%d' % i].global_cls.in_channels
         else:
             raise NotImplementedError
     if not args.no_context:
@@ -117,26 +127,6 @@ def main():
         nets[key] = nets[key].cuda()
 
     ################ Training setup #################
-
-    params = get_params(nets, args)
-    if args.optimizer == 'sgd':
-        optimizer = optim.SGD(params, lr=args.det_lr, momentum=args.momentum, weight_decay=args.weight_decay)
-    elif args.optimizer == 'adam':
-        optimizer = optim.Adam(params, lr=args.det_lr)
-    else:
-        raise NotImplementedError
-
-    if args.scheduler == "cosine":
-        scheduler = WarmupCosineLR(optimizer, args.milestones, args.min_ratio, args.cycle_decay, args.warmup_iters)
-    else:
-        scheduler = WarmupStepLR(optimizer, args.milestones, args.warmup_iters)
-
-    # Initialize AMP if needed
-    if args.fp16:
-        models, optimizer = amp.initialize([net for _,net in nets.items()], optimizer, opt_level="O1")
-        for i, key in enumerate(nets):
-            nets[key] = models[i]
-
     # DataParallel is used
     nets['base_net'] = torch.nn.DataParallel(nets['base_net'])
     if not args.no_context:
@@ -177,20 +167,65 @@ def main():
             if not args.no_context and 'context_net' in checkpoint:
                 nets['context_net'].load_state_dict(checkpoint['context_net'])
             for i in range(args.max_iter):
+                if args.num_classes != len(checkpoint['det_net%d' % i]['global_cls.bias']):
+                    nets['det_net%d' % i].global_cls = nn.Conv3d(ic_t, 60, (1,1,1), bias=True)
                 nets['det_net%d' % i].load_state_dict(checkpoint['det_net%d' % i])
+            
+            # Finetune 'ava_cls.pth' provided by STEP
+            if args.num_classes != len(checkpoint['det_net%d' % i]['global_cls.bias']):
+                print(f" >>>>>> Finetuning from {len(checkpoint['det_net%d' % i]['global_cls.bias'])} to {args.num_classes} <<<<<< ")
+                for p in nets['base_net'].parameters(): p.requires_grad = False
+                if not args.no_context:
+                    for p in nets['context_net'].parameters(): p.requires_grad = False
+                for i in range(args.max_iter):
+                    for p in nets['det_net%d' % i].parameters(): p.requires_grad = False
+                    nets['det_net%d' % i].global_cls = nn.Conv3d(ic_t, args.num_classes, (1,1,1), bias=True)
+                    nets['det_net%d' % i].to('cuda:%d' % ((i+1)%gpu_count))
+                    nets['det_net%d' % i].set_device('cuda:%d' % ((i+1)%gpu_count))
+            '''# if freeze all the layers gradients other than the last layer
+            for p in nets['base_net'].parameters(): print(p.requires_grad)
+            if not args.no_context:
+                for p in nets['context_net'].parameters(): print(p.requires_grad)
+            for i in range(args.max_iter):
+                print(nets['det_net%d' % i])
+                for p in nets['det_net%d' % i].parameters(): print(p.requires_grad)'''
 
-            optimizer.load_state_dict(checkpoint['optimizer'])
-            if 'scheduler' in checkpoint:
-                scheduler.load_state_dict(checkpoint['scheduler'])
+            # if 'optimizer' in checkpoint:
+            #     optimizer.load_state_dict(checkpoint['optimizer'])
+            # if 'scheduler' in checkpoint:
+            #     scheduler.load_state_dict(checkpoint['scheduler'])
 
-            args.start_iteration = checkpoint['iteration']
-            if checkpoint['iteration'] % int(np.ceil(len(train_dataset)/args.batch_size)) == 0:
-                args.start_epochs = checkpoint['epochs']
-            else:
-                args.start_epochs = checkpoint['epochs'] - 1
+            if args.num_classes == len(checkpoint['det_net%d' % i]['global_cls.bias']):
+                args.start_iteration = checkpoint['iteration']
+                if checkpoint['iteration'] % int(np.ceil(len(train_dataset)/args.batch_size)) == 0:
+                    args.start_epochs = checkpoint['epochs']
+                else:
+                    args.start_epochs = checkpoint['epochs'] - 1
 
             del checkpoint
             torch.cuda.empty_cache()
+
+    ################ Optimizer and Scheduler setup #################
+
+    params = get_params(nets, args)
+    if args.optimizer == 'sgd':
+        optimizer = optim.SGD(params, lr=args.det_lr, momentum=args.momentum, weight_decay=args.weight_decay)
+    elif args.optimizer == 'adam':
+        optimizer = optim.Adam(params, lr=args.det_lr)
+        # optimizer = optim.Adam(filter(lambda x : x.requires_grad, nets['det_net0'].parameters()),lr=args.det_lr, weight_decay=args.weight_decay) # Tried, but didnt work
+    else:
+        raise NotImplementedError
+
+    if args.scheduler == "cosine":
+        scheduler = WarmupCosineLR(optimizer, args.milestones, args.min_ratio, args.cycle_decay, args.warmup_iters)
+    else:
+        scheduler = WarmupStepLR(optimizer, args.milestones, args.warmup_iters)
+
+    # Initialize AMP if needed
+    if args.fp16:
+        models, optimizer = amp.initialize([net for _,net in nets.items()], optimizer, opt_level="O1")
+        for i, key in enumerate(nets):
+            nets[key] = models[i]
 
     ######################################################
 
@@ -200,7 +235,7 @@ def main():
 
     for i in range(args.max_iter):
         log_file.write(str(nets['det_net%d' % i])+'\n\n')
-
+    
     params_num = [sum(p.numel() for p in nets['base_net'].parameters() if p.requires_grad)]
     if not args.no_context:
         params_num.append(sum(p.numel() for p in nets['context_net'].parameters() if p.requires_grad))
@@ -234,8 +269,7 @@ def train(args, nets, optimizer, scheduler, train_dataloader, val_dataloader, lo
     epoch_size = int(np.ceil(len(train_dataloader.dataset) / args.batch_size))
 
     while epochs < args.max_epochs:
-        for _, (images, targets, tubes, infos) in enumerate(train_dataloader):
-
+        for data_id, (images, targets, tubes, infos) in enumerate(train_dataloader):
             images = images.cuda()
 
             # adjust learning rate
@@ -319,6 +353,13 @@ def train(args, nets, optimizer, scheduler, train_dataloader, val_dataloader, lo
                     scaled_loss.backward()
             else:
                 cur_loss_global_cls.backward()
+
+            # if data_id < 3:
+            #     print('\nglobal weight: ')
+            #     print(nets['det_net0'].global_cls.weight)
+            #     print('\nglobal grad: ')
+            #     print(nets['det_net0'].global_cls.weight.grad)
+            #     print(cur_loss_global_cls.item())
             optimizer.step()
 
 
@@ -364,7 +405,7 @@ def train(args, nets, optimizer, scheduler, train_dataloader, val_dataloader, lo
                 if os.path.isfile(args.save_root+'checkpoint_'+str(iteration-args.save_step) + '.pth'):
                     os.remove(args.save_root+'checkpoint_'+str(iteration-args.save_step) + '.pth')
                     print (args.save_root+'checkpoint_'+str(iteration-args.save_step) + '.pth  removed!')
-
+            # break
             # For consistency when resuming from the middle of an epoch
             if iteration % epoch_size == 0 and iteration > 0:
                 break

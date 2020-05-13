@@ -1,0 +1,11 @@
+apex/
+build/
+datasets/
+STEP.egg-info/
+
+.vscode/
+__pycache__/
+*/__pycache__/
+
+model.txt
+pretrained/

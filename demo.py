@@ -27,13 +27,14 @@ from utils.vis_utils import overlay_image
 from data.customize import CustomizedDataset, detection_collate, WIDTH, HEIGHT
 from data.augmentations import BaseTransform
 
-
+os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"]="4,5,6,7"  # specify which GPU(s) to be used
 
 def main():
 
     ################## Customize your configuratons here ###################
 
-    checkpoint_path = 'pretrained/ava_step.pth'
+    checkpoint_path = 'pretrained/20200329_checkpoint_best.pth' # 'pretrained/ava_step.pth'
     if os.path.isfile(checkpoint_path):
         print ("Loading pretrain model from %s" % checkpoint_path)
         map_location = 'cuda:0'
@@ -43,14 +44,15 @@ def main():
         raise ValueError("Pretrain model not found!", checkpoint_path)
 
     # TODO: Set data_root to the customized input dataset
-    args.data_root = '/datasets/demo/frames/'
+    args.data_root = '/data/CLASP-DATA/20200227-trimmed/frames/cam18-p2p-1/' # '/data/CLASP-DATA/frames/'
     args.save_root = os.path.join(os.path.dirname(args.data_root), 'results/')
     if not os.path.isdir(args.save_root):
         os.makedirs(args.save_root)
 
     # TODO: modify this setting according to the actual frame rate and file name
     source_fps = 30
-    im_format = 'frame%04d.jpg'
+    # im_format = 'frame%05d.jpg'
+    im_format = '%07d.jpg'
     conf_thresh = 0.4
     global_thresh = 0.8    # used for cross-class NMS
     

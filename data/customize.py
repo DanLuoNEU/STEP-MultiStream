@@ -101,7 +101,6 @@ class CustomizedDataset(data.Dataset):
             p += stride
             img_name = os.path.join(self.data_root, videoname, self.im_format % min(numf-1, int(p)))
             images.append(cv2.imread(img_name))
-
         return np.stack(images, axis=0)
 
 

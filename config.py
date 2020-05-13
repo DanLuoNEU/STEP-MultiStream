@@ -17,8 +17,8 @@ def parse_config():
     ############ General configs ##############
 
     parser.add_argument('--name', default='Debug', help='Experiment Name')
-    parser.add_argument('--data_root', default='/vulcan/scratch/xyang35/datasets/AVA/', help='Location of dataset root directory')
-    parser.add_argument('--save_root', default='/vulcan/scratch/xyang35/datasets/AVA/cache', help='Location to save checkpoint models')
+    parser.add_argument('--data_root', default='/data/Dan/ava_v2_1/', help='Location of dataset root directory')
+    parser.add_argument('--save_root', default='/data/Dan/ava_v2_1/cache', help='Location to save checkpoint models')
     parser.add_argument('--base_net', default='i3d', help='Architecture used for backbone network')
     parser.add_argument('--det_net', default='two_branch', help='Architecture used for backbone network')
     parser.add_argument('--no_context', action='store_true', help='If true, context branch is no used.')
@@ -127,5 +127,8 @@ def parse_config():
         args.scale_norm = 2
         args.means = (0,0,0)
         args.stds = (1,1,1)
+    if args.input_type =="flow":
+        args.scale_norm = 0
+        
 
     return args

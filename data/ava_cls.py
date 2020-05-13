@@ -20,7 +20,7 @@ import random
 
 WIDTH, HEIGHT = 400, 400
 TEM_REDUCE = 4    # 4 for I3D backbone
-NUM_CLASSES = 60
+NUM_CLASSES = 3 # 60
 
 
 def make_list(label_path, chunks=1, stride=1, foreground_only=True):
@@ -44,7 +44,8 @@ def make_list(label_path, chunks=1, stride=1, foreground_only=True):
         frames = sorted(annots[videoname].keys())
 
         # loop through each frame
-        for fid in np.arange(902, 1799, stride):    # AVA v2.1 annotations at timestamps 902:1798 inclusive
+        for fid in np.arange(1, 1799, stride):    # AVA v2.1 annotations at timestamps 902:1798 inclusive, clasp starts from 0
+        # for fid in np.arange(902, 1799, stride):    # AVA v2.1 annotations at timestamps 902:1798 inclusive
 
             # no foreground label
             if foreground_only and (not fid in frames):
@@ -111,12 +112,16 @@ def get_target_tubes(root, boxes, labels, num_classes=60):
     if chunks == 0:
         return np.zeros((1, chunks, 4+num_classes), dtype=np.float32)
 
-    label_map = os.path.join(root, 'label/ava_action_list_v2.1_for_activitynet_2018.pbtxt')
+    # label_map = os.path.join(root, 'label/ava_action_list_v2.1_for_activitynet_2018.pbtxt')
+    # categories, class_whitelist = read_labelmap(open(label_map, 'r'))
+    # classes = np.array(list(class_whitelist)) - 1
+    label_map = os.path.join(root, 'label/ava_finetune.pbtxt')
     categories, class_whitelist = read_labelmap(open(label_map, 'r'))
-    classes = np.array(list(class_whitelist)) - 1
+    classes = np.array(list(class_whitelist))
 
     gt_tubes = np.zeros((len(boxes), chunks, 4), dtype=np.float32)
-    gt_classes = np.zeros((len(boxes), chunks, 80), dtype=np.float32)
+    # gt_classes = np.zeros((len(boxes), chunks, 80), dtype=np.float32)
+    gt_classes = np.zeros((len(boxes), chunks, num_classes), dtype=np.float32) # only for 3 class finetune
     for i in range(len(boxes)):
         for t in range(chunks):
             if boxes[i][t]:
@@ -174,7 +179,9 @@ def _load_images(path, num, fps=12, direction='forward'):
 
     img_names = glob.glob(os.path.join(path, '*.jpg'))
     if len(img_names) == 0:
-        raise ValueError("Image path {} not Found".format(path))
+        img_names = glob.glob(os.path.join(path, '*.png'))
+        if len(img_names) == 0:
+            raise ValueError("Image path {} not Found".format(path))
     img_names = sorted(img_names)
 
     # resampling according to fps
@@ -298,12 +305,12 @@ class AVADataset(data.Dataset):
 
         self.imgpath_rgb = os.path.join(root, 'frames/')
         if self.mode == 'train':
-            self.label_path = os.path.join(root, 'label/train.pkl')
+            self.label_path = os.path.join("/data/Dan/ava_v2_1/", 'label/train.pkl')
         elif self.mode == 'val':
-            self.label_path = os.path.join(root, 'label/val.pkl')
+            self.label_path = os.path.join("/data/Dan/ava_v2_1/", 'label/val.pkl')
         else:
             self.stride = 1
-            self.label_path = os.path.join(root, 'label/val.pkl')
+            self.label_path = os.path.join("/data/Dan/ava_v2_1/", 'label/val.pkl')
             self.foreground_only = False
            
         data_list, videoname_list = make_list(self.label_path, self.chunks, self.stride, self.foreground_only)
@@ -392,5 +399,4 @@ def detection_collate(batch):
         imgs = torch.stack(imgs, 0)
 
     return imgs, gt, tubes, infos
-
 
