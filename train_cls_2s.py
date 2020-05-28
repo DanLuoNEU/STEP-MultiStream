@@ -370,8 +370,8 @@ def train(args, nets_rgb, nets_of, optimizer, scheduler, train_dataloader, val_d
             flat_tubes, _ = flatten_tubes(selected_tubes, batch_idx=True)    # add batch_idx for ROI pooling
             flat_targets = torch.FloatTensor(flat_targets).to(conv_feat_rgb)
             flat_tubes = torch.FloatTensor(flat_tubes).to(conv_feat_rgb)    # gpu:0 for ROI pooling
-            flat_targets_of = torch.FloatTensor(flat_targets).to(conv_feat_of)
-            flat_tubes_of = torch.FloatTensor(flat_tubes).to(conv_feat_of)    # gpu:0 for ROI pooling
+            flat_targets_of = flat_targets.to(conv_feat_of)
+            flat_tubes_of = flat_tubes.to(conv_feat_of)    # gpu:0 for ROI pooling
 
             # ROI Pooling
             pooled_feat_rgb = nets_rgb['roi_net'](conv_feat_rgb[:, T_start:T_start+T_length].contiguous(), flat_tubes)
@@ -594,6 +594,7 @@ def validate(args, val_dataloader, nets_rgb, nets_of, iteration=0, iou_thresh=0.
             # flatten list of tubes
             flat_tubes, tubes_nums = flatten_tubes(selected_tubes, batch_idx=True)    # add batch_idx for ROI pooling
             flat_tubes = torch.FloatTensor(flat_tubes).to(conv_feat_rgb)    # gpu:0 for ROI pooling
+            flat_tubes_of = flat_tubes.to(conv_feat_of)    # gpu:0 for ROI pooling
 
             # ROI Pooling            
             pooled_feat_rgb = nets_rgb['roi_net'](conv_feat_rgb[:, T_start:T_start+T_length].contiguous(), flat_tubes)
@@ -610,10 +611,10 @@ def validate(args, val_dataloader, nets_rgb, nets_of, iteration=0, iou_thresh=0.
                 temp_context_feat_of = torch.zeros((pooled_feat_of.size(0),context_feat_of.size(1),T_length,1,1)).to(context_feat_of)
                 for p in range(pooled_feat_rgb.size(0)):
                     temp_context_feat_rgb[p] = context_feat_rgb[int(flat_tubes[p,0,0].item()/T_length),:,T_start:T_start+T_length].contiguous().clone()
-                    temp_context_feat_of[p] = context_feat_of[int(flat_tubes[p,0,0].item()/T_length),:,T_start:T_start+T_length].contiguous().clone()
+                    temp_context_feat_of[p] = context_feat_of[int(flat_tubes_of[p,0,0].item()/T_length),:,T_start:T_start+T_length].contiguous().clone()
             global_prob_rgb, _,_,_, _,_,_ = nets_rgb['det_net0'](pooled_feat_rgb, context_feat=temp_context_feat_rgb, tubes=None, targets=None)
             global_prob_of, _,_,_, _,_,_ = nets_of['det_net0'](pooled_feat_of, context_feat=temp_context_feat_of, tubes=None, targets=None)
-            global_prob = 0.5*global_prob_rgb + 0.5*global_prob_of
+            global_prob = 0.6*global_prob_rgb + 0.4*global_prob_of
             #################### Evaluation #################
 
             # loop for each batch
