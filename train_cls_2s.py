@@ -370,10 +370,12 @@ def train(args, nets_rgb, nets_of, optimizer, scheduler, train_dataloader, val_d
             flat_tubes, _ = flatten_tubes(selected_tubes, batch_idx=True)    # add batch_idx for ROI pooling
             flat_targets = torch.FloatTensor(flat_targets).to(conv_feat_rgb)
             flat_tubes = torch.FloatTensor(flat_tubes).to(conv_feat_rgb)    # gpu:0 for ROI pooling
+            flat_targets_of = torch.FloatTensor(flat_targets).to(conv_feat_of)
+            flat_tubes_of = torch.FloatTensor(flat_tubes).to(conv_feat_of)    # gpu:0 for ROI pooling
 
             # ROI Pooling
             pooled_feat_rgb = nets_rgb['roi_net'](conv_feat_rgb[:, T_start:T_start+T_length].contiguous(), flat_tubes)
-            pooled_feat_of = nets_of['roi_net'](conv_feat_of[:, T_start:T_start+T_length].contiguous(), flat_tubes)
+            pooled_feat_of = nets_of['roi_net'](conv_feat_of[:, T_start:T_start+T_length].contiguous(), flat_tubes_of)
             _,C,W,H = pooled_feat_rgb.size()
             pooled_feat_rgb = pooled_feat_rgb.view(-1, T_length, pooled_feat_rgb.size(1), W, H)
             pooled_feat_of = pooled_feat_of.view(-1, T_length, pooled_feat_of.size(1), W, H)
@@ -385,12 +387,12 @@ def train(args, nets_rgb, nets_of, optimizer, scheduler, train_dataloader, val_d
                 temp_context_feat_of = torch.zeros((pooled_feat_of.size(0),context_feat_of.size(1),T_length,1,1)).to(context_feat_of)
                 for p in range(pooled_feat_rgb.size(0)):
                     temp_context_feat_rgb[p] = context_feat_rgb[int(flat_tubes[p,0,0].item()/T_length),:,T_start:T_start+T_length].contiguous().clone()
-                    temp_context_feat_of[p] = context_feat_of[int(flat_tubes[p,0,0].item()/T_length),:,T_start:T_start+T_length].contiguous().clone()
+                    temp_context_feat_of[p] = context_feat_of[int(flat_tubes_of[p,0,0].item()/T_length),:,T_start:T_start+T_length].contiguous().clone()
 
             _,_,_,_, cur_loss_global_cls_rgb, _, _ = nets_rgb['det_net0'](pooled_feat_rgb, context_feat=temp_context_feat_rgb, tubes=flat_tubes, targets=flat_targets)
-            _,_,_,_, cur_loss_global_cls_of, _, _ = nets_of['det_net0'](pooled_feat_of, context_feat=temp_context_feat_of, tubes=flat_tubes, targets=flat_targets)
+            _,_,_,_, cur_loss_global_cls_of, _, _ = nets_of['det_net0'](pooled_feat_of, context_feat=temp_context_feat_of, tubes=flat_tubes, targets=flat_targets_of)
             # Fuse the loss
-            cur_loss_global_cls = 0.5*cur_loss_global_cls_rgb+0.5*cur_loss_global_cls_rgb
+            cur_loss_global_cls = 0.6*cur_loss_global_cls_rgb+0.4*cur_loss_global_cls_of
             cur_loss_global_cls = cur_loss_global_cls.mean()
 
             ########### Gradient updates ############

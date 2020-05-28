@@ -1,6 +1,7 @@
 apex/
 build/
 datasets/
+examples/
 STEP.egg-info/
 
 .vscode/
