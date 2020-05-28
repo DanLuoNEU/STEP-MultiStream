@@ -5,15 +5,18 @@ Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses
 
 import os
 import os.path
-import torch
-import torch.utils.data as data
-import pickle
-import numpy as np
 import cv2
 import glob
+import random
+import pickle
+import numpy as np
+import PIL.Image as Image
+
+import torch
+import torch.utils.data as data
+
 from utils.tube_utils import scale_tubes, scale_tubes_abs
 from .data_utils import generate_anchors
-import random
 
 
 WIDTH, HEIGHT = 400, 400
@@ -91,6 +94,9 @@ class CustomizedDataset(data.Dataset):
         for _ in range(num_left):
             img_name = os.path.join(self.data_root, videoname, self.im_format % max(0, int(p)))
             images.append(np.load(img_name))
+            # flow=np.zeros((540,960,2))
+            # flow=np.array(Image.fromarray(np.uint8(np.load(img_name)*255)).resize((540,960)))/255.
+            # images.append(flow)
             p -= stride
         images = images[::-1]
 
@@ -101,6 +107,9 @@ class CustomizedDataset(data.Dataset):
             p += stride
             img_name = os.path.join(self.data_root, videoname, self.im_format % min(numf-1, int(p)))
             images.append(np.load(img_name))
+            # flow=np.zeros((540,960,2))
+            # flow=np.array(Image.fromarray(np.uint8(np.load(img_name)*255)).resize((540,960)))/255.
+            # images.append(flow)
         return np.stack(images, axis=0)
 
 

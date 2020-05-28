@@ -90,6 +90,8 @@ class CustomizedDataset(data.Dataset):
         p = fid
         for _ in range(num_left):
             img_name = os.path.join(self.data_root, videoname, self.im_format % max(0, int(p)))
+            # img_tmp = cv2.resize(cv2.imread(img_name),(540,960))
+            # images.append(img_tmp)
             images.append(cv2.imread(img_name))
             p -= stride
         images = images[::-1]
@@ -100,6 +102,8 @@ class CustomizedDataset(data.Dataset):
         for _ in range(num_right):
             p += stride
             img_name = os.path.join(self.data_root, videoname, self.im_format % min(numf-1, int(p)))
+            # img_tmp = cv2.resize(cv2.imread(img_name),(540,960))
+            # images.append(img_tmp)
             images.append(cv2.imread(img_name))
         return np.stack(images, axis=0)
 

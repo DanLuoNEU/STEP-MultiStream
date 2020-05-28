@@ -61,6 +61,7 @@ def main():
     global_thresh = 0.8    # used for cross-class NMS
     # modify the label
     args.id2class = {1:'xfr', 2: 'trf', 3:'background'}
+    args.batch_size=2
     
     ################ Define models #################
     gpu_count = torch.cuda.device_count()
