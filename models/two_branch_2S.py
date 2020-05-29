@@ -348,7 +348,7 @@ class TwoBranchNet(nn.Module):
         loss_local_loc = loss_local_loc.view(-1)
         loss_neighbor_loc = loss_neighbor_loc.view(-1)
 
-        return global_prob, local_loc, first_loc, last_loc, loss_global_cls, loss_local_loc, loss_neighbor_loc
+        return global_prob, local_loc, first_loc, last_loc, loss_global_cls, loss_local_loc, loss_neighbor_loc, global_feat_conv_flat
     
     def _init_net(self):
     
