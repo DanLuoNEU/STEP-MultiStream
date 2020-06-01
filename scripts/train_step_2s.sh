@@ -7,7 +7,8 @@ cd ../
 
 data_root="/data/truppr/ava/"
 save_root="/data/Dan/ava_v2_1/cache/"
-pretrain_path='/data/Dan/ava_v2_1/cache/Cls_2s-max3-i3d-two_branch/checkpoint_best.pth'
+kinetics_pretrain="pretrained/i3d_kinetics.pth|pretrained/i3d_flow_kinetics.pth"
+pretrain_path='/data/Dan/ava_v2_1/cache/Cls_2s-max1-i3d-two_branch/20200529_64/checkpoint_best.pth'
 
 name="STEP_2s"
 base_net="i3d"
@@ -61,7 +62,7 @@ freeze_stats="True"
 
 
 python train_2s.py --data_root $data_root --save_root $save_root --num_classes 3 \
-    --name $name --pretrain_path $pretrain_path --resume_path $resume_path --input_type $input_type\
+    --name $name --kinetics_pretrain $kinetics_pretrain --pretrain_path $pretrain_path --resume_path $resume_path --input_type $input_type\
     --base_net $base_net --det_net $det_net --max_iter $max_iter --T $T \
     --iterative_mode $iterative_mode --anchor_mode $anchor_mode --anchor_mode $anchor_mode --temporal_mode $temporal_mode \
     --pool_mode $pool_mode --pool_size $pool_size --save_step $save_step --topk $topk --evaluate_topk $evaluate_topk \

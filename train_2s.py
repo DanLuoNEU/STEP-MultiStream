@@ -93,7 +93,7 @@ def main():
                                     do_flip=args.do_flip, do_crop=args.do_crop, do_photometric=args.do_photometric, do_erase=args.do_erase)
     log_file.write("Data augmentation: "+ str(augmentation))
     train_dataset = AVADataset(args.data_root, 'train', args.input_type, args.T, args.NUM_CHUNKS[args.max_iter], args.fps, augmentation, proposal_path=args.proposal_path_train, stride=1, anchor_mode=args.anchor_mode, num_classes=args.num_classes, foreground_only=True)
-    val_dataset = AVADataset(args.data_root, 'val', args.input_type, args.T, args.NUM_CHUNKS[args.max_iter], args.fps, BaseTransform(size=args.image_size, scale=args.scale_norm, input_type='2s'), stride=1, num_classes=args.num_classes, foreground_only=True), proposal_path=args.proposal_path_val, stride=1, anchor_mode=args.anchor_mode, num_classes=args.num_classes, foreground_only=False)
+    val_dataset = AVADataset(args.data_root, 'val', args.input_type, args.T, args.NUM_CHUNKS[args.max_iter], args.fps, BaseTransform(size=args.image_size, scale=args.scale_norm, input_type='2s'), proposal_path=args.proposal_path_val, stride=1, anchor_mode=args.anchor_mode, num_classes=args.num_classes, foreground_only=True)#foreground_only=False
 
     if args.milestones[0] == -1:
         args.milestones = [int(np.ceil(len(train_dataset) / args.batch_size) * args.max_epochs)]
@@ -322,7 +322,7 @@ def train(args, nets_rgb, nets_of, optimizer, scheduler, train_dataloader, val_d
             for _, net in nets_rgb.items():
                 net.eval()
             with torch.no_grad():
-                history, _ = inference(args, conv_feat, context_feat, nets_rgb, args.max_iter-1, tubes)
+                history, _ = inference(args, conv_feat_rgb, context_feat_rgb, nets_rgb, args.max_iter-1, tubes)
             for _, net in nets_rgb.items():
                 net.train()
             for _, net in nets_of.items():
@@ -375,17 +375,17 @@ def train(args, nets_rgb, nets_of, optimizer, scheduler, train_dataloader, val_d
                 _,_,_,_, cur_loss_global_cls_rgb, cur_loss_local_loc_rgb, cur_loss_neighbor_loc_rgb = nets_rgb['det_net%d' % (i-1)](pooled_feat_rgb, context_feat=temp_context_feat_rgb, tubes=flat_tubes, targets=flat_targets)
                 _,_,_,_, cur_loss_global_cls_of, cur_loss_local_loc_of, cur_loss_neighbor_loc_of = nets_of['det_net%d' % (i-1)](pooled_feat_of, context_feat=temp_context_feat_of, tubes=flat_tubes_of, targets=flat_targets_of)
                 # Fuse the loss
-                cur_loss_global_cls = 0.6*cur_loss_global_cls_rgb+0.4*cur_loss_global_cls_of
+                cur_loss_global_cls = 0.5*cur_loss_global_cls_rgb+0.5*cur_loss_global_cls_of
                 cur_loss_global_cls = cur_loss_global_cls.mean()
-                cur_loss_local_loc = 0.6*cur_loss_local_loc_rgb+0.4*cur_loss_local_loc_of
+                cur_loss_local_loc = 0.5*cur_loss_local_loc_rgb+0.5*cur_loss_local_loc_of
                 cur_loss_local_loc = cur_loss_local_loc.mean()
-                cur_loss_neighbor_loc = 0.6*cur_loss_neighbor_loc_rgb+0.4*cur_loss_neighbor_loc_of
+                cur_loss_neighbor_loc = 0.5*cur_loss_neighbor_loc_rgb+0.5*cur_loss_neighbor_loc_of
                 cur_loss_neighbor_loc = cur_loss_neighbor_loc.mean()
 
                 cur_loss = cur_loss_global_cls + \
                             cur_loss_local_loc * args.lambda_reg + \
                             cur_loss_neighbor_loc * args.lambda_neighbor
-                loss_back += cur_loss.to(conv_feat.device)
+                loss_back += cur_loss.to(conv_feat_rgb.device)
 
                 losses[i-1].update(cur_loss.item())
                 if cur_loss_neighbor_loc.item() > 0:
@@ -575,7 +575,9 @@ def validate(args, val_dataloader, nets_rgb, nets_of, iteration=0, iou_thresh=0.
 
             ############## Inference ##############
 
-            history, _ = inference(args, conv_feat_rgb, context_feat_rgb, nets_rgb, args.max_iter, tubes)
+            history_rgb, _ = inference(args, conv_feat_of, context_feat_of, nets_of, args.max_iter, tubes)
+            history_of, _ = inference(args, conv_feat_of, context_feat_of, nets_of, args.max_iter, tubes)
+            history = history_rgb
 
             #################### Evaluation #################
 
