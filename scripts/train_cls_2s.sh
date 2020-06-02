@@ -25,8 +25,8 @@ pool_size=7
 
 # training schedule
 num_workers=8
-max_epochs=3 #10 #14
-batch_size=1
+max_epochs=5 #10 #14
+batch_size=4
 optimizer="adam"
 base_lr=5e-5
 det_lr0=1e-4
@@ -52,7 +52,7 @@ freeze_affine="True"
 freeze_stats="True"
 
 
-/home/dan/anaconda3/envs/py36pt110/bin/python train_cls_2s.py --data_root $data_root --save_root $save_root \
+python train_cls_2s.py --data_root $data_root --save_root $save_root \
     --name $name --resume_path $resume_path --kinetics_pretrain $kinetics_pretrain \
     --base_net $base_net --det_net $det_net --max_iter $max_iter --T $T \
     --iterative_mode $iterative_mode --input_type $input_type\

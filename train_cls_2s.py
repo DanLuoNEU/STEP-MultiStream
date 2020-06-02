@@ -90,7 +90,7 @@ def main():
                                     do_flip=args.do_flip, do_crop=args.do_crop, do_photometric=args.do_photometric, do_erase=args.do_erase)
     log_file.write("Data augmentation: "+ str(augmentation))
     train_dataset = AVADataset(args.data_root, 'train', args.input_type, args.T, args.NUM_CHUNKS[args.max_iter], args.fps, augmentation, stride=1, num_classes=args.num_classes, foreground_only=True)
-    val_dataset = AVADataset(args.data_root, 'val', args.input_type, args.T, args.NUM_CHUNKS[args.max_iter], args.fps, BaseTransform(size=args.image_size, scale=args.scale_norm,input_type='2s'), stride=1, num_classes=args.num_classes, foreground_only=True)
+    val_dataset = AVADataset(args.data_root, 'val', args.input_type, args.T, args.NUM_CHUNKS[args.max_iter], args.fps, BaseTransform(size=args.image_size, scale=args.scale_norm, input_type='2s'), stride=1, num_classes=args.num_classes, foreground_only=True)
 
     if args.milestones[0] == -1:
         args.milestones = [int(np.ceil(len(train_dataset) / args.batch_size) * args.max_epochs)]
@@ -209,23 +209,6 @@ def main():
             for i in range(args.max_iter):
                 nets_rgb['det_net%d' % i].load_state_dict(checkpoint['det_net_rgb%d' % i])
                 nets_of['det_net%d' % i].load_state_dict(checkpoint['det_net_of%d' % i])
-            
-            # # Finetune
-            # if args.num_classes != len(checkpoint['det_net%d' % i]['global_cls.bias']):
-            #     print(f" >>>>>> Finetuning from {len(checkpoint['det_net%d' % i]['global_cls.bias'])} to {args.num_classes} <<<<<< ")
-            #     for p in nets['base_net'].parameters(): p.requires_grad = False
-            #     if not args.no_context:
-            #         for p in nets['context_net'].parameters(): p.requires_grad = False
-            #     for i in range(args.max_iter):
-            #         for p in nets['det_net%d' % i].parameters(): p.requires_grad = False
-            #         nets['det_net%d' % i].global_cls = nn.Conv3d(ic_t, args.num_classes, (1,1,1), bias=True)
-            #         nets['det_net%d' % i].to('cuda:%d' % ((i+1)%gpu_count))
-            #         nets['det_net%d' % i].set_device('cuda:%d' % ((i+1)%gpu_count))
-
-            # if 'optimizer' in checkpoint:
-            #     optimizer.load_state_dict(checkpoint['optimizer'])
-            # if 'scheduler' in checkpoint:
-            #     scheduler.load_state_dict(checkpoint['scheduler'])
 
             args.start_iteration = checkpoint['iteration']
             if checkpoint['iteration'] % int(np.ceil(len(train_dataset)/args.batch_size)) == 0:
@@ -369,9 +352,9 @@ def train(args, nets_rgb, nets_of, optimizer, scheduler, train_dataloader, val_d
             flat_targets, tubes_nums = flatten_tubes(target_tubes, batch_idx=False)
             flat_tubes, _ = flatten_tubes(selected_tubes, batch_idx=True)    # add batch_idx for ROI pooling
             flat_targets = torch.FloatTensor(flat_targets).to(conv_feat_rgb)
-            flat_tubes = torch.FloatTensor(flat_tubes).to(conv_feat_rgb)    # gpu:0 for ROI pooling
+            flat_tubes = torch.FloatTensor(flat_tubes).to(conv_feat_rgb)
             flat_targets_of = flat_targets.to(conv_feat_of)
-            flat_tubes_of = flat_tubes.to(conv_feat_of)    # gpu:0 for ROI pooling
+            flat_tubes_of = flat_tubes.to(conv_feat_of)
 
             # ROI Pooling
             pooled_feat_rgb = nets_rgb['roi_net'](conv_feat_rgb[:, T_start:T_start+T_length].contiguous(), flat_tubes)
@@ -390,7 +373,7 @@ def train(args, nets_rgb, nets_of, optimizer, scheduler, train_dataloader, val_d
                     temp_context_feat_of[p] = context_feat_of[int(flat_tubes_of[p,0,0].item()/T_length),:,T_start:T_start+T_length].contiguous().clone()
 
             _,_,_,_, cur_loss_global_cls_rgb, _, _ = nets_rgb['det_net0'](pooled_feat_rgb, context_feat=temp_context_feat_rgb, tubes=flat_tubes, targets=flat_targets)
-            _,_,_,_, cur_loss_global_cls_of, _, _ = nets_of['det_net0'](pooled_feat_of, context_feat=temp_context_feat_of, tubes=flat_tubes, targets=flat_targets_of)
+            _,_,_,_, cur_loss_global_cls_of, _, _ = nets_of['det_net0'](pooled_feat_of, context_feat=temp_context_feat_of, tubes=flat_tubes_of, targets=flat_targets_of)
             # Fuse the loss
             cur_loss_global_cls = 0.6*cur_loss_global_cls_rgb+0.4*cur_loss_global_cls_of
             cur_loss_global_cls = cur_loss_global_cls.mean()
@@ -412,7 +395,6 @@ def train(args, nets_rgb, nets_of, optimizer, scheduler, train_dataloader, val_d
             #     print(nets['det_net0'].global_cls.weight.grad)
             #     print(cur_loss_global_cls.item())
             optimizer.step()
-
 
             ############### Print logs and save models ############
 
@@ -459,7 +441,7 @@ def train(args, nets_rgb, nets_of, optimizer, scheduler, train_dataloader, val_d
                 if os.path.isfile(args.save_root+'checkpoint_'+str(iteration-args.save_step) + '.pth'):
                     os.remove(args.save_root+'checkpoint_'+str(iteration-args.save_step) + '.pth')
                     print (args.save_root+'checkpoint_'+str(iteration-args.save_step) + '.pth  removed!')
-            # break
+
             # For consistency when resuming from the middle of an epoch
             if iteration % epoch_size == 0 and iteration > 0:
                 break
@@ -476,7 +458,7 @@ def train(args, nets_rgb, nets_of, optimizer, scheduler, train_dataloader, val_d
             for _, net in nets_of.items():
                 net.eval() # switch net to evaluation mode
             print('Validating at ', iteration)
-            all_metrics = validate(args, val_dataloader, nets_rgb,nets_of, iteration, iou_thresh=args.iou_thresh)
+            all_metrics = validate(args, val_dataloader, nets_rgb, nets_of, iteration, iou_thresh=args.iou_thresh)
     
             prt_str = ''
             for i in range(args.max_iter):

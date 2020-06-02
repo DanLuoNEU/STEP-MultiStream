@@ -316,7 +316,7 @@ class AVADataset(data.Dataset):
 
 
         self.imgpath_rgb = os.path.join(root, 'frames/')
-        self.imgpath_of = '/data/truppr/ava/flows/'
+        self.imgpath_of = os.path.join(root, 'flows/')
         if self.mode == 'train':
             self.label_path = os.path.join("/data/Dan/ava_v2_1", 'label/train.pkl')
         elif self.mode == 'val':

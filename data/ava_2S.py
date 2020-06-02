@@ -5,17 +5,19 @@ Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses
 
 import os
 import os.path
-import torch
-import torch.utils.data as data
-import pickle
-import numpy as np
 import cv2
 import glob
+import pickle
+import random
+import numpy as np
+import PIL.Image as Image
+
+import torch
+import torch.utils.data as data
+
+from .data_utils import generate_anchors
 from utils.tube_utils import scale_tubes, scale_tubes_abs
 from external.ActivityNet.Evaluation.get_ava_performance import read_labelmap
-from .data_utils import generate_anchors
-import random
-
 
 WIDTH, HEIGHT = 400, 400
 TEM_REDUCE = 4    # 4 for I3D backbone
@@ -43,7 +45,8 @@ def make_list(label_path, chunks=1, stride=1, foreground_only=True):
         frames = sorted(annots[videoname].keys())
 
         # loop through each frame
-        for fid in np.arange(902, 1799, stride):    # AVA v2.1 annotations at timestamps 902:1798 inclusive
+        for fid in np.arange(1, 1799, stride):    # Custome Annotations
+        # for fid in np.arange(902, 1799, stride):    # AVA v2.1 annotations at timestamps 902:1798 inclusive
 
             # no foreground label
             if foreground_only and (not fid in frames):
@@ -91,7 +94,7 @@ def make_list(label_path, chunks=1, stride=1, foreground_only=True):
             data_list.append([vid, fid, boxes, labels, persons])
 
         vid += 1
-
+    print(len(data_list))
     return data_list, videoname_list
 
 
@@ -119,7 +122,7 @@ def get_target_tubes(root, boxes, labels, num_classes=60):
 
     gt_tubes = np.zeros((len(boxes), chunks, 4), dtype=np.float32)
     # gt_classes = np.zeros((len(boxes), chunks, 80), dtype=np.float32)
-    gt_classes = np.zeros((len(boxes), chunks, num_classes), dtype=np.float32)
+    gt_classes = np.zeros((len(boxes), chunks, num_classes), dtype=np.float32) # only for 3 class finetune
     for i in range(len(boxes)):
         for t in range(chunks):
             if boxes[i][t]:
@@ -174,10 +177,17 @@ def _load_images(path, num, fps=12, direction='forward'):
     """
     Load images in a folder wiht given num and fps, direction can be either 'forward' or 'backward'
     """
-
-    img_names = glob.glob(os.path.join(path, '*.jpg'))
+    
+    if 'frames' in path:
+        img_names = glob.glob(os.path.join(path, '*.jpg'))
+        if len(img_names) == 0:
+            img_names = glob.glob(os.path.join(path, '*.png'))
+    elif 'flows' in path:
+        img_names = glob.glob(os.path.join(path, '*.npy'))
+    
     if len(img_names) == 0:
         raise ValueError("Image path {} not Found".format(path))
+    
     img_names = sorted(img_names)
 
     # resampling according to fps
@@ -193,7 +203,10 @@ def _load_images(path, num, fps=12, direction='forward'):
     for idx in index:
         img_name = img_names[idx]
         if os.path.isfile(img_name):
-            img = cv2.imread(img_name)
+            if 'frames' in path:
+                img = cv2.imread(img_name)
+            elif 'flows' in path:
+                img = np.load(img_name)
             images.append(img)
         else:
             raise ValueError("Image not found!", img_name)
@@ -273,13 +286,14 @@ class AVADataset(data.Dataset):
 
 
         self.imgpath_rgb = os.path.join(root, 'frames/')
+        self.imgpath_of = os.path.join(root, 'flows/')
         if self.mode == 'train':
-            self.label_path = os.path.join(root, 'label/train.pkl')
+            self.label_path = os.path.join("/data/Dan/ava_v2_1", 'label/train.pkl')
         elif self.mode == 'val':
-            self.label_path = os.path.join(root, 'label/val.pkl')
+            self.label_path = os.path.join("/data/Dan/ava_v2_1", 'label/val.pkl')
         else:
             self.stride = 1
-            self.label_path = os.path.join(root, 'label/val.pkl')
+            self.label_path = os.path.join("/data/Dan/ava_v2_1", 'label/val.pkl')
             self.foreground_only = False
            
         data_list, videoname_list = make_list(self.label_path, self.chunks, self.stride, self.foreground_only)
@@ -291,7 +305,6 @@ class AVADataset(data.Dataset):
                 # remove the data with no proposals
                 if videoname_list[d[0]] in self.proposals and d[1] in self.proposals[videoname_list[d[0]]]:
                     self.data.append(d)
-
         else:
             self.proposals = None
             self.data = data_list
@@ -303,6 +316,7 @@ class AVADataset(data.Dataset):
         """
         Return:
             images: FloatTensor, shape [T, C, H, W]
+            flows: FloatTensor, shape [T, C, H, W]
             target_tubes: FloatTensor, shape [num_selected, 4+num_classes]    (including labels)
             selected_anchors: FloatTensor, shape [num_selected, T, 4]
             info: dict ['vid', 'sf', 'label', 'num_selected']
@@ -316,8 +330,21 @@ class AVADataset(data.Dataset):
         gt_tubes = get_target_tubes(self.root, boxes, labels, self.num_classes)    # gt boxes scaled to [0, 1]
 
         # load data
-        if self.input_type == "rgb":
+        if self.input_type == "2s":
             images = read_images(self.imgpath_rgb, videoname, fid, num=TEM_REDUCE*self.T*self.chunks, fps=self.fps)    # for i3d backbone
+            
+            # width and height of Flows is not the same as images
+            flows_ori = read_images(self.imgpath_of, videoname, fid, num=TEM_REDUCE*self.T*self.chunks, fps=self.fps)
+            flows = np.zeros((images.shape[0],images.shape[1],images.shape[2],2))
+            # Concatenate along channel, (T, W, H, C)
+            for t in range(images.shape[0]):
+                flows[t,] = np.array(Image.fromarray(np.uint8(flows_ori[t,]*255)).resize((images.shape[2],images.shape[1])))/255.
+
+            images = np.concatenate((images,flows), axis=3)
+        elif self.input_type == "rgb":
+            images = read_images(self.imgpath_rgb, videoname, fid, num=TEM_REDUCE*self.T*self.chunks, fps=self.fps)    # for i3d backbone
+        elif self.input_type == "flow":
+            images = read_images(self.imgpath_of, videoname, fid, num=TEM_REDUCE*self.T*self.chunks, fps=self.fps)    # for i3d backbone
         else:
             images = None
 
@@ -337,6 +364,8 @@ class AVADataset(data.Dataset):
             if self.input_type == 'rgb':
                 # BGR to RGB (for opencv)
                 images = images[:, :, :, (2,1,0)]
+            elif self.input_type == '2s':
+                images = images[:, :, :, (2,1,0,3,4)]
 
             # swap dimensions to [T, C, W, H]
             images = torch.from_numpy(images).permute(0,3,1,2)
