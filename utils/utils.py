@@ -56,7 +56,7 @@ def inference(args, conv_feat, context_feat, nets, exec_iter, tubes):
             for p in range(pooled_feat.size(0)):
                 temp_context_feat[p] = context_feat[int(flat_tubes[p,0,0].item()/T_length),:,T_start:T_start+T_length].contiguous().clone()
 
-        global_prob, local_loc, first_loc, last_loc, _,_,_ = nets['det_net%d' % (i-1)](pooled_feat, context_feat=temp_context_feat, tubes=None, targets=None)
+        global_prob, local_loc, first_loc, last_loc, _,_,_,_ = nets['det_net%d' % (i-1)](pooled_feat, context_feat=temp_context_feat, tubes=None, targets=None)
 
 
         ########## prepare data for next iteration ###########

@@ -137,7 +137,7 @@ def main():
     ################ Optimizer and Scheduler setup #################
     # Two ways to solve the conflict
     ## 1. Two optimizers
-    ## 2. Two nets and concatenate params
+    ## 2. Two nets and concatenate params(used)
     # params = get_params(nets, args) # bug: name is not base_net etc.
     params_rgb = get_params(nets_rgb,args)
     params_of = get_params(nets_of,args)
@@ -266,7 +266,7 @@ def main():
     train(args, nets_rgb, nets_of, optimizer, scheduler, train_dataloader, val_dataloader, log_file, loss_dif)
 
 
-def train(args, nets_rgb, nets_of, optimizer, scheduler, train_dataloader, val_dataloader, log_file,loss_dif=None):
+def train(args, nets_rgb, nets_of, optimizer, scheduler, train_dataloader, val_dataloader, log_file, loss_dif=None):
 
     for _, net in nets_rgb.items():
         net.train()
@@ -379,7 +379,6 @@ def train(args, nets_rgb, nets_of, optimizer, scheduler, train_dataloader, val_d
             # Compute the Distillation Loss
             cur_loss_global_cls_dif = loss_dif(global_feat_flat_rgb, global_feat_flat_of)
             # Fuse the loss
-            # print(cur_loss_global_cls_rgb.mean(),cur_loss_global_cls_of.mean(),cur_loss_global_cls_dif.mean())
             cur_loss_global_cls = 0.5*cur_loss_global_cls_rgb+0.3*cur_loss_global_cls_of+0.2*cur_loss_global_cls_dif
             cur_loss_global_cls = cur_loss_global_cls.mean()
 
@@ -464,7 +463,7 @@ def train(args, nets_rgb, nets_of, optimizer, scheduler, train_dataloader, val_d
             for _, net in nets_of.items():
                 net.eval() # switch net to evaluation mode
             print('Validating at ', iteration)
-            all_metrics = validate(args, val_dataloader, nets_rgb,nets_of, iteration, iou_thresh=args.iou_thresh)
+            all_metrics = validate(args, val_dataloader, nets_rgb, nets_of, iteration, iou_thresh=args.iou_thresh)
     
             prt_str = ''
             for i in range(args.max_iter):
@@ -657,4 +656,3 @@ def validate(args, val_dataloader, nets_rgb, nets_of, iteration=0, iou_thresh=0.
 
 if __name__ == '__main__':
     main()
-

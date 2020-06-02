@@ -1,5 +1,5 @@
 """
-05/29/2020, Dan
+06/01/2020, Dan
 Copyright (C) 2019 NVIDIA Corporation.  All rights reserved.
 Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode).
 """
@@ -69,7 +69,7 @@ if args.cuda:
 
 #args.device = torch.device("cuda:0" if args.cuda and torch.cuda.is_available() else "cpu")
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"]="4,5"  # specify which GPU(s) to be used
+os.environ["CUDA_VISIBLE_DEVICES"]="6,7"  # specify which GPU(s) to be used
 gpu_count = torch.cuda.device_count()
 torch.backends.cudnn.benchmark=True
 best_mAP = 0
@@ -134,6 +134,8 @@ def main():
     for key in nets_of:
         nets_of[key] = nets_of[key].cuda()
 
+    ################ define distillation loss #################
+    loss_dif = nn.MSELoss()
     ################ Training setup #################
     params_rgb = get_params(nets_rgb,args)
     params_of = get_params(nets_of,args)
@@ -224,7 +226,7 @@ def main():
             model_path = args.resume_path
             if not os.path.isfile(model_path):
                 raise ValueError("Resume model not found!", args.resume_path)
-
+        
         if model_path is not None:
             print ("Resuming trained model from %s" % model_path)
             checkpoint = torch.load(model_path, map_location='cuda:0')
@@ -264,15 +266,15 @@ def main():
         log_file.write(str(nets_of['det_net%d' % i])+'\n\n')
     
     # Start training
-    train(args, nets_rgb, nets_of, optimizer, scheduler, train_dataloader, val_dataloader, log_file)
+    train(args, nets_rgb, nets_of, optimizer, scheduler, train_dataloader, val_dataloader, log_file, loss_dif)
 
 
-def train(args, nets_rgb, nets_of, optimizer, scheduler, train_dataloader, val_dataloader, log_file):
+def train(args, nets_rgb, nets_of, optimizer, scheduler, train_dataloader, val_dataloader, log_file, loss_dif=None):
     global best_mAP
 
     for _, net in nets_rgb.items():
         net.train()
-    for _, net in nets_rgb.items():
+    for _, net in nets_of.items():
         net.train()
 
     # loss counters
@@ -372,14 +374,16 @@ def train(args, nets_rgb, nets_of, optimizer, scheduler, train_dataloader, val_d
                         temp_context_feat_rgb[p] = context_feat_rgb[int(flat_tubes[p,0,0].item()/T_length),:,T_start:T_start+T_length].contiguous().clone()
                         temp_context_feat_of[p] = context_feat_of[int(flat_tubes_of[p,0,0].item()/T_length),:,T_start:T_start+T_length].contiguous().clone()
 
-                _,_,_,_, cur_loss_global_cls_rgb, cur_loss_local_loc_rgb, cur_loss_neighbor_loc_rgb = nets_rgb['det_net%d' % (i-1)](pooled_feat_rgb, context_feat=temp_context_feat_rgb, tubes=flat_tubes, targets=flat_targets)
-                _,_,_,_, cur_loss_global_cls_of, cur_loss_local_loc_of, cur_loss_neighbor_loc_of = nets_of['det_net%d' % (i-1)](pooled_feat_of, context_feat=temp_context_feat_of, tubes=flat_tubes_of, targets=flat_targets_of)
+                _,_,_,_, cur_loss_global_cls_rgb, cur_loss_local_loc_rgb, cur_loss_neighbor_loc_rgb, global_feat_flat_rgb = nets_rgb['det_net%d' % (i-1)](pooled_feat_rgb, context_feat=temp_context_feat_rgb, tubes=flat_tubes, targets=flat_targets)
+                _,_,_,_, cur_loss_global_cls_of, cur_loss_local_loc_of, cur_loss_neighbor_loc_of, global_feat_flat_of = nets_of['det_net%d' % (i-1)](pooled_feat_of, context_feat=temp_context_feat_of, tubes=flat_tubes_of, targets=flat_targets_of)
+                # Compute the Distillation Loss
+                cur_loss_global_cls_dif = loss_dif(global_feat_flat_rgb, global_feat_flat_of)
                 # Fuse the loss
-                cur_loss_global_cls = 0.5*cur_loss_global_cls_rgb+0.5*cur_loss_global_cls_of
+                cur_loss_global_cls = 0.5*cur_loss_global_cls_rgb+0.4*cur_loss_global_cls_of+0.1*cur_loss_global_cls_dif
                 cur_loss_global_cls = cur_loss_global_cls.mean()
-                cur_loss_local_loc = 0.5*cur_loss_local_loc_rgb+0.5*cur_loss_local_loc_of
+                cur_loss_local_loc = 0.5*cur_loss_local_loc_rgb+0.4*cur_loss_local_loc_of+0.1*cur_loss_global_cls_dif
                 cur_loss_local_loc = cur_loss_local_loc.mean()
-                cur_loss_neighbor_loc = 0.5*cur_loss_neighbor_loc_rgb+0.5*cur_loss_neighbor_loc_of
+                cur_loss_neighbor_loc = 0.5*cur_loss_neighbor_loc_rgb+0.4*cur_loss_neighbor_loc_of+0.1*cur_loss_global_cls_dif
                 cur_loss_neighbor_loc = cur_loss_neighbor_loc.mean()
 
                 cur_loss = cur_loss_global_cls + \
@@ -568,15 +572,10 @@ def validate(args, val_dataloader, nets_rgb, nets_of, iteration=0, iou_thresh=0.
             context_feat_rgb = None
             if not args.no_context:
                 context_feat_rgb = nets_rgb['context_net'](conv_feat_rgb)
-            conv_feat_of = nets_of['base_net'](flows)
-            context_feat_of = None
-            if not args.no_context:
-                context_feat_of = nets_of['context_net'](conv_feat_of)
 
             ############## Inference ##############
 
-            history_rgb, _ = inference(args, conv_feat_of, context_feat_of, nets_of, args.max_iter, tubes)
-            history_of, _ = inference(args, conv_feat_of, context_feat_of, nets_of, args.max_iter, tubes)
+            history_rgb, _ = inference(args, conv_feat_rgb, context_feat_rgb, nets_rgb, args.max_iter, tubes)
             history = history_rgb
 
             #################### Evaluation #################
