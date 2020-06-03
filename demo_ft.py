@@ -21,7 +21,7 @@ import glob
 from config import parse_config
 from models import BaseNet, ROINet, TwoBranchNet, ContextNet
 from external.maskrcnn_benchmark.roi_layers import nms
-from utils.utils import inference, train_select, AverageMeter, get_gpu_memory
+from utils.utils import inference, train_select, AverageMeter, get_gpu_memory, Timer
 from utils.tube_utils import flatten_tubes, valid_tubes, compute_box_iou
 from utils.vis_utils import overlay_image
 from data.customize import CustomizedDataset, detection_collate, WIDTH, HEIGHT
@@ -34,7 +34,7 @@ def main():
 
     ################## Customize your configuratons here ###################
 
-    checkpoint_path = 'pretrained/20200329_checkpoint_best.pth' # 'pretrained/20200329_checkpoint_best.pth' # 'pretrained/ft_step_90cam20.pth'
+    checkpoint_path = '/data/Dan/ava_v2_1/cache/STEP-max3-i3d-two_branch/checkpoint_best.pth'
     if os.path.isfile(checkpoint_path):
         print ("Loading pretrain model from %s" % checkpoint_path)
         map_location = 'cuda:0'
@@ -44,8 +44,9 @@ def main():
         raise ValueError("Pretrain model not found!", checkpoint_path)
 
     # TODO: Set data_root to the customized input dataset
-    args.data_root = '/data/CLASP-DATA/20200227-trimmed/demo/' # '/data/CLASP-DATA/20200227-trimmed/frames/cam18-p2p-1/' # '/data/CLASP-DATA/20200227-trimmed/demo'
+    args.data_root = 'examples/rgb_frames'
     args.save_root = os.path.join(os.path.dirname(args.data_root), 'results/')
+    args.batch_size=1
     if not os.path.isdir(args.save_root):
         print("making " + str(args.save_root))
         os.makedirs(args.save_root)
@@ -57,9 +58,6 @@ def main():
     im_format = 'frame%05d.jpg'
     conf_thresh = 0.4
     global_thresh = 0.8    # used for cross-class NMS
-    # modify the label
-    # print(args.id2class)
-    # exit(0)
     args.id2class = {1:'transfer', 2: 'transfer', 3:'background'}
     # args.id2class[1] = 'transfer' #'give'
     # args.id2class[2] = 'transfer' #'take'
@@ -116,6 +114,10 @@ def main():
     fout = open(os.path.join(args.save_root, 'results.txt'), 'w')
     torch.cuda.synchronize()
     t0 = time.time()
+    t_base = Timer("base")
+    t_context = Timer("context")
+    t_2b = Timer("2b")
+    t_rest = Timer("rest")
     with torch.no_grad():
         for _, (images, tubes, infos) in enumerate(dataloader):
 
@@ -123,13 +125,19 @@ def main():
             images = images.cuda()
 
             # get conv features
+            t_base.start()
             conv_feat = nets['base_net'](images)
+            t_base.stop()
             context_feat = None
             if not args.no_context:
+                t_context.start()
                 context_feat = nets['context_net'](conv_feat)
+                t_context.stop()
 
+            t_2b.start()
             history, _ = inference(args, conv_feat, context_feat, nets, args.max_iter, tubes)
-
+            t_2b.stop()
+            t_rest.start()
             # collect result of the last step
             pred_prob = history[-1]['pred_prob'].cpu()
             pred_prob = pred_prob[:,int(pred_prob.shape[1]/2)]
@@ -206,7 +214,8 @@ def main():
                         merged_box = np.mean(np.concatenate(temp[0], axis=0).reshape(-1,4), axis=0)
                         key = ','.join(merged_box.astype(str).tolist())
                         merged_result[key] = [(l, s) for l,s in zip(temp[1], temp[2])]
-
+                
+                t_rest.stop()
                 # visualize results
                 if not os.path.isdir(os.path.join(args.save_root, info['video_name'])):
                     os.makedirs(os.path.join(args.save_root, info['video_name']))
@@ -233,6 +242,10 @@ def main():
             t0 = time.time()
                     
     fout.close()
+    print(f"base total time: {Timer.timers['base']:0.4f} seconds")
+    print(f"context total time: {Timer.timers['context']:0.4f} seconds")
+    print(f"2b total time: {Timer.timers['2b']:0.4f} seconds")
+    print(f"rest total time: {Timer.timers['rest']:0.4f} seconds")
 
 if __name__ == "__main__":
     main()
