@@ -379,11 +379,11 @@ def train(args, nets_rgb, nets_of, optimizer, scheduler, train_dataloader, val_d
                 # Compute the Distillation Loss
                 cur_loss_global_cls_dif = loss_dif(global_feat_flat_rgb, global_feat_flat_of)
                 # Fuse the loss
-                cur_loss_global_cls = 0.5*cur_loss_global_cls_rgb+0.4*cur_loss_global_cls_of+0.1*cur_loss_global_cls_dif
+                cur_loss_global_cls = 0.1*cur_loss_global_cls_rgb+0.9*cur_loss_global_cls_of+0.2*cur_loss_global_cls_dif
                 cur_loss_global_cls = cur_loss_global_cls.mean()
-                cur_loss_local_loc = 0.5*cur_loss_local_loc_rgb+0.4*cur_loss_local_loc_of+0.1*cur_loss_global_cls_dif
+                cur_loss_local_loc = 0.1*cur_loss_local_loc_rgb+0.9*cur_loss_local_loc_of+0.2*cur_loss_global_cls_dif
                 cur_loss_local_loc = cur_loss_local_loc.mean()
-                cur_loss_neighbor_loc = 0.5*cur_loss_neighbor_loc_rgb+0.4*cur_loss_neighbor_loc_of+0.1*cur_loss_global_cls_dif
+                cur_loss_neighbor_loc = 0.1*cur_loss_neighbor_loc_rgb+0.9*cur_loss_neighbor_loc_of+0.2*cur_loss_global_cls_dif
                 cur_loss_neighbor_loc = cur_loss_neighbor_loc.mean()
 
                 cur_loss = cur_loss_global_cls + \
