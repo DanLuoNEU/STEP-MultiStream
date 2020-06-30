@@ -126,8 +126,11 @@ class CustomizedDataset(data.Dataset):
         images = torch.from_numpy(images).permute(0,3,1,2)
 
         # get anchor tubes
-        if self.anchor_mode == "1":
-            anchors = generate_anchors([4/3, 2], [5/6, 3/4])
+        if self.anchor_mode == "0":
+            anchors = generate_anchors([4/3], [5/6])
+            anchor_tubes = np.tile(np.expand_dims(anchors, axis=1), (1,self.T,1))
+        elif self.anchor_mode == "1":
+            anchors = generate_anchors([4/3,2], [5/6,3/4]) 
             anchor_tubes = np.tile(np.expand_dims(anchors, axis=1), (1,self.T,1))
         elif self.anchor_mode == "2":
             anchors = generate_anchors([4/3,2,3], [5/6,3/4,1/2]) 
