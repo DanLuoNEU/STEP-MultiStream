@@ -15,7 +15,7 @@ from utils.tube_utils import scale_tubes, scale_tubes_abs
 from external.ActivityNet.Evaluation.get_ava_performance import read_labelmap
 from .data_utils import generate_anchors
 import random
-
+import json
 
 WIDTH, HEIGHT = 400, 400
 TEM_REDUCE = 4    # 4 for I3D backbone
@@ -96,7 +96,7 @@ def make_list(label_path, chunks=1, stride=1, foreground_only=True):
     return data_list, videoname_list
 
 
-def get_target_tubes(root, boxes, labels, num_classes=60):
+def get_target_tubes(root, boxes, labels, objects, num_classes=60):
     """
     Input:
         boxes: list of tubes (list of boxes (list))
@@ -109,7 +109,7 @@ def get_target_tubes(root, boxes, labels, num_classes=60):
 
     # background frame
     if chunks == 0:
-        return np.zeros((1, chunks, 4+num_classes), dtype=np.float32)
+        return np.zeros((1, chunks, 12+num_classes), dtype=np.float32)
 
     # label_map = os.path.join(root, 'label/ava_action_list_v2.1_for_activitynet_2018.pbtxt')
     # categories, class_whitelist = read_labelmap(open(label_map, 'r'))
@@ -118,19 +118,57 @@ def get_target_tubes(root, boxes, labels, num_classes=60):
     categories, class_whitelist = read_labelmap(open(label_map, 'r'))
     classes = np.array(list(class_whitelist))
 
-    gt_tubes = np.zeros((len(boxes), chunks, 4), dtype=np.float32)
+    gt_tubes = np.zeros((len(boxes), chunks, 12), dtype=np.float32)
+    
+    # print(gt_tubes[:,:,:])
+    # print(gt_tubes.shape)
+    # input()
+    
     # gt_classes = np.zeros((len(boxes), chunks, 80), dtype=np.float32)
     gt_classes = np.zeros((len(boxes), chunks, num_classes), dtype=np.float32)
+    z = 0
     for i in range(len(boxes)):
         for t in range(chunks):
             if boxes[i][t]:
-                gt_tubes[i,t] = boxes[i][t]
+                gt_tubes[i,t,0:4] = boxes[i][t]
+                key = "['{:.3f}', '{:.3f}', '{:.3f}', '{:.3f}']".format(boxes[i][t][0], boxes[i][t][1], boxes[i][t][2], boxes[i][t][3])
+                # print(key)
+
+                try:
+                    objects[str(key)]
+                    # print(objects[str(key)])
+                    if "bin" in objects[str(key)].keys():
+                        # print(objects[str(key)]["human"])
+                        # print(type(objects[str(key)]["human"]))
+                        gt_tubes[i,t,4:8] = [float(i.replace("'",'')) for i in objects[str(key)]["human"].strip('][').split(', ')] # objects[str(key)]["human"]
+                        gt_tubes[i,t,8:12] = [float(i.replace("'",'')) for i in objects[str(key)]["bin"].strip('][').split(', ')] # objects[str(key)]["bin"]
+                        gt_classes[i,t,0] = 1
+                    else:
+                        gt_tubes[i,t,4:8] = [float(i.replace("'",'')) for i in objects[str(key)]["give"].strip('][').split(', ')] # objects[str(key)]["give"]
+                        gt_tubes[i,t,8:12] = [float(i.replace("'",'')) for i in objects[str(key)]["take"].strip('][').split(', ')] # objects[str(key)]["take"]
+                        gt_classes[i,t,1] = 1
+
+
+                except KeyError:
+                    gt_tubes[i,t,4:8] = boxes[i][t]
+                    gt_tubes[i,t,8:12] = boxes[i][t]
+                    gt_classes[i,t,2] = 1
+                
+                
+                # print("[" + "'" + str(boxes[i][t][0]) + "', '" + str(boxes[i][t][1]) + "', '" + str(boxes[i][t][2]) + "', '" + str(boxes[i][t][3]) + "']")
+                '''
                 for l in labels[i][t]:
                     gt_classes[i,t,l-1] = 1    # foreground labels in annotation start from 1
+                '''
 
     if num_classes == 60:
         gt_classes = gt_classes[:,:,classes]
     gt = np.concatenate((gt_tubes, gt_classes), axis=2)
+    
+    # print(gt[:,:,:])
+    # print("z: ", z)
+    # input()
+
 
     return gt
 
@@ -275,6 +313,7 @@ class AVADataset(data.Dataset):
         self.anchor_mode = anchor_mode
         self.foreground_only = foreground_only
 
+        self.object_list = "/data/CLASP-DATA/DATASET-TRAINVAL-FILES/20200717/dataset_20200717-objects.json"
 
         self.imgpath_rgb = os.path.join(root, 'frames/')
         if self.mode == 'train':
@@ -317,7 +356,11 @@ class AVADataset(data.Dataset):
         vid, fid, boxes, labels, persons = data
         videoname = self.video_name[vid]
 
-        gt_tubes = get_target_tubes(self.root, boxes, labels, self.num_classes)    # gt boxes scaled to [0, 1]
+        # load objects
+        with open(self.object_list,'r') as json_file:
+            objects = json.load(json_file)
+
+        gt_tubes = get_target_tubes(self.root, boxes, labels, objects, self.num_classes)    # gt boxes scaled to [0, 1]
 
         # load data
         if self.input_type == "rgb":
@@ -364,9 +407,17 @@ class AVADataset(data.Dataset):
                 anchor_tubes = np.zeros([1,self.T,4])
         else:
             anchor_tubes = proposals
+        
+        # print(gt_tubes[:,:,:])
+        # print(gt_tubes.shape)
+        # input()
 
         # rescale tubes to absolute position
         gt_tubes[:,:,:4] = scale_tubes_abs(gt_tubes[:,:,:4], WIDTH, HEIGHT)
+
+        # print(gt_tubes[:,:,:])
+        # print(gt_tubes.shape)
+        # input()
         anchor_tubes = scale_tubes_abs(anchor_tubes, WIDTH, HEIGHT)
 
         # collect useful information
