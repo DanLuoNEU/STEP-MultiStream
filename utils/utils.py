@@ -59,30 +59,64 @@ def inference(args, conv_feat, context_feat, nets, exec_iter, tubes):
 
         global_prob, local_loc, first_loc, last_loc, _,_,_ = nets['det_net%d' % (i-1)](pooled_feat, context_feat=temp_context_feat, tubes=None, targets=None)
 
+        action_BB = local_loc[:,:,0:4]
+        other1_BB = local_loc[:,:,4:8]
+        other2_BB = local_loc[:,:,8:]
+
+        action_BB_first = first_loc[:,:,0:4]
+        other1_BB_first = first_loc[:,:,4:8]
+        other2_BB_first = first_loc[:,:,8:]
+
+        action_BB_last = last_loc[:,:,0:4]
+        other1_BB_last = last_loc[:,:,4:8]
+        other2_BB_last = last_loc[:,:,8:]
 
         ########## prepare data for next iteration ###########
-    
+        print("inference town: ", local_loc.shape)
+        # other1 = local_loc
         pred_prob = global_prob.view(-1,1,args.num_classes).expand(-1,T_length,-1)
     
         # decode regression results to output tubes
-        flat_tubes = flat_tubes.to(local_loc)
-        pred_loc = decode_coef(flat_tubes.view(-1,5)[:, 1:],
-                                     local_loc.view(-1, 4))
-        pred_loc = pred_loc.view(local_loc.size())
+        # flat_tubes = flat_tubes.to(local_loc)
+        flat_tubes = flat_tubes.to(action_BB)
+        
+        other1_pred_loc = decode_coef(flat_tubes.view(-1,5)[:, 1:], other1_BB.view(-1, 4))
+        other1_pred_loc = other1_pred_loc.view(other1_BB.size())
+
+        # flat_tubes = flat_tubes.to(other2_BB)
+        other2_pred_loc = decode_coef(flat_tubes.view(-1,5)[:, 1:], other2_BB.view(-1, 4))
+        other2_pred_loc = other2_pred_loc.view(other2_BB.size())
+
+        # flat_tubes = flat_tubes.to(action_BB)
+        action_pred_loc = decode_coef(flat_tubes.view(-1,5)[:, 1:], action_BB.view(-1, 4))
+        action_pred_loc = action_pred_loc.view(action_BB.size())
+    
+
+        print(action_pred_loc,"\n",action_pred_loc.shape)
 
         if args.temporal_mode == "predict":
-            pred_first_loc = decode_coef(flat_tubes[:, chunk_idx[0]-half_T:chunk_idx[0]+half_T+1].contiguous().view(-1,5)[:, 1:],
-                                     first_loc.view(-1, 4))
-            pred_first_loc = pred_first_loc.view(first_loc.size())    # [N*T, 4*C] --> [N, T, 4*C]
+            action_pred_first_loc = decode_coef(flat_tubes[:, chunk_idx[0]-half_T:chunk_idx[0]+half_T+1].contiguous().view(-1,5)[:, 1:],action_BB_first.view(-1, 4))
+            action_pred_first_loc = action_pred_first_loc.view(action_BB_first.size())    # [N*T, 4*C] --> [N, T, 4*C]           
+           
+            other1_pred_first_loc = decode_coef(flat_tubes[:, chunk_idx[0]-half_T:chunk_idx[0]+half_T+1].contiguous().view(-1,5)[:, 1:],other1_BB_first.view(-1, 4))
+            other1_pred_first_loc = other1_pred_first_loc.view(other1_BB_first.size())
 
-            pred_last_loc = decode_coef(flat_tubes[:, chunk_idx[-1]-half_T:chunk_idx[-1]+half_T+1].contiguous().view(-1,5)[:, 1:],
-                                     last_loc.view(-1, 4))
-            pred_last_loc = pred_last_loc.view(last_loc.size())    # [N*T, 4*C] --> [N, T, 4*C]
-    
+            other2_pred_first_loc = decode_coef(flat_tubes[:, chunk_idx[0]-half_T:chunk_idx[0]+half_T+1].contiguous().view(-1,5)[:, 1:],other2_BB_first.view(-1, 4))
+            other1_pred_first_loc = other2_pred_first_loc.view(other2_BB_first.size())
+
+            action_pred_last_loc = decode_coef(flat_tubes[:, chunk_idx[-1]-half_T:chunk_idx[-1]+half_T+1].contiguous().view(-1,5)[:, 1:],action_BB_last.view(-1, 4))
+            action_pred_last_loc = action_pred_last_loc.view(action_BB_last.size())    # [N*T, 4*C] --> [N, T, 4*C]
+   
+            other1_pred_last_loc = decode_coef(flat_tubes[:, chunk_idx[-1]-half_T:chunk_idx[-1]+half_T+1].contiguous().view(-1,5)[:, 1:],other1_BB_last.view(-1, 4))
+            other1_pred_last_loc = other1_pred_last_loc.view(other1_BB_last.size())
+
+            other2_pred_last_loc = decode_coef(flat_tubes[:, chunk_idx[-1]-half_T:chunk_idx[-1]+half_T+1].contiguous().view(-1,5)[:, 1:],other2_BB_last.view(-1, 4))
+            other2_pred_last_loc = other2_pred_last_loc.view(other2_BB_last.size())
+
         history.append({'pred_prob': pred_prob.data, 
-                        'pred_loc': pred_loc.data, 
-                        'pred_first_loc': pred_first_loc.data if args.temporal_mode=="predict" else None, 
-                        'pred_last_loc': pred_last_loc.data if args.temporal_mode=="predict" else None, 
+                        'pred_loc': action_pred_loc.data,
+                        'pred_first_loc': action_pred_first_loc.data if args.temporal_mode=="predict" else None, 
+                        'pred_last_loc': action_pred_last_loc.data if args.temporal_mode=="predict" else None, 
                         'tubes_nums': tubes_nums})
 
         # loop for each batch
@@ -94,15 +128,15 @@ def inference(args, conv_feat, context_feat, nets, exec_iter, tubes):
             tubes_count = tubes_count + tubes_nums[b]
 
             cur_pred_prob = pred_prob[seq_start:seq_start+tubes_nums[b]]
-            cur_pred_tubes = pred_loc[seq_start:seq_start+tubes_nums[b]]
+            cur_pred_tubes = action_pred_loc[seq_start:seq_start+tubes_nums[b]]
             cur_pred_class = torch.argmax(cur_pred_prob, dim=-1)
 
             # check whether extending tubes is needed
             if i < args.max_iter and args.NUM_CHUNKS[i+1] == args.NUM_CHUNKS[i]+2:
                 # check which method to extend tubes
                 if args.temporal_mode == "predict":
-                    cur_first_tubes = pred_first_loc[seq_start:seq_start+tubes_nums[b]]
-                    cur_last_tubes = pred_last_loc[seq_start:seq_start+tubes_nums[b]]
+                    cur_first_tubes = action_pred_first_loc[seq_start:seq_start+tubes_nums[b]]
+                    cur_last_tubes = action_pred_last_loc[seq_start:seq_start+tubes_nums[b]]
 
                     cur_proposals = torch.cat([cur_first_tubes, cur_pred_tubes, cur_last_tubes], dim=1)    # concatenate along time axis
                     cur_proposals = cur_proposals.cpu().numpy()
@@ -246,35 +280,48 @@ def train_select(step, history, targets, tubes, args):
 
     ######### Select training samples ########
 
+    # print(targets)
+    # print(candidates[0])
+    # print()
+    # input("kill me")
+
     selected_tubes = []
     target_tubes = []
     for b in range(len(targets)):
         cur_tubes = candidates[b][0]
         cur_scores = candidates[b][1]
+        
+        print(targets[b][:,int(max_chunks/2)].reshape(targets[b].shape[0],1,-1))
+        print(cur_tubes[:,int(cur_tubes.shape[1]/2)].reshape(cur_tubes.shape[0],1,-1))
+        print(cur_scores)
+        print("poop")
         selected_pos, selected_neg, ious = select_proposals(
                 targets[b][:,int(max_chunks/2)].reshape(targets[b].shape[0],1,-1), 
                 cur_tubes[:,int(cur_tubes.shape[1]/2)].reshape(cur_tubes.shape[0],1,-1),
                 cur_scores,
                 cls_thresh, args.max_pos_num, args.selection_sampling, args.neg_ratio)
 
+        
         cur_selected_tubes = np.zeros((len(selected_pos)+len(selected_neg), cur_tubes.shape[1], 4), dtype=np.float32)
-        cur_target_tubes = np.zeros((len(selected_pos)+len(selected_neg), 1, 6+args.num_classes), dtype=np.float32)    # only one frame for loss
+        cur_target_tubes = np.zeros((len(selected_pos)+len(selected_neg), 1, 14+args.num_classes), dtype=np.float32)    # only one frame for loss
         row = 0
         for ii,jj in selected_pos:
+            print(row, b, ii, int(max_chunks/2))
+            print(targets[0][0,1,:])
             cur_selected_tubes[row] = cur_tubes[jj]
-            cur_target_tubes[row,:,:4] = targets[b][ii,int(max_chunks/2),:4]
-            cur_target_tubes[row,:,6:] = targets[b][ii,int(max_chunks/2),4:]
-            cur_target_tubes[row,:,5] = 1    # flag for regression
-            cur_target_tubes[row,:,4] = 1    # flag for classification
+            cur_target_tubes[row,:,:12] = targets[b][ii,int(max_chunks/2),:12]
+            cur_target_tubes[row,:,14:] = targets[b][ii,int(max_chunks/2),12:]
+            cur_target_tubes[row,:,13] = 1    # flag for regression
+            cur_target_tubes[row,:,12] = 1    # flag for classification
             row += 1
 
         for ii,jj in selected_neg:
             cur_selected_tubes[row] = cur_tubes[jj]
             # for regreesion only samples
             if ious[ii, jj] >= reg_thresh:
-                cur_target_tubes[row,:,:4] = targets[b][ii,int(max_chunks/2),:4]
-                cur_target_tubes[row,:,6:] = targets[b][ii,int(max_chunks/2),4:]
-                cur_target_tubes[row,:,5] = 1    # for regression
+                cur_target_tubes[row,:,:12] = targets[b][ii,int(max_chunks/2),:12]
+                cur_target_tubes[row,:,14:] = targets[b][ii,int(max_chunks/2),12:]
+                cur_target_tubes[row,:,13] = 1    # for regression
             # FIXME: cur_target_tubes[row,:,4] = 1     # flag for classification
             row += 1
 
@@ -287,8 +334,8 @@ def train_select(step, history, targets, tubes, args):
                 cur_first_tubes = candidates[b][2]
                 cur_last_tubes = candidates[b][3]
 
-                cur_selected_first = np.zeros((len(selected_pos)+len(selected_neg), args.T, 4), dtype=np.float32)
-                cur_selected_last = np.zeros((len(selected_pos)+len(selected_neg), args.T, 4), dtype=np.float32)
+                cur_selected_first = np.zeros((len(selected_pos)+len(selected_neg), args.T, 12), dtype=np.float32)
+                cur_selected_last = np.zeros((len(selected_pos)+len(selected_neg), args.T, 12), dtype=np.float32)
                 row = 0
                 for ii,jj in selected_pos:
                     cur_selected_first[row] = cur_first_tubes[jj]
@@ -314,23 +361,26 @@ def train_select(step, history, targets, tubes, args):
 
         ###### check whether predicting neighbor is needed ######
 
-        cur_target_first = np.zeros((len(selected_pos)+len(selected_neg), 1, 6+args.num_classes), dtype=np.float32)
-        cur_target_last = np.zeros((len(selected_pos)+len(selected_neg), 1, 6+args.num_classes), dtype=np.float32)
+        cur_target_first = np.zeros((len(selected_pos)+len(selected_neg), 1, 14+args.num_classes), dtype=np.float32)
+        cur_target_last = np.zeros((len(selected_pos)+len(selected_neg), 1, 14+args.num_classes), dtype=np.float32)
 
         if args.temporal_mode == "predict" and step < args.max_iter and args.NUM_CHUNKS[step+1] == args.NUM_CHUNKS[step]+2:
             row = 0
             for ii, jj in selected_pos:
-                cur_target_first[row,:,:4] = targets[b][ii,int((T_start-args.T)/args.T),:4]
+                cur_target_first[row,:,:12] = targets[b][ii,int((T_start-args.T)/args.T),:12]
                 if cur_target_first[row,:,:4].sum() > 0:    # valid box
-                    cur_target_first[row,:,5] = 1
-                cur_target_first[row,:,6:] = targets[b][ii,int((T_start-args.T)/args.T),4:]
+                    cur_target_first[row,:,13] = 1
+                cur_target_first[row,:,14:] = targets[b][ii,int((T_start-args.T)/args.T),12:]
 
-                cur_target_last[row,:,:4] = targets[b][ii,int((T_start+T_length)/args.T),:4]
+                cur_target_last[row,:,:12] = targets[b][ii,int((T_start+T_length)/args.T),:12]
                 if cur_target_last[row,:,:4].sum() > 0:    # valid box
-                    cur_target_last[row,:,5] = 1
-                cur_target_last[row,:,6:] = targets[b][ii,int((T_start+T_length)/args.T),4:]
+                    cur_target_last[row,:,13] = 1
+                cur_target_last[row,:,14:] = targets[b][ii,int((T_start+T_length)/args.T),12:]
                 row += 1
 
+        print(cur_target_first.shape)
+        print(cur_target_tubes.shape)
+        print(cur_target_last.shape)
         cur_target_tubes = np.concatenate([cur_target_first,
                                           cur_target_tubes,
                                           cur_target_last], axis=1)
