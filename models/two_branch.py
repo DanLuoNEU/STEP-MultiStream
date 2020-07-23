@@ -195,9 +195,19 @@ class TwoBranchNet(nn.Module):
                     Bottleneck(1024, 256))
             self.downsample2 = nn.Conv2d(1024, self.fc_dim,
                         kernel_size=1, stride=1, bias=True)
-            self.local_reg = nn.Linear(self.fc_dim * self.pool_size**2, 4)
-            self.neighbor_reg1 = nn.Linear(self.fc_dim * self.pool_size**2, 4)    # for tube t-1
-            self.neighbor_reg2 = nn.Linear(self.fc_dim * self.pool_size**2, 4)    # for tube t+1
+            self.local_reg = nn.Linear(self.fc_dim * self.pool_size**2, 12)
+            self.neighbor_reg1 = nn.Linear(self.fc_dim * self.pool_size**2, 12)    # for tube t-1
+            self.neighbor_reg2 = nn.Linear(self.fc_dim * self.pool_size**2, 12)    # for tube t+1
+
+            '''
+            ### Additional BB for XFR
+            self.local_reg_human = nn.Linear(self.fc_dim * self.pool_size**2, 4)
+            self.local_reg_bin = nn.Linear(self.fc_dim * self.pool_size**2, 4)
+
+            ### Additional BB for P2P
+            self.local_reg_give = nn.Linear(self.fc_dim * self.pool_size**2, 4)
+            self.local_reg_take = nn.Linear(self.fc_dim * self.pool_size**2, 4)
+            '''
 
         self._init_net()
 
@@ -297,6 +307,14 @@ class TwoBranchNet(nn.Module):
                 target = center_targets[:, 6:] * mask    # mask out background samples
                 loss_global_cls = F.binary_cross_entropy_with_logits(global_class, 
                         target, reduction='none')
+           
+            '''
+            print(target)
+            print(target.shape)
+            print(global_class)
+            print(global_class.shape)
+            input()
+            '''
 
             if not self.cls_only:
                 ######### regression loss for center clip #########
@@ -332,12 +350,39 @@ class TwoBranchNet(nn.Module):
                     loss_neighbor_loc = F.smooth_l1_loss(neighbor_loc, neighbor_targets_loc, reduction='none')
                     loss_neighbor_loc = torch.sum(loss_neighbor_loc * neighbor_mask.detach()) / torch.sum(neighbor_mask.detach())
 
+                    # print(neighbor_loc)
+                    # print(neighbor_loc.shape)
+                    # print(target.shape)
+                    # print(global_class)
+                    # print(global_class.shape)
+                    # input("Hello, Mr. Pooprecht")
+
         #### Output ####
 
         global_prob = torch.sigmoid(global_class)
         loss_global_cls = loss_global_cls.view(-1)
         loss_local_loc = loss_local_loc.view(-1)
         loss_neighbor_loc = loss_neighbor_loc.view(-1)
+
+        '''
+        if not self.training:
+            print("global_prob: ", global_prob.shape)
+            print("local_loc: ", local_loc.shape)
+            print("first_loc: ", first_loc.shape)
+            print("last_loc: ", last_loc.shape)
+
+            print("local_loc: ", local_loc)
+            print("first_loc: ", first_loc)
+            print("last_loc: ", last_loc)
+
+            input("(VAL) Hello, Mr. Pooprecht")
+        else:
+            print("global_prob: ", global_prob.shape)
+            print("local_loc: ", local_loc.shape)
+            print("first_loc: ", first_loc.shape)
+            print("last_loc: ", last_loc.shape)
+            print("(TRAIN) Hello, Mr. Pooprecht")
+        '''
 
         return global_prob, local_loc, first_loc, last_loc, loss_global_cls, loss_local_loc, loss_neighbor_loc
     
