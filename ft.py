@@ -204,8 +204,34 @@ def main():
             nets['base_net'].load_state_dict(checkpoint['base_net'])
             if not args.no_context and 'context_net' in checkpoint:
                 nets['context_net'].load_state_dict(checkpoint['context_net'])
+
+            ### Convert single 1x4 BB regression into 1x12 3 BB regression
             for i in range(args.max_iter):
-                nets['det_net%d' % i].load_state_dict(checkpoint['det_net%d' % i])
+                # nets['det_net%d' % i].load_state_dict(checkpoint['det_net%d' % i])
+                layer_data = nets['det_net%d' % i].state_dict()
+                for name, param in checkpoint['det_net%d' % i].items():
+                    if name in ["local_reg.weight", "neighbor_reg1.weight", "neighbor_reg2.weight"]:
+                        layer = torch.zeros(param.shape[0]*3,param.shape[1])
+                        layer[0:4,:] = param
+                        layer[4:8,:] = param
+                        layer[8:,:] = param
+                        # print(layer)
+                        # print(name, param.shape)
+                        layer_data[name].copy_(layer)
+                    elif name in ["local_reg.bias", "neighbor_reg1.bias", "neighbor_reg2.bias"]:
+                        layer = torch.zeros(param.shape[0]*3)
+                        layer[0:4] = param
+                        layer[4:8] = param
+                        layer[8:] = param
+                        layer_data[name].copy_(layer)
+                        # print(name, param.shape)
+                    else:
+                        # nets['det_net%d' % i][name].copy_(param)
+                        layer_data[name].copy_(param)
+
+                nets['det_net%d' % i].load_state_dict(layer_data)
+                # input()
+
 
             if 'optimizer' in checkpoint:
                 optimizer.load_state_dict(checkpoint['optimizer'])
@@ -260,6 +286,14 @@ def train(args, nets, optimizer, scheduler, train_dataloader, val_dataloader, lo
 
     while epochs < args.max_epochs:
         for _, (images, targets, tubes, infos) in enumerate(train_dataloader):
+            '''
+            print("gimme some targs:")
+            print(targets)
+            print(len(targets), targets[0].shape)
+            print(infos)
+            input()
+            '''
+
 
             images = images.cuda()
 
@@ -325,6 +359,10 @@ def train(args, nets, optimizer, scheduler, train_dataloader, val_dataloader, lo
                     for p in range(pooled_feat.size(0)):
                         temp_context_feat[p] = context_feat[int(flat_tubes[p,0,0].item()/T_length),:,T_start:T_start+T_length].contiguous().clone()
 
+                
+                print("flat targs:\n",flat_targets)
+                print(flat_targets.shape)
+                # input()
                 _,_,_,_, cur_loss_global_cls, cur_loss_local_loc, cur_loss_neighbor_loc = nets['det_net%d' % (i-1)](pooled_feat, context_feat=temp_context_feat, tubes=flat_tubes, targets=flat_targets)
                 cur_loss_global_cls = cur_loss_global_cls.mean()
                 cur_loss_local_loc = cur_loss_local_loc.mean()
