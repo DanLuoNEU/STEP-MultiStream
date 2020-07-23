@@ -18,7 +18,7 @@ def parse_config():
 
     parser.add_argument('--name', default='Debug', help='Experiment Name')
     parser.add_argument('--data_root', default='/data/Dan/ava_v2_1/', help='Location of dataset root directory')
-    parser.add_argument('--save_root', default='/data/Dan/ava_v2_1/cache', help='Location to save checkpoint models')
+    parser.add_argument('--save_root', default='/data/truppr/ava_v2_1/cache', help='Location to save checkpoint models')
     parser.add_argument('--base_net', default='i3d', help='Architecture used for backbone network')
     parser.add_argument('--det_net', default='two_branch', help='Architecture used for backbone network')
     parser.add_argument('--no_context', action='store_true', help='If true, context branch is no used.')
@@ -31,7 +31,7 @@ def parse_config():
     parser.add_argument('--proposal_path_val', default=None, type=str2none, help='Path to the extracted proposals')
     parser.add_argument('--input_type', default='rgb', type=str, help='Input type for model: rgb | flow | stack')
     parser.add_argument('--dataset', default='ava', help='dataset name')
-    parser.add_argument('--num_classes', default=60, type=int, help='Number of classes')
+    parser.add_argument('--num_classes', default=3, type=int, help='Number of classes')
     parser.add_argument('--T', default=3, type=int, help='Sequence length for a tube')
     parser.add_argument('--fps', default=12, type=int, help='FPS for sequence')
     parser.add_argument('--num_workers', default=1, type=int, help='Number of workers used in dataloading')

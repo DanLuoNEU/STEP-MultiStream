@@ -6,7 +6,7 @@
 cd ../
 
 data_root="/data/truppr/ava/"
-save_root="/data/Dan/ava_v2_1/cache/"
+save_root="/data/truppr/ava_v2_1/cache/"
 kinetics_pretrain="pretrained/i3d_kinetics.pth"
 
 name="Cls"
