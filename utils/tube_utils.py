@@ -173,8 +173,10 @@ def decode_coef(anchors, deltas):
     Return:
         pred_tubes: FloatTensor [num_tubes, 4], regression result with absolution position
     """
+    # print(anchors, anchors.shape)
+    # print(deltas, deltas.shape)
     x, y, w, h = get_center_size(anchors)
-
+    # print(x.shape, y.shape, w.shape, h.shape)
     pred_x = w * deltas[:, 0] + x
     pred_y = h * deltas[:, 1] + y
     pred_w = w * torch.exp(deltas[:, 2])

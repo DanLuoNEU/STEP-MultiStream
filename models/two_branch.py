@@ -359,13 +359,25 @@ class TwoBranchNet(nn.Module):
                 first_targets_loc = first_targets[:, :4].clone()
                 last_targets_loc = last_targets[:, :4].clone()
                 neighbor_targets_loc = torch.cat([first_targets_loc, last_targets_loc], dim=0)
+                
+                print(first_tubes.view(-1,5)[:, 1:], "\n", last_tubes.view(-1,5)[:, 1:])
+                input() 
                 neighbor_targets_loc = encode_coef(neighbor_targets_loc, 
                                         torch.cat([first_tubes.view(-1,5)[:, 1:],
                                                    last_tubes.view(-1,5)[:, 1:]], dim=0))
-    
+                
+                neighbor_targets_loc = encode_coef(neighbor_targets_loc,
+                                        torch.cat([first_tubes.view(-1,5)[:, 1:],
+                                                   last_tubes.view(-1,5)[:, 1:]], dim=0))
+
+                neighbor_targets_loc = encode_coef(neighbor_targets_loc,
+                                        torch.cat([first_tubes.view(-1,5)[:, 1:],
+                                                   last_tubes.view(-1,5)[:, 1:]], dim=0))
+
+
                 with torch.no_grad():
-                    first_mask = first_targets[:, 5].view(-1, 1).repeat(1,4)
-                    last_mask = last_targets[:, 5].view(-1, 1).repeat(1,4)
+                    first_mask = first_targets[:, 13].view(-1, 1).repeat(1,12)
+                    last_mask = last_targets[:, 13].view(-1, 1).repeat(1,12)
                     neighbor_mask = torch.cat([first_mask, last_mask], dim=0)
     
                 if neighbor_mask.sum():
