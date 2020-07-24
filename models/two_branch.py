@@ -356,21 +356,25 @@ class TwoBranchNet(nn.Module):
                 ######### regression loss for neighbor clips #########
     
                 # transform target to regression parameterization
-                first_targets_loc = first_targets[:, :4].clone()
-                last_targets_loc = last_targets[:, :4].clone()
+                print(first_targets.shape)
+                first_targets_loc = first_targets[:, :12].clone()
+                last_targets_loc = last_targets[:, :12].clone()
                 neighbor_targets_loc = torch.cat([first_targets_loc, last_targets_loc], dim=0)
                 
                 print(first_tubes.view(-1,5)[:, 1:], "\n", last_tubes.view(-1,5)[:, 1:])
                 input() 
-                neighbor_targets_loc = encode_coef(neighbor_targets_loc, 
+                print(neighbor_targets_loc[:,0:4])
+                neighbor_targets_loc[:,0:4] = encode_coef(neighbor_targets_loc[:,0:4], 
                                         torch.cat([first_tubes.view(-1,5)[:, 1:],
                                                    last_tubes.view(-1,5)[:, 1:]], dim=0))
-                
-                neighbor_targets_loc = encode_coef(neighbor_targets_loc,
+               
+                print(neighbor_targets_loc[:,0:4])
+
+                neighbor_targets_loc[:,4:8] = encode_coef(neighbor_targets_loc[:,4:8],
                                         torch.cat([first_tubes.view(-1,5)[:, 1:],
                                                    last_tubes.view(-1,5)[:, 1:]], dim=0))
 
-                neighbor_targets_loc = encode_coef(neighbor_targets_loc,
+                neighbor_targets_loc[:,8:12] = encode_coef(neighbor_targets_loc[:,8:12],
                                         torch.cat([first_tubes.view(-1,5)[:, 1:],
                                                    last_tubes.view(-1,5)[:, 1:]], dim=0))
 
