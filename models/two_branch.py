@@ -306,10 +306,10 @@ class TwoBranchNet(nn.Module):
             if mask.sum():
                 target = center_targets[:, 14:] * mask    # mask out background samples
                 # target = center_targets[:, 14:]
-                print(global_class.shape)
-                print(global_class)
-                print(target.shape)
-                print(target)
+                # print(global_class.shape)
+                # print(global_class)
+                # print(target.shape)
+                # print(target)
                 loss_global_cls = F.binary_cross_entropy_with_logits(global_class,
                         target, reduction='none')
            
@@ -325,10 +325,10 @@ class TwoBranchNet(nn.Module):
                 ######### regression loss for center clip #########
     
                 # transform target to regression parameterizatio
-                print(center_tubes)
-                print(center_tubes.shape)
-                print(center_targets)
-                print(center_targets.shape)
+                # print(center_tubes)
+                # print(center_tubes.shape)
+                # print(center_targets)
+                # print(center_targets.shape)
                 
 
                 center_targets_loc = center_targets[:,:12].clone()
@@ -339,36 +339,36 @@ class TwoBranchNet(nn.Module):
     
                 with torch.no_grad():
                     mask = center_targets[:, 13].view(-1, 1).repeat(1,12)
-                    print("edmund maskie \n",mask)
-                    print(mask.shape)
+                    # print("edmund maskie \n",mask)
+                    # print(mask.shape)
                 if mask.sum():
-                    print(center_pred.shape)
-                    print(center_pred)
-                    print(center_targets_loc.shape)
-                    print(center_targets_loc)
+                    # # print(center_pred.shape)
+                    # print(center_pred)
+                    # print(center_targets_loc.shape)
+                    # print(center_targets_loc)
                     loss_local_loc = F.smooth_l1_loss(center_pred, center_targets_loc, reduction='none')
 
-                    print("\n\nloss out: \n",loss_local_loc)
-                    print(loss_local_loc.shape)
+                    # print("\n\nloss out: \n",loss_local_loc)
+                    # print(loss_local_loc.shape)
 
                     loss_local_loc = torch.sum(loss_local_loc * mask.detach()) / torch.sum(mask.detach())    # masked average
     
                 ######### regression loss for neighbor clips #########
     
                 # transform target to regression parameterization
-                print(first_targets.shape)
+                # print(first_targets.shape)
                 first_targets_loc = first_targets[:, :12].clone()
                 last_targets_loc = last_targets[:, :12].clone()
                 neighbor_targets_loc = torch.cat([first_targets_loc, last_targets_loc], dim=0)
                 
-                print(first_tubes.view(-1,5)[:, 1:], "\n", last_tubes.view(-1,5)[:, 1:])
-                input() 
-                print(neighbor_targets_loc[:,0:4])
+                # print(first_tubes.view(-1,5)[:, 1:], "\n", last_tubes.view(-1,5)[:, 1:])
+                # input() 
+                # print(neighbor_targets_loc[:,0:4])
                 neighbor_targets_loc[:,0:4] = encode_coef(neighbor_targets_loc[:,0:4], 
                                         torch.cat([first_tubes.view(-1,5)[:, 1:],
                                                    last_tubes.view(-1,5)[:, 1:]], dim=0))
                
-                print(neighbor_targets_loc[:,0:4])
+                # print(neighbor_targets_loc[:,0:4])
 
                 neighbor_targets_loc[:,4:8] = encode_coef(neighbor_targets_loc[:,4:8],
                                         torch.cat([first_tubes.view(-1,5)[:, 1:],

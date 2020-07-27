@@ -72,7 +72,7 @@ def inference(args, conv_feat, context_feat, nets, exec_iter, tubes):
         other2_BB_last = last_loc[:,:,8:]
 
         ########## prepare data for next iteration ###########
-        print("inference town: ", local_loc.shape)
+        # print("inference town: ", local_loc.shape)
         # other1 = local_loc
         pred_prob = global_prob.view(-1,1,args.num_classes).expand(-1,T_length,-1)
     
@@ -92,7 +92,7 @@ def inference(args, conv_feat, context_feat, nets, exec_iter, tubes):
         action_pred_loc = action_pred_loc.view(action_BB.size())
     
 
-        print(action_pred_loc,"\n",action_pred_loc.shape)
+        # print(action_pred_loc,"\n",action_pred_loc.shape)
 
         if args.temporal_mode == "predict":
             action_pred_first_loc = decode_coef(flat_tubes[:, chunk_idx[0]-half_T:chunk_idx[0]+half_T+1].contiguous().view(-1,5)[:, 1:],action_BB_first.view(-1, 4))
@@ -205,6 +205,7 @@ def train_select(step, history, targets, tubes, args):
             candidates.append((tubes[b], None))
 
         else:    # for step > 1
+            # input("here is your bullshit")
             seq_start = tubes_count
             tubes_count = tubes_count + tubes_nums[b]
             cur_pred_prob = pred_prob[seq_start:seq_start+tubes_nums[b]]
@@ -281,7 +282,7 @@ def train_select(step, history, targets, tubes, args):
     ######### Select training samples ########
 
     # print(targets)
-    # print(candidates[0])
+    # print(candidates)
     # print()
     # input("kill me")
 
@@ -291,23 +292,30 @@ def train_select(step, history, targets, tubes, args):
         cur_tubes = candidates[b][0]
         cur_scores = candidates[b][1]
         
-        print(targets[b][:,int(max_chunks/2)].reshape(targets[b].shape[0],1,-1))
-        print(cur_tubes[:,int(cur_tubes.shape[1]/2)].reshape(cur_tubes.shape[0],1,-1))
-        print(cur_scores)
-        print("poop")
+        # print(targets[b][:,int(max_chunks/2)].reshape(targets[b].shape[0],1,-1))
+        # print(cur_tubes[:,int(cur_tubes.shape[1]/2)].reshape(cur_tubes.shape[0],1,-1))
+        # print(cur_scores)
+        # print("poop")
         selected_pos, selected_neg, ious = select_proposals(
                 targets[b][:,int(max_chunks/2)].reshape(targets[b].shape[0],1,-1), 
                 cur_tubes[:,int(cur_tubes.shape[1]/2)].reshape(cur_tubes.shape[0],1,-1),
                 cur_scores,
                 cls_thresh, args.max_pos_num, args.selection_sampling, args.neg_ratio)
 
+
+        # print(cur_tubes)
+        # print(cur_tubes.shape)
+        # print()
         
         cur_selected_tubes = np.zeros((len(selected_pos)+len(selected_neg), cur_tubes.shape[1], 4), dtype=np.float32)
         cur_target_tubes = np.zeros((len(selected_pos)+len(selected_neg), 1, 14+args.num_classes), dtype=np.float32)    # only one frame for loss
+
+        # print(cur_selected_tubes.shape)
+
         row = 0
         for ii,jj in selected_pos:
-            print(row, b, ii, int(max_chunks/2))
-            print(targets[0][0,1,:])
+            # print(row, b, ii, int(max_chunks/2))
+            # print(targets[0][0,1,:])
             cur_selected_tubes[row] = cur_tubes[jj]
             cur_target_tubes[row,:,:12] = targets[b][ii,int(max_chunks/2),:12]
             cur_target_tubes[row,:,14:] = targets[b][ii,int(max_chunks/2),12:]
@@ -334,10 +342,15 @@ def train_select(step, history, targets, tubes, args):
                 cur_first_tubes = candidates[b][2]
                 cur_last_tubes = candidates[b][3]
 
-                cur_selected_first = np.zeros((len(selected_pos)+len(selected_neg), args.T, 12), dtype=np.float32)
-                cur_selected_last = np.zeros((len(selected_pos)+len(selected_neg), args.T, 12), dtype=np.float32)
+                cur_selected_first = np.zeros((len(selected_pos)+len(selected_neg), args.T, 4), dtype=np.float32)
+                cur_selected_last = np.zeros((len(selected_pos)+len(selected_neg), args.T, 4), dtype=np.float32)
                 row = 0
                 for ii,jj in selected_pos:
+                    # print("mayhaps a bug")
+                    # print(cur_first_tubes[jj])
+                    # print(cur_first_tubes[jj].shape)
+                    # print(cur_selected_first[row])
+                    # print(cur_selected_first[row].shape)
                     cur_selected_first[row] = cur_first_tubes[jj]
                     cur_selected_last[row] = cur_last_tubes[jj]
                     row += 1
@@ -378,9 +391,9 @@ def train_select(step, history, targets, tubes, args):
                 cur_target_last[row,:,14:] = targets[b][ii,int((T_start+T_length)/args.T),12:]
                 row += 1
 
-        print(cur_target_first.shape)
-        print(cur_target_tubes.shape)
-        print(cur_target_last.shape)
+        # print(cur_target_first.shape)
+        # print(cur_target_tubes.shape)
+        # print(cur_target_last.shape)
         cur_target_tubes = np.concatenate([cur_target_first,
                                           cur_target_tubes,
                                           cur_target_last], axis=1)

@@ -302,7 +302,7 @@ def train(args, nets, optimizer, scheduler, train_dataloader, val_dataloader, lo
             lr = optimizer.param_groups[-1]['lr']
 
             # get conv features
-            conv_feat = nets['base_net'](images)
+            conv_feat = nets['base_net'](images) # _ = f[g][gg](ggg)
             context_feat = None
             if not args.no_context:
                 context_feat = nets['context_net'](conv_feat)
@@ -360,8 +360,8 @@ def train(args, nets, optimizer, scheduler, train_dataloader, val_dataloader, lo
                         temp_context_feat[p] = context_feat[int(flat_tubes[p,0,0].item()/T_length),:,T_start:T_start+T_length].contiguous().clone()
 
                 
-                print("flat targs:\n",flat_targets)
-                print(flat_targets.shape)
+                # print("flat targs:\n",flat_targets)
+                # print(flat_targets.shape)
                 # input()
                 _,_,_,_, cur_loss_global_cls, cur_loss_local_loc, cur_loss_neighbor_loc = nets['det_net%d' % (i-1)](pooled_feat, context_feat=temp_context_feat, tubes=flat_tubes, targets=flat_targets)
                 cur_loss_global_cls = cur_loss_global_cls.mean()

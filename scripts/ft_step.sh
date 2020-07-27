@@ -7,8 +7,9 @@
 cd ../
 
 data_root="/data/truppr/ava/"
-save_root="/data/Dan/ava_v2_1/cache/"
-pretrain_path="/data/Dan/ava_v2_1/cache/Cls-max1-i3d-two_branch/checkpoint_best.pth"
+save_root="/data/truppr/ava_v2_1/cache/"
+# pretrain_path="/data/truppr/ava/cache/Cls-max1-i3d-two_branch/checkpoint_best.pth"
+pretrain_path="/data/truppr/ava/cache/20200408/Cls-max1-i3d-two_branch/checkpoint_best.pth"
 
 name="STEP"
 base_net="i3d"

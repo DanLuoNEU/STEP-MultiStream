@@ -57,16 +57,20 @@ def make_list(label_path, chunks=1, stride=1, foreground_only=True):
                 boxes = []
                 labels = []
                 persons = []
+                keys = []
                 # loop through each person
                 for pid, val in annotation.items():
                     temp_boxes = [[] for _ in range(chunks)]
                     temp_labels = [[] for _ in range(chunks)]
                     temp_persons = [[] for _ in range(chunks)]
+                    temp_keys = [[] for _ in range(chunks)]
+
                     # center frame
                     mid = int(chunks/2)
                     temp_boxes[mid] = val['box']
                     temp_labels[mid] = val['label']
                     temp_persons[mid] = pid
+                    temp_keys[mid] = val['objects']
 
                     # previous frames
                     for t in range(1, mid+1):
@@ -74,29 +78,34 @@ def make_list(label_path, chunks=1, stride=1, foreground_only=True):
                             temp_boxes[mid-t] = annots[videoname][fid-t][pid]['box']
                             temp_labels[mid-t] = annots[videoname][fid-t][pid]['label']
                             temp_persons[mid-t] = pid
+                            temp_keys[mid-t] = annots[videoname][fid-t][pid]['objects']
                     # future frames
                     for t in range(1, mid+1):
                         if fid+t in frames and pid in annots[videoname][fid+t]:    # valid frame with ground truth
                             temp_boxes[mid+t] = annots[videoname][fid+t][pid]['box']
                             temp_labels[mid+t] = annots[videoname][fid+t][pid]['label']
                             temp_persons[mid+t] = pid
+                            temp_keys[mid+t] = annots[videoname][fid+t][pid]['objects']
+
 
                     boxes.append(temp_boxes)
                     labels.append(temp_labels)
                     persons.append(temp_persons)
+                    keys.append(temp_keys)
             else:
                 boxes = [[[] for _ in range(chunks)]]
                 labels = [[[] for _ in range(chunks)]]
                 persons = [[[] for _ in range(chunks)]]
+                keys = [[[] for _ in range(chunks)]]
 
-            data_list.append([vid, fid, boxes, labels, persons])
+            data_list.append([vid, fid, boxes, labels, persons, keys])
 
         vid += 1
 
     return data_list, videoname_list
 
 
-def get_target_tubes(root, boxes, labels, objects, num_classes=60):
+def get_target_tubes(root, boxes, labels, objects, keys, num_classes=60):
     """
     Input:
         boxes: list of tubes (list of boxes (list))
@@ -131,30 +140,65 @@ def get_target_tubes(root, boxes, labels, objects, num_classes=60):
         for t in range(chunks):
             if boxes[i][t]:
                 gt_tubes[i,t,0:4] = boxes[i][t]
-                key = "['{:.3f}', '{:.3f}', '{:.3f}', '{:.3f}']".format(boxes[i][t][0], boxes[i][t][1], boxes[i][t][2], boxes[i][t][3])
+                # key = "['{:.3f}', '{:.3f}', '{:.3f}', '{:.3f}']".format(boxes[i][t][0], boxes[i][t][1], boxes[i][t][2], boxes[i][t][3])
                 # print(key)
-
+                '''
+                print(keys)
+                print(keys[i][t])
+                input()
+                '''
+                key = keys[i][t]
+                '''
+                print(boxes[i][t])
+                print(key)
+                input()
+                '''
                 try:
-                    objects[str(key)]
-                    # print(objects[str(key)])
-                    if "bin" in objects[str(key)].keys():
+                    objects[key]
+                    # objects[str(key)]                    
+
+                    if key == "NA":
+                        gt_tubes[i,t,4:8] = boxes[i][t]
+                        gt_tubes[i,t,8:12] = boxes[i][t]
+                        gt_classes[i,t,2] = 1
+
+                    elif "bin" in objects[key].keys():
                         # print(objects[str(key)]["human"])
                         # print(type(objects[str(key)]["human"]))
-                        gt_tubes[i,t,4:8] = [float(i.replace("'",'')) for i in objects[str(key)]["human"].strip('][').split(', ')] # objects[str(key)]["human"]
-                        gt_tubes[i,t,8:12] = [float(i.replace("'",'')) for i in objects[str(key)]["bin"].strip('][').split(', ')] # objects[str(key)]["bin"]
-                        gt_classes[i,t,0] = 1
-                    else:
-                        gt_tubes[i,t,4:8] = [float(i.replace("'",'')) for i in objects[str(key)]["give"].strip('][').split(', ')] # objects[str(key)]["give"]
-                        gt_tubes[i,t,8:12] = [float(i.replace("'",'')) for i in objects[str(key)]["take"].strip('][').split(', ')] # objects[str(key)]["take"]
+                        # print(key)
+                        # print(objects[key])
+                        # print(type(objects[key]["human"]))
+
+                        gt_tubes[i,t,4:8] = [float(i.replace("'",'')) for i in objects[key]["human"].strip("][").split(",")] # objects[str(key)]["human"]
+                        gt_tubes[i,t,8:12] = [float(i.replace("'",'')) for i in objects[key]["bin"].strip("][").split(",")] # objects[str(key)]["bin"]
                         gt_classes[i,t,1] = 1
+                    else:
+                        # print(key)
+                        # print(objects[key])
+                        # print(type(objects[key]["give"]))
+                        gt_tubes[i,t,4:8] = [float(i) for i in objects[key]["give"]] # objects[str(key)]["give"]
+                        gt_tubes[i,t,8:12] = [float(i) for i in objects[key]["take"]] # objects[str(key)]["take"]
+                        gt_classes[i,t,0] = 1
 
 
                 except KeyError:
-                    gt_tubes[i,t,4:8] = boxes[i][t]
-                    gt_tubes[i,t,8:12] = boxes[i][t]
-                    gt_classes[i,t,2] = 1
-                
-                
+                    if 3 not in labels[i][t]:
+                        # print(labels[i][t])
+                        # print(boxes[i][t])
+                        # print("ALERT: MISSING DATA FROM OBJECT FILE???")
+                        gt_tubes[i,t,4:8] = [0., 0., 0., 0.]
+                        gt_tubes[i,t,8:12] = [0., 0., 0., 0.]
+                        gt_classes[i,t,2] = 1
+                    else:
+                        gt_tubes[i,t,4:8] = boxes[i][t]
+                        gt_tubes[i,t,8:12] = boxes[i][t]
+                        gt_classes[i,t,2] = 1
+                    '''
+                    if 3 not in labels[i][t]:
+                        print(labels[i][t])
+                        print(boxes[i][t])
+                        input("MISSING DATA FROM OBJECT FILE???")       
+                    '''
                 # print("[" + "'" + str(boxes[i][t][0]) + "', '" + str(boxes[i][t][1]) + "', '" + str(boxes[i][t][2]) + "', '" + str(boxes[i][t][3]) + "']")
                 '''
                 for l in labels[i][t]:
@@ -313,16 +357,16 @@ class AVADataset(data.Dataset):
         self.anchor_mode = anchor_mode
         self.foreground_only = foreground_only
 
-        self.object_list = "/data/CLASP-DATA/DATASET-TRAINVAL-FILES/20200717/dataset_20200717-objects.json"
+        self.object_list = "/data/CLASP-DATA/DATASET-TRAINVAL-FILES/20200725/dataset_20200725-objects.json"
 
         self.imgpath_rgb = os.path.join(root, 'frames/')
         if self.mode == 'train':
-            self.label_path = os.path.join('/data/Dan/ava_v2_1/', 'label/train.pkl')
+            self.label_path = os.path.join('/data/truppr/ava/', 'label/train.pkl')
         elif self.mode == 'val':
-            self.label_path = os.path.join('/data/Dan/ava_v2_1/', 'label/val.pkl')
+            self.label_path = os.path.join('/data/truppr/ava/', 'label/val.pkl')
         else:
             self.stride = 1
-            self.label_path = os.path.join('/data/Dan/ava_v2_1/', 'label/val.pkl')
+            self.label_path = os.path.join('/data/truppr/ava/', 'label/val.pkl')
             self.foreground_only = False
            
         data_list, videoname_list = make_list(self.label_path, self.chunks, self.stride, self.foreground_only)
@@ -353,14 +397,14 @@ class AVADataset(data.Dataset):
 
         # pull an example sequence
         data = self.data[index]
-        vid, fid, boxes, labels, persons = data
+        vid, fid, boxes, labels, persons, keys = data
         videoname = self.video_name[vid]
 
         # load objects
         with open(self.object_list,'r') as json_file:
             objects = json.load(json_file)
 
-        gt_tubes = get_target_tubes(self.root, boxes, labels, objects, self.num_classes)    # gt boxes scaled to [0, 1]
+        gt_tubes = get_target_tubes(self.root, boxes, labels, objects, keys, self.num_classes)    # gt boxes scaled to [0, 1]
 
         # load data
         if self.input_type == "rgb":
