@@ -158,10 +158,12 @@ def get_target_tubes(root, boxes, labels, objects, keys, num_classes=60):
                     # objects[str(key)]                    
 
                     if key == "NA":
-                        gt_tubes[i,t,4:8] = boxes[i][t]
-                        gt_tubes[i,t,8:12] = boxes[i][t]
+                        # gt_tubes[i,t,4:8] = boxes[i][t]
+                        # gt_tubes[i,t,8:12] = boxes[i][t]
+                        # gt_classes[i,t,2] = 1
+                        gt_tubes[i,t,4:8] = [0., 0., 0., 0.]
+                        gt_tubes[i,t,8:12] = [0., 0., 0., 0.]
                         gt_classes[i,t,2] = 1
-
                     elif "bin" in objects[key].keys():
                         # print(objects[str(key)]["human"])
                         # print(type(objects[str(key)]["human"]))
@@ -190,9 +192,13 @@ def get_target_tubes(root, boxes, labels, objects, keys, num_classes=60):
                         gt_tubes[i,t,8:12] = [0., 0., 0., 0.]
                         gt_classes[i,t,2] = 1
                     else:
-                        gt_tubes[i,t,4:8] = boxes[i][t]
-                        gt_tubes[i,t,8:12] = boxes[i][t]
+                        gt_tubes[i,t,4:8] = [0., 0., 0., 0.]
+                        gt_tubes[i,t,8:12] = [0., 0., 0., 0.]
                         gt_classes[i,t,2] = 1
+                        # gt_tubes[i,t,4:8] = boxes[i][t]
+                        # gt_tubes[i,t,8:12] = boxes[i][t]
+                        # gt_classes[i,t,2] = 1
+
                     '''
                     if 3 not in labels[i][t]:
                         print(labels[i][t])

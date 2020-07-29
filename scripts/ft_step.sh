@@ -7,7 +7,7 @@
 cd ../
 
 data_root="/data/truppr/ava/"
-save_root="/data/truppr/ava_v2_1/cache/"
+save_root="/data/truppr/ava/cache/"
 # pretrain_path="/data/truppr/ava/cache/Cls-max1-i3d-two_branch/checkpoint_best.pth"
 pretrain_path="/data/truppr/ava/cache/20200408/Cls-max1-i3d-two_branch/checkpoint_best.pth"
 
@@ -26,7 +26,7 @@ pool_size=7
 
 # training schedule
 num_workers=16
-max_epochs=10 # 14
+max_epochs=50 # 10 # 14
 batch_size=4 # 8
 optimizer="adam"
 base_lr=7.5e-5

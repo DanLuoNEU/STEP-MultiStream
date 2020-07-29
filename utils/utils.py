@@ -113,8 +113,11 @@ def inference(args, conv_feat, context_feat, nets, exec_iter, tubes):
             other2_pred_last_loc = decode_coef(flat_tubes[:, chunk_idx[-1]-half_T:chunk_idx[-1]+half_T+1].contiguous().view(-1,5)[:, 1:],other2_BB_last.view(-1, 4))
             other2_pred_last_loc = other2_pred_last_loc.view(other2_BB_last.size())
 
+        # print(action_pred_loc, other1_pred_loc,other2_pred_loc)
         history.append({'pred_prob': pred_prob.data, 
                         'pred_loc': action_pred_loc.data,
+                        'pred_loc_other1': other1_pred_loc.data,
+                        'pred_loc_other2': other2_pred_loc.data,
                         'pred_first_loc': action_pred_first_loc.data if args.temporal_mode=="predict" else None, 
                         'pred_last_loc': action_pred_last_loc.data if args.temporal_mode=="predict" else None, 
                         'tubes_nums': tubes_nums})
@@ -315,14 +318,19 @@ def train_select(step, history, targets, tubes, args):
         row = 0
         for ii,jj in selected_pos:
             # print(row, b, ii, int(max_chunks/2))
-            # print(targets[0][0,1,:])
             cur_selected_tubes[row] = cur_tubes[jj]
             cur_target_tubes[row,:,:12] = targets[b][ii,int(max_chunks/2),:12]
             cur_target_tubes[row,:,14:] = targets[b][ii,int(max_chunks/2),12:]
-            cur_target_tubes[row,:,13] = 1    # flag for regression
+            
+            if cur_target_tubes[row,:,-1].item() == 1:
+                cur_target_tubes[row,:,13] = 1      # NOTE: Set to 1 if you want to use regression with background objects...
+            else:
+                cur_target_tubes[row,:,13] = 1    # flag for regression #TODO: Turn off for background...
+            
+            
             cur_target_tubes[row,:,12] = 1    # flag for classification
             row += 1
-
+            
         for ii,jj in selected_neg:
             cur_selected_tubes[row] = cur_tubes[jj]
             # for regreesion only samples

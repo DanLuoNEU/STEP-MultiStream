@@ -209,28 +209,32 @@ def main():
             for i in range(args.max_iter):
                 # nets['det_net%d' % i].load_state_dict(checkpoint['det_net%d' % i])
                 layer_data = nets['det_net%d' % i].state_dict()
-                for name, param in checkpoint['det_net%d' % i].items():
-                    if name in ["local_reg.weight", "neighbor_reg1.weight", "neighbor_reg2.weight"]:
-                        layer = torch.zeros(param.shape[0]*3,param.shape[1])
-                        layer[0:4,:] = param
-                        layer[4:8,:] = param
-                        layer[8:,:] = param
-                        # print(layer)
-                        # print(name, param.shape)
-                        layer_data[name].copy_(layer)
-                    elif name in ["local_reg.bias", "neighbor_reg1.bias", "neighbor_reg2.bias"]:
-                        layer = torch.zeros(param.shape[0]*3)
-                        layer[0:4] = param
-                        layer[4:8] = param
-                        layer[8:] = param
-                        layer_data[name].copy_(layer)
-                        # print(name, param.shape)
-                    else:
-                        # nets['det_net%d' % i][name].copy_(param)
-                        layer_data[name].copy_(param)
+                
+                if args.inflate:
+                    for name, param in checkpoint['det_net%d' % i].items():
+                        if name in ["local_reg.weight", "neighbor_reg1.weight", "neighbor_reg2.weight"]:
+                            layer = torch.zeros(param.shape[0]*3,param.shape[1])
+                            layer[0:4,:] = param
+                            layer[4:8,:] = param
+                            layer[8:,:] = param
+                            # print(layer)
+                            # print(name, param.shape)
+                            layer_data[name].copy_(layer)
+                        elif name in ["local_reg.bias", "neighbor_reg1.bias", "neighbor_reg2.bias"]:
+                            layer = torch.zeros(param.shape[0]*3)
+                            layer[0:4] = param
+                            layer[4:8] = param
+                            layer[8:] = param
+                            layer_data[name].copy_(layer)
+                            # print(name, param.shape)
+                        else:
+                            # nets['det_net%d' % i][name].copy_(param)
+                            layer_data[name].copy_(param)
 
-                nets['det_net%d' % i].load_state_dict(layer_data)
-                # input()
+                    nets['det_net%d' % i].load_state_dict(layer_data)
+                    # input()
+                else:
+                    nets['det_net%d' % i].load_state_dict(checkpoint['det_net%d' % i])
 
 
             if 'optimizer' in checkpoint:
@@ -509,11 +513,19 @@ def validate(args, val_dataloader, nets, iteration=0, iou_thresh=0.5):
     # write results to files for evaluation
     output_files = []
     fouts = []
+    tim_files = []
+    tim_outs = []
     for i in range(args.max_iter):
         output_file = args.save_root+'val_result-'+str(iteration)+'-iter'+str(i+1)+'.csv'
+        tim_file = args.save_root+'tim_result-'+str(iteration)+'-iter'+str(i+1)+'.csv'
         output_files.append(output_file)
+        tim_files.append(tim_file)
+
         f = open(output_file, 'w')
         fouts.append(f)
+
+        f = open(tim_file, 'w')
+        tim_outs.append(f)
 
     gt_file = args.save_root+'val_gt.csv'
     fout = open(gt_file, 'w')
@@ -557,7 +569,12 @@ def validate(args, val_dataloader, nets, iteration=0, iou_thresh=0.5):
                 pred_prob = pred_prob[:,int(pred_prob.shape[1]/2)]
                 pred_tubes = history[i]['pred_loc'].cpu()
                 pred_tubes = pred_tubes[:,int(pred_tubes.shape[1]/2)]
+                pred_tubes_other1 = history[i]['pred_loc_other1'].cpu()
+                pred_tubes_other1 = pred_tubes_other1[:,int(pred_tubes_other1.shape[1]/2)]
+                pred_tubes_other2 = history[i]['pred_loc_other2'].cpu()
+                pred_tubes_other2 = pred_tubes_other2[:,int(pred_tubes_other2.shape[1]/2)]
                 tubes_nums = history[i]['tubes_nums']
+
 
                 # loop for each sample in a batch
                 tubes_count = 0
@@ -568,10 +585,14 @@ def validate(args, val_dataloader, nets, iteration=0, iou_thresh=0.5):
     
                     cur_pred_prob = pred_prob[seq_start:seq_start+tubes_nums[b]]
                     cur_pred_tubes = pred_tubes[seq_start:seq_start+tubes_nums[b]]
+                    cur_pred_tubes_other1 = pred_tubes_other1[seq_start:seq_start+tubes_nums[b]]
+                    cur_pred_tubes_other2 = pred_tubes_other2[seq_start:seq_start+tubes_nums[b]]
 
                     # do NMS first
                     all_scores = []
                     all_boxes = []
+                    all_other_1 = []
+                    all_other_2 = []
                     all_idx = []
                     for cl_ind in range(args.num_classes):
                         scores = cur_pred_prob[:, cl_ind].squeeze().reshape(-1)
@@ -581,21 +602,42 @@ def validate(args, val_dataloader, nets, iteration=0, iou_thresh=0.5):
                         if len(scores) == 0:
                             all_scores.append([])
                             all_boxes.append([])
+                            all_other_1.append([])
+                            all_other_2.append([])
                             continue
                         boxes = cur_pred_tubes.clone()
+                        boxes_other1 = cur_pred_tubes_other1.clone()
+                        boxes_other2 = cur_pred_tubes_other2.clone()
+
                         l_mask = c_mask.unsqueeze(1).expand_as(boxes)
                         boxes = boxes[l_mask].view(-1, 4)
     
                         boxes = valid_tubes(boxes.view(-1,1,4)).view(-1,4)
+                        boxes_other1 = valid_tubes(boxes_other1.view(-1,1,4)).view(-1,4)
+                        boxes_other2 = valid_tubes(boxes_other2.view(-1,1,4)).view(-1,4)
+
                         keep = nms(boxes, scores, args.nms_thresh)
                         boxes = boxes[keep].numpy()
+                        boxes_other1 = boxes_other1[keep].numpy()
+                        boxes_other2 = boxes_other2[keep].numpy()
+
                         scores = scores[keep].numpy()
                         idx = idx[keep]
     
                         boxes[:, ::2] /= width
                         boxes[:, 1::2] /= height
+
+                        boxes_other1[:, ::2] /= width
+                        boxes_other1[:, 1::2] /= height
+
+                        boxes_other2[:, ::2] /= width
+                        boxes_other2[:, 1::2] /= height
+
+
                         all_scores.append(scores)
                         all_boxes.append(boxes)
+                        all_other_1.append(boxes_other1)
+                        all_other_2.append(boxes_other2)
                         all_idx.append(idx)
 
                     # get the top scores
@@ -608,6 +650,18 @@ def validate(args, val_dataloader, nets, iteration=0, iou_thresh=0.5):
                     for s,cl_ind,j in scores_list:
                         # write to files
                         box = all_boxes[cl_ind][j]
+                        box_1 = all_other_1[cl_ind][j]
+                        box_2 = all_other_2[cl_ind][j]
+                        
+                        
+                        tim_outs[i].write('{0},{1:04},{2:.4},{3:.4},{4:.4},{5:.4},{6:.4},{7:.4},{8:.4},{9:.4},{10:.4},{11:.4},{12:.4},{13:.4},{14},{15:.4}\n'.format(
+                                                    info['video_name'],
+                                                    info['fid'],
+                                                    box[0],box[1],box[2],box[3],
+                                                    box_1[0],box_1[1],box_1[2],box_1[3],
+                                                    box_2[0],box_2[1],box_2[2],box_2[3],
+                                                    label_dict[cl_ind],
+                                                    s))
                         fouts[i].write('{0},{1:04},{2:.4},{3:.4},{4:.4},{5:.4},{6},{7:.4}\n'.format(
                                                     info['video_name'],
                                                     info['fid'],
@@ -619,6 +673,7 @@ def validate(args, val_dataloader, nets, iteration=0, iou_thresh=0.5):
     all_metrics = []
     for i in range(args.max_iter):
         fouts[i].close()
+        tim_outs[i].close()
 
         metrics = ava_evaluation(os.path.join(args.data_root, 'label/'), output_files[i], gt_file)
         all_metrics.append(metrics)
