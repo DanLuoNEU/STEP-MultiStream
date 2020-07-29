@@ -18,7 +18,7 @@ def parse_config():
 
     parser.add_argument('--name', default='Debug', help='Experiment Name')
     parser.add_argument('--data_root', default='/data/Dan/ava_v2_1/', help='Location of dataset root directory')
-    parser.add_argument('--save_root', default='/data/truppr/ava_v2_1/cache', help='Location to save checkpoint models')
+    parser.add_argument('--save_root', default='/data/truppr/ava/cache', help='Location to save checkpoint models')
     parser.add_argument('--base_net', default='i3d', help='Architecture used for backbone network')
     parser.add_argument('--det_net', default='two_branch', help='Architecture used for backbone network')
     parser.add_argument('--no_context', action='store_true', help='If true, context branch is no used.')
@@ -101,6 +101,7 @@ def parse_config():
     parser.add_argument('--min_ratio', default=0., type=float, help='Minimum ratio decay for base_lr.')
     parser.add_argument('--warmup_iters', default=1000, type=int, help='The number of iterations for linear warmup.')
     
+    parser.add_argument('--inflate', action='store_true', help='If true, inflates loaded models parameters for multi BB regression training....')
     
     ## Parse arguments
     args = parser.parse_args()
