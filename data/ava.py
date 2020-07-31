@@ -464,7 +464,8 @@ class AVADataset(data.Dataset):
 
         # rescale tubes to absolute position
         gt_tubes[:,:,:4] = scale_tubes_abs(gt_tubes[:,:,:4], WIDTH, HEIGHT)
-
+        gt_tubes[:,:,4:8] = scale_tubes_abs(gt_tubes[:,:,4:8], WIDTH, HEIGHT)
+        gt_tubes[:,:,8:12] = scale_tubes_abs(gt_tubes[:,:,8:12], WIDTH, HEIGHT)
         # print(gt_tubes[:,:,:])
         # print(gt_tubes.shape)
         # input()

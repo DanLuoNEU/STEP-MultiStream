@@ -102,7 +102,9 @@ def parse_config():
     parser.add_argument('--warmup_iters', default=1000, type=int, help='The number of iterations for linear warmup.')
     
     parser.add_argument('--inflate', action='store_true', help='If true, inflates loaded models parameters for multi BB regression training....')
-    
+   
+    parser.add_argument('--visualize', action='store_true', help='If true, visualizes output frames....')
+
     ## Parse arguments
     args = parser.parse_args()
 

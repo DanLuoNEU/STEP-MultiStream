@@ -122,6 +122,7 @@ def main():
     for key in nets:
         nets[key] = nets[key].cuda()
 
+    
     ################ Training setup #################
     ################ Optimizer and Scheduler setup #################
     params = get_params(nets, args)
@@ -236,11 +237,12 @@ def main():
                 else:
                     nets['det_net%d' % i].load_state_dict(checkpoint['det_net%d' % i])
 
-
+            '''
             if 'optimizer' in checkpoint:
                 optimizer.load_state_dict(checkpoint['optimizer'])
             if 'scheduler' in checkpoint:
                 scheduler.load_state_dict(checkpoint['scheduler'])
+            '''
 
             args.start_iteration = checkpoint['iteration']
             if checkpoint['iteration'] % int(np.ceil(len(train_dataset)/args.batch_size)) == 0:
@@ -251,6 +253,32 @@ def main():
 
             del checkpoint
             torch.cuda.empty_cache()
+
+    ################ Optimizer and Scheduler setup #################
+    '''
+    params = get_params(nets, args)
+    if args.optimizer == 'sgd':
+        optimizer = optim.SGD(params, lr=args.det_lr, momentum=args.momentum, weight_decay=args.weight_decay)
+    elif args.optimizer == 'adam':
+        optimizer = optim.Adam(params, lr=args.det_lr)
+    else:
+        raise NotImplementedError
+
+    if args.scheduler == "cosine":
+        scheduler = WarmupCosineLR(optimizer, args.milestones, args.min_ratio, args.cycle_decay, args.warmup_iters)
+    else:
+        scheduler = WarmupStepLR(optimizer, args.milestones, args.warmup_iters)
+
+    if 'optimizer' in checkpoint:
+        optimizer.load_state_dict(checkpoint['optimizer'])
+    if 'scheduler' in checkpoint:
+        scheduler.load_state_dict(checkpoint['scheduler'])
+    # Initialize AMP if needed
+    if args.fp16:
+        models, optimizer = amp.initialize([net for _,net in nets.items()], optimizer, opt_level="O1")
+        for i, key in enumerate(nets):
+            nets[key] = models[i]
+    '''
 
     ######################################################
 
@@ -329,7 +357,6 @@ def train(args, nets, optimizer, scheduler, train_dataloader, val_dataloader, lo
             ########### Forward pass for each iteration ############
             optimizer.zero_grad()
             loss_back = 0.
-
             # loop for each step
             for i in range(1, args.max_iter+1):    # index from 1
 
@@ -611,7 +638,9 @@ def validate(args, val_dataloader, nets, iteration=0, iou_thresh=0.5):
 
                         l_mask = c_mask.unsqueeze(1).expand_as(boxes)
                         boxes = boxes[l_mask].view(-1, 4)
-    
+                        boxes_other1 = boxes_other1[l_mask].view(-1, 4)
+                        boxes_other2 = boxes_other2[l_mask].view(-1, 4)
+
                         boxes = valid_tubes(boxes.view(-1,1,4)).view(-1,4)
                         boxes_other1 = valid_tubes(boxes_other1.view(-1,1,4)).view(-1,4)
                         boxes_other2 = valid_tubes(boxes_other2.view(-1,1,4)).view(-1,4)

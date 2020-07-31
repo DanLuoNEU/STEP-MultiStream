@@ -14,7 +14,8 @@ pretrain_path="/data/truppr/ava/cache/20200408/Cls-max1-i3d-two_branch/checkpoin
 name="STEP"
 base_net="i3d"
 det_net="two_branch"
-resume_path="Auto"
+# resume_path="Auto"
+resume_path="Best"
 
 T=3
 max_iter=3 #3    # index starts from 1
@@ -71,4 +72,4 @@ freeze_stats="True"
     --scale_norm $scale_norm --do_flip $do_flip --do_crop $do_crop --do_photometric $do_photometric --do_erase $do_erase \
     --fc_dim $fc_dim --dropout $dropout --NUM_SAMPLE $NUM_SAMPLE --scheduler $scheduler --warmup_iters $warmup_iters \
     --cls_thresh $cls_thresh --reg_thresh $reg_thresh --max_pos_num $max_pos_num --neg_ratio $neg_ratio \
-    --freeze_affine $freeze_affine --freeze_stats $freeze_stats --lambda_reg $lambda_reg --lambda_neighbor $lambda_neighbor 
+    --freeze_affine $freeze_affine --freeze_stats $freeze_stats --lambda_reg $lambda_reg --lambda_neighbor $lambda_neighbor --inflate 
