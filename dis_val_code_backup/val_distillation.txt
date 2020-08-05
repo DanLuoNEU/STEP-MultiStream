@@ -1,0 +1,42 @@
+34p
+<generator object ObjectDetectionEvaluator.__init__.<locals>.<genexpr> at 0x7f832a31c6d0>
+{ 'PascalBoxes_PerformanceByCategory/AP@0.5IOU/background': 0.23490106920043174,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/p2p (human)': 0.10904440537792748,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/xfr (conveyor)': 0.37505077201932113,
+  'PascalBoxes_Precision/mAP@0.5IOU': 0.23966541553256013}
+<generator object ObjectDetectionEvaluator.__init__.<locals>.<genexpr> at 0x7f832a31ceb8>
+{ 'PascalBoxes_PerformanceByCategory/AP@0.5IOU/background': 0.35274812253226395,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/p2p (human)': 0.15487827868230714,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/xfr (conveyor)': 0.5406893832921288,
+  'PascalBoxes_Precision/mAP@0.5IOU': 0.34943859483556666}
+<generator object ObjectDetectionEvaluator.__init__.<locals>.<genexpr> at 0x7f832250fe60>
+{ 'PascalBoxes_PerformanceByCategory/AP@0.5IOU/background': 0.3599116157288101,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/p2p (human)': 0.17619173626853762,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/xfr (conveyor)': 0.6101661495062788,
+  'PascalBoxes_Precision/mAP@0.5IOU': 0.38208983383454215}
+Iter 1: MEANAP =>0.23966541553256013
+Iter 2: MEANAP =>0.34943859483556666
+Iter 3: MEANAP =>0.38208983383454215
+
+
+Validation TIME::: 342.712
+
+9p
+<generator object ObjectDetectionEvaluator.__init__.<locals>.<genexpr> at 0x7f2eb4808570>
+{ 'PascalBoxes_PerformanceByCategory/AP@0.5IOU/background': 0.14917845853315778,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/p2p (human)': 0.010963328424613634,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/xfr (conveyor)': 0.12548456333510055,
+  'PascalBoxes_Precision/mAP@0.5IOU': 0.09520878343095733}
+<generator object ObjectDetectionEvaluator.__init__.<locals>.<genexpr> at 0x7f2eb4808518>
+{ 'PascalBoxes_PerformanceByCategory/AP@0.5IOU/background': 0.32079473610712333,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/p2p (human)': 0.08621665306665763,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/xfr (conveyor)': 0.5725414960439237,
+  'PascalBoxes_Precision/mAP@0.5IOU': 0.32651762840590154}
+<generator object ObjectDetectionEvaluator.__init__.<locals>.<genexpr> at 0x7f2eb4808410>
+{ 'PascalBoxes_PerformanceByCategory/AP@0.5IOU/background': 0.373751301378855,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/p2p (human)': 0.16093953218840854,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/xfr (conveyor)': 0.5829966155667929,
+  'PascalBoxes_Precision/mAP@0.5IOU': 0.3725624830446855}
+Iter 1: MEANAP =>0.09520878343095733
+Iter 2: MEANAP =>0.32651762840590154
+Iter 3: MEANAP =>0.3725624830446855
