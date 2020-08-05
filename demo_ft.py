@@ -47,6 +47,7 @@ def main():
     args.data_root = 'examples/rgb_frames'
     args.save_root = os.path.join(os.path.dirname(args.data_root), 'results/')
     args.batch_size=1
+    args.anchor_mode='1'
     if not os.path.isdir(args.save_root):
         print("making " + str(args.save_root))
         os.makedirs(args.save_root)
@@ -58,7 +59,7 @@ def main():
     im_format = 'frame%05d.jpg'
     conf_thresh = 0.4
     global_thresh = 0.8    # used for cross-class NMS
-    args.id2class = {1:'transfer', 2: 'transfer', 3:'background'}
+    args.id2class = {1:'xfr', 2: 'tfr', 3:'background'}
     # args.id2class[1] = 'transfer' #'give'
     # args.id2class[2] = 'transfer' #'take'
     
@@ -114,10 +115,10 @@ def main():
     fout = open(os.path.join(args.save_root, 'results.txt'), 'w')
     torch.cuda.synchronize()
     t0 = time.time()
-    t_base = Timer("base")
-    t_context = Timer("context")
-    t_2b = Timer("2b")
-    t_rest = Timer("rest")
+    t_base = Timer("base",logger=None)
+    t_context = Timer("context",logger=None)
+    t_2b = Timer("2b",logger=None)
+    t_rest = Timer("rest",logger=None)
     with torch.no_grad():
         for _, (images, tubes, infos) in enumerate(dataloader):
 
@@ -217,35 +218,35 @@ def main():
                 
                 t_rest.stop()
                 # visualize results
-                if not os.path.isdir(os.path.join(args.save_root, info['video_name'])):
-                    os.makedirs(os.path.join(args.save_root, info['video_name']))
-                print (info)
-                overlay_image(os.path.join(args.data_root, info['video_name'], im_format % info['fid']),
-                              os.path.join(args.save_root, info['video_name'], im_format % info['fid']),
-                              pred_boxes = merged_result,
-                              id2class = args.id2class)
+                # if not os.path.isdir(os.path.join(args.save_root, info['video_name'])):
+                #     os.makedirs(os.path.join(args.save_root, info['video_name']))
+                # print (info)
+                # overlay_image(os.path.join(args.data_root, info['video_name'], im_format % info['fid']),
+                #               os.path.join(args.save_root, info['video_name'], im_format % info['fid']),
+                #               pred_boxes = merged_result,
+                #               id2class = args.id2class)
 
-                # write to files
-                for key in merged_result:
-                    box = np.asarray(key.split(','), dtype=np.float32)
-                    for l, s in merged_result[key]:
-                        fout.write('{0},{1:04},{2:.4},{3:.4},{4:.4},{5:.4},{6},{7:.4}\n'.format(
-                                                info['video_name'],
-                                                info['fid'],
-                                                box[0],box[1],box[2],box[3],
-                                                l, s))
+                # # write to files
+                # for key in merged_result:
+                #     box = np.asarray(key.split(','), dtype=np.float32)
+                #     for l, s in merged_result[key]:
+                #         fout.write('{0},{1:04},{2:.4},{3:.4},{4:.4},{5:.4},{6},{7:.4}\n'.format(
+                #                                 info['video_name'],
+                #                                 info['fid'],
+                #                                 box[0],box[1],box[2],box[3],
+                #                                 l, s))
             torch.cuda.synchronize()
             t1 = time.time()
-            print ("Batch time: ", t1-t0)
+            # print ("Batch time: ", t1-t0)
 
             torch.cuda.synchronize()
             t0 = time.time()
                     
     fout.close()
-    print(f"base total time: {Timer.timers['base']:0.4f} seconds")
-    print(f"context total time: {Timer.timers['context']:0.4f} seconds")
-    print(f"2b total time: {Timer.timers['2b']:0.4f} seconds")
-    print(f"rest total time: {Timer.timers['rest']:0.4f} seconds")
+    print(f"base avg time: {(Timer.timers['base']/len(dataloader)):0.4f} seconds")
+    print(f"context avg time: {(Timer.timers['context']/len(dataloader)):0.4f} seconds")
+    print(f"2b avg time: {(Timer.timers['2b']/len(dataloader)):0.4f} seconds")
+    print(f"rest avg time: {(Timer.timers['rest']/len(dataloader)):0.4f} seconds")
 
 if __name__ == "__main__":
     main()
