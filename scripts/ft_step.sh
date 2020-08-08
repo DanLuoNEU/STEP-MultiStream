@@ -8,7 +8,8 @@ cd ../
 
 data_root="/data/truppr/ava/"
 save_root="/data/Dan/ava_v2_1/cache/"
-pretrain_path="/data/Dan/ava_v2_1/cache/Cls-max1-i3d-two_branch/checkpoint_best.pth"
+# pretrain_path="/data/Dan/ava_v2_1/cache/Cls-max1-i3d-two_branch/checkpoint_best.pth"
+pretrain_path="/data/CLASP-DATA/DEMO-DATA/bestModel/RGB/side/checkpoint_best_rgb_cls_v2.pth"
 
 name="STEP"
 base_net="i3d"
@@ -25,7 +26,7 @@ pool_size=7
 
 # training schedule
 num_workers=16
-max_epochs=10 # 14
+max_epochs=50 # 14
 batch_size=4 # 8
 optimizer="adam"
 base_lr=7.5e-5
