@@ -25,7 +25,7 @@ pool_size=7
 
 # training schedule
 num_workers=8
-max_epochs=5 #10 #14
+max_epochs=15 #10 #14
 batch_size=1
 optimizer="adam"
 base_lr=5e-5

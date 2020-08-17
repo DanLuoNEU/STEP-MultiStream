@@ -135,7 +135,7 @@ def main():
         nets_of[key] = nets_of[key].cuda()
 
     ################ define distillation loss #################
-    loss_dif = nn.MSELoss()
+    loss_dif = nn.CrossEntropyLoss()
     ################ Training setup #################
     params_rgb = get_params(nets_rgb,args)
     params_of = get_params(nets_of,args)
