@@ -8,7 +8,7 @@ cd ../
 data_root="/data/truppr/ava/"
 save_root="/data/Dan/ava_v2_1/cache/"
 kinetics_pretrain="pretrained/i3d_kinetics.pth|pretrained/i3d_flow_kinetics.pth"
-pretrain_path='/data/Dan/ava_v2_1/cache/Cls_2s-max1-i3d-two_branch/20200529_64/checkpoint_best.pth'
+pretrain_path='/data/Dan/ava_v2_1/cache/Cls_2s-max1-i3d-two_branch/20200813/checkpoint_best.pth'
 
 name="STEP_2s"
 base_net="i3d"
@@ -26,7 +26,7 @@ pool_size=7
 
 # training schedule
 num_workers=8
-max_epochs=10
+max_epochs=25
 batch_size=1 # 2
 optimizer="adam"
 base_lr=7.5e-5

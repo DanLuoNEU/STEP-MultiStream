@@ -69,7 +69,7 @@ if args.cuda:
 
 #args.device = torch.device("cuda:0" if args.cuda and torch.cuda.is_available() else "cpu")
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"]="4,5,6,7"  # specify which GPU(s) to be used
+os.environ["CUDA_VISIBLE_DEVICES"]="2,7"  # specify which GPU(s) to be used
 gpu_count = torch.cuda.device_count()
 torch.backends.cudnn.benchmark=True
 best_mAP = 0

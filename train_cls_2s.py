@@ -68,7 +68,7 @@ if args.cuda:
 
 #args.device = torch.device("cuda:0" if args.cuda and torch.cuda.is_available() else "cpu")
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"]="4,5,6,7"  # specify which GPU(s) to be used
+os.environ["CUDA_VISIBLE_DEVICES"]="2,3,4,7"  # specify which GPU(s) to be used
 gpu_count = torch.cuda.device_count()
 torch.backends.cudnn.benchmark=True
 
@@ -375,7 +375,7 @@ def train(args, nets_rgb, nets_of, optimizer, scheduler, train_dataloader, val_d
             _,_,_,_, cur_loss_global_cls_rgb, _, _ = nets_rgb['det_net0'](pooled_feat_rgb, context_feat=temp_context_feat_rgb, tubes=flat_tubes, targets=flat_targets)
             _,_,_,_, cur_loss_global_cls_of, _, _ = nets_of['det_net0'](pooled_feat_of, context_feat=temp_context_feat_of, tubes=flat_tubes_of, targets=flat_targets_of)
             # Fuse the loss
-            cur_loss_global_cls = 0.6*cur_loss_global_cls_rgb+0.4*cur_loss_global_cls_of
+            cur_loss_global_cls = 0.5*cur_loss_global_cls_rgb+0.5*cur_loss_global_cls_of
             cur_loss_global_cls = cur_loss_global_cls.mean()
 
             ########### Gradient updates ############
@@ -596,7 +596,7 @@ def validate(args, val_dataloader, nets_rgb, nets_of, iteration=0, iou_thresh=0.
                     temp_context_feat_of[p] = context_feat_of[int(flat_tubes_of[p,0,0].item()/T_length),:,T_start:T_start+T_length].contiguous().clone()
             global_prob_rgb, _,_,_, _,_,_ = nets_rgb['det_net0'](pooled_feat_rgb, context_feat=temp_context_feat_rgb, tubes=None, targets=None)
             global_prob_of, _,_,_, _,_,_ = nets_of['det_net0'](pooled_feat_of, context_feat=temp_context_feat_of, tubes=None, targets=None)
-            global_prob = 0.6*global_prob_rgb + 0.4*global_prob_of
+            global_prob = 0.5*global_prob_rgb + 0.5*global_prob_of
             #################### Evaluation #################
 
             # loop for each batch
