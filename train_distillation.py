@@ -69,7 +69,7 @@ if args.cuda:
 
 #args.device = torch.device("cuda:0" if args.cuda and torch.cuda.is_available() else "cpu")
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"]="6,7"  # specify which GPU(s) to be used
+os.environ["CUDA_VISIBLE_DEVICES"]="2,7"  # specify which GPU(s) to be used
 gpu_count = torch.cuda.device_count()
 torch.backends.cudnn.benchmark=True
 best_mAP = 0
@@ -374,16 +374,21 @@ def train(args, nets_rgb, nets_of, optimizer, scheduler, train_dataloader, val_d
                         temp_context_feat_rgb[p] = context_feat_rgb[int(flat_tubes[p,0,0].item()/T_length),:,T_start:T_start+T_length].contiguous().clone()
                         temp_context_feat_of[p] = context_feat_of[int(flat_tubes_of[p,0,0].item()/T_length),:,T_start:T_start+T_length].contiguous().clone()
 
-                _,_,_,_, cur_loss_global_cls_rgb, cur_loss_local_loc_rgb, cur_loss_neighbor_loc_rgb, global_feat_flat_rgb = nets_rgb['det_net%d' % (i-1)](pooled_feat_rgb, context_feat=temp_context_feat_rgb, tubes=flat_tubes, targets=flat_targets)
-                _,_,_,_, cur_loss_global_cls_of, cur_loss_local_loc_of, cur_loss_neighbor_loc_of, global_feat_flat_of = nets_of['det_net%d' % (i-1)](pooled_feat_of, context_feat=temp_context_feat_of, tubes=flat_tubes_of, targets=flat_targets_of)
+                global_prob_rgb,_,_,_, cur_loss_global_cls_rgb, cur_loss_local_loc_rgb, cur_loss_neighbor_loc_rgb, global_feat_flat_rgb = nets_rgb['det_net%d' % (i-1)](pooled_feat_rgb, context_feat=temp_context_feat_rgb, tubes=flat_tubes, targets=flat_targets)
+                global_prob_of,_,_,_, cur_loss_global_cls_of, cur_loss_local_loc_of, cur_loss_neighbor_loc_of, global_feat_flat_of = nets_of['det_net%d' % (i-1)](pooled_feat_of, context_feat=temp_context_feat_of, tubes=flat_tubes_of, targets=flat_targets_of)
                 # Compute the Distillation Loss
-                cur_loss_global_cls_dif = loss_dif(global_feat_flat_rgb, global_feat_flat_of)
+                # cur_loss_global_cls_dif = loss_dif(global_feat_flat_rgb, global_feat_flat_of)
+                global_prob_of_gt = torch.argmax(global_prob_of,dim=1)
+                cur_loss_global_cls_dif = loss_dif(global_prob_rgb, global_prob_of_gt)
                 # Fuse the loss
-                cur_loss_global_cls = 0.1*cur_loss_global_cls_rgb+0.9*cur_loss_global_cls_of+0.2*cur_loss_global_cls_dif
+                # print(cur_loss_global_cls_rgb.mean(), cur_loss_global_cls_of.mean(), cur_loss_global_cls_dif.mean()) # e0
+                # print(cur_loss_local_loc_rgb.mean(), cur_loss_local_loc_of.mean()) # e-1
+                # print(cur_loss_neighbor_loc_rgb.mean(), cur_loss_neighbor_loc_of.mean()) # 0 / 0
+                cur_loss_global_cls = 0.33*cur_loss_global_cls_rgb+0.33*cur_loss_global_cls_of+0.33*cur_loss_global_cls_dif
                 cur_loss_global_cls = cur_loss_global_cls.mean()
-                cur_loss_local_loc = 0.1*cur_loss_local_loc_rgb+0.9*cur_loss_local_loc_of+0.2*cur_loss_global_cls_dif
+                cur_loss_local_loc = 0.5*cur_loss_local_loc_rgb+0.5*cur_loss_local_loc_of
                 cur_loss_local_loc = cur_loss_local_loc.mean()
-                cur_loss_neighbor_loc = 0.1*cur_loss_neighbor_loc_rgb+0.9*cur_loss_neighbor_loc_of+0.2*cur_loss_global_cls_dif
+                cur_loss_neighbor_loc = 0.5*cur_loss_neighbor_loc_rgb+0.5*cur_loss_neighbor_loc_of
                 cur_loss_neighbor_loc = cur_loss_neighbor_loc.mean()
 
                 cur_loss = cur_loss_global_cls + \
