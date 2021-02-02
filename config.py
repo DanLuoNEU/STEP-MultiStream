@@ -29,7 +29,7 @@ def parse_config():
     parser.add_argument('--kinetics_pretrain', default=None, type=str2none, help='Path to the Kinetics pretrained model')
     parser.add_argument('--proposal_path_train', default=None, type=str2none, help='Path to the extracted proposals')
     parser.add_argument('--proposal_path_val', default=None, type=str2none, help='Path to the extracted proposals')
-    parser.add_argument('--input_type', default='rgb', type=str, help='Input type for model: rgb | flow | stack')
+    parser.add_argument('--input_type', default='rgb', type=str, help='Input type for model: rgb | flow | 2s')
     parser.add_argument('--dataset', default='ava', help='dataset name')
     parser.add_argument('--num_classes', default=60, type=int, help='Number of classes')
     parser.add_argument('--T', default=3, type=int, help='Sequence length for a tube')
