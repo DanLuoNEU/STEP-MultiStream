@@ -9,10 +9,11 @@ data_root="/data/truppr/ava/"
 save_root="/data/Dan/ava_v2_1/cache/"
 pretrain_path='/data/Dan/ava_v2_1/cache/Cls_of-max1-i3d-two_branch/checkpoint_best.pth'
 
-name="STEP_of"
+name="STEP_of_topdown_part"
 base_net="i3d"
 det_net="two_branch"
-resume_path="Auto"
+# resume_path="Auto"
+resume_path="/data/CLASP-DATA/pretrained/STEP/bestModel/Flows/checkpoint_best_of_v2.pth"
 
 input_type="flow"
 T=3
@@ -25,7 +26,7 @@ pool_size=7
 
 # training schedule
 num_workers=16
-max_epochs=14
+max_epochs=20
 batch_size=2 # 4
 optimizer="adam"
 base_lr=7.5e-5

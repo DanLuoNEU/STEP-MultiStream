@@ -44,10 +44,9 @@ def overlay_image(image_path, output_path, gt_boxes=None, pred_boxes=None, id2cl
             count = 0
             for label, score in pred_boxes[key]:
                 # Dont show background
-                if id2class[label]=="background":
+                if id2class[label]=="bkgd":
                     continue
-                draw.text((box[0]+10, box[1]+10+count*20), '{}: {:.2f}'.format(id2class[label] if id2class is not None else label,
-                                                                               score), fill="red",font=font)
+                draw.text((box[0]+10, box[1]+10+count*20), '{}'.format(id2class[label] if id2class is not None else label), fill="red",font=font)
                 break
                 count += 1
 

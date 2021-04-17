@@ -278,12 +278,12 @@ class AVADataset(data.Dataset):
 
         self.imgpath_rgb = os.path.join(root, 'frames/')
         if self.mode == 'train':
-            self.label_path = os.path.join('/data/Dan/ava_v2_1/', 'label/train.pkl')
+            self.label_path = os.path.join(root, 'label/train.pkl')
         elif self.mode == 'val':
-            self.label_path = os.path.join('/data/Dan/ava_v2_1/', 'label/val.pkl')
+            self.label_path = os.path.join(root, 'label/val.pkl')
         else:
             self.stride = 1
-            self.label_path = os.path.join('/data/Dan/ava_v2_1/', 'label/val.pkl')
+            self.label_path = os.path.join(root, 'label/val.pkl')
             self.foreground_only = False
            
         data_list, videoname_list = make_list(self.label_path, self.chunks, self.stride, self.foreground_only)

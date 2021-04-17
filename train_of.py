@@ -30,7 +30,7 @@ from utils.eval_utils import ava_evaluation
 from external.ActivityNet.Evaluation.get_ava_performance import read_labelmap
 
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"]="0,1,2,3,4,5,6,7"  # specify which GPU(s) to be used
+os.environ["CUDA_VISIBLE_DEVICES"]="5,6,7"  # specify which GPU(s) to be used
 
 args = parse_config()
 
@@ -76,7 +76,7 @@ def main():
 
     args.exp_name = '{}-max{}-{}-{}'.format(args.name, args.max_iter, args.base_net, args.det_net)
     args.save_root = os.path.join(args.save_root, args.exp_name+'/')
-    args.scale_norm = 0
+    args.scale_norm = 0 # Optical Flow data scale is in [-1,1]
 
     if not os.path.isdir(args.save_root):
         os.makedirs(args.save_root)
@@ -86,11 +86,11 @@ def main():
     log_file.write(args.exp_name+'\n')
 
     ################ DataLoader setup #################
-
+    # Data Augmentation
     print('Loading Dataset...')
     augmentation = TubeAugmentation(args.image_size, args.means, args.stds, do_flip=args.do_flip, do_crop=args.do_crop, do_photometric=args.do_photometric, scale=args.scale_norm, do_erase=args.do_erase)
     log_file.write("Data augmentation: "+ str(augmentation))
-
+    # Dataloader
     train_dataset = AVADataset(args.data_root, 'train', args.input_type, args.T, args.NUM_CHUNKS[args.max_iter], args.fps, augmentation, proposal_path=args.proposal_path_train, stride=1, anchor_mode=args.anchor_mode, num_classes=args.num_classes, foreground_only=True)
     val_dataset = AVADataset(args.data_root, 'val', args.input_type, args.T, args.NUM_CHUNKS[args.max_iter], args.fps, BaseTransform(args.image_size, args.means, args.stds,args.scale_norm), proposal_path=args.proposal_path_val, stride=1, anchor_mode=args.anchor_mode, num_classes=args.num_classes, foreground_only=True)
 
@@ -105,15 +105,14 @@ def main():
     log_file.write("Validation size: " + str(len(val_dataset)) + "\n")
     print('Training STEP on ', train_dataset.name)
 
-    ################ define models #################
+    ################ Define models #################
 
     nets = OrderedDict()
     # backbone network
     nets['base_net'] = BaseNet(args)
     # ROI pooling
     nets['roi_net'] = ROINet(args.pool_mode, args.pool_size)
-
-    # detection network
+    # Detection network
     for i in range(args.max_iter):
         if args.det_net == "two_branch":
             nets['det_net%d' % i] = TwoBranchNet(args)
@@ -122,12 +121,12 @@ def main():
     if not args.no_context:
         # context branch
         nets['context_net'] = ContextNet(args)
-    
+    # Use GPU
     for key in nets:
         nets[key] = nets[key].cuda()
 
     ################ Training setup #################
-    ################ Optimizer and Scheduler setup #################
+    # Optimizer Setup
     params = get_params(nets, args)
     if args.optimizer == 'sgd':
         optimizer = optim.SGD(params, lr=args.det_lr, momentum=args.momentum, weight_decay=args.weight_decay)
@@ -135,18 +134,16 @@ def main():
         optimizer = optim.Adam(params, lr=args.det_lr)
     else:
         raise NotImplementedError
-
+    # Scheduler Setup
     if args.scheduler == "cosine":
         scheduler = WarmupCosineLR(optimizer, args.milestones, args.min_ratio, args.cycle_decay, args.warmup_iters)
     else:
         scheduler = WarmupStepLR(optimizer, args.milestones, args.warmup_iters)
-
     # Initialize AMP if needed
     if args.fp16:
         models, optimizer = amp.initialize([net for _,net in nets.items()], optimizer, opt_level="O1")
         for i, key in enumerate(nets):
             nets[key] = models[i]
-
     # DataParallel is used
     nets['base_net'] = torch.nn.DataParallel(nets['base_net'])
     if not args.no_context:
@@ -157,8 +154,7 @@ def main():
         nets['det_net%d' % i].set_device('cuda:%d' % ((i+1)%gpu_count))
 
     ############ Pretrain & Resume ###########
-
-    # load pretrained model if needed
+    # Load pretrained model if needed
     if args.pretrain_path is not None:
         if os.path.isfile(args.pretrain_path):
             print ("Loading pretrain model from %s" % args.pretrain_path)
@@ -178,8 +174,7 @@ def main():
 
         del checkpoint
         torch.cuda.empty_cache()
-
-    # resume trained model if needed
+    # Resume trained model if needed
     if args.resume_path is not None:
         if args.resume_path.lower() == "best":
             model_path = args.save_root+'/checkpoint_best.pth'
@@ -221,6 +216,8 @@ def main():
                 args.start_epochs = checkpoint['epochs']
             else:
                 args.start_epochs = checkpoint['epochs'] - 1
+            args.start_iteration=1
+            args.start_epochs=0
             best_mAP = checkpoint['val_mAP']
 
             del checkpoint

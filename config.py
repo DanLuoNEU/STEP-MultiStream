@@ -25,6 +25,8 @@ def parse_config():
     parser.set_defaults(no_context=False)
     parser.add_argument('--fp16', action='store_true', help='If true, fp16 is used.')
     parser.set_defaults(fp16=False)
+    parser.add_argument('--view_ft', action='store_true', help='If true, fp16 is used.')
+    parser.set_defaults(view_ft=False)
     
     parser.add_argument('--kinetics_pretrain', default=None, type=str2none, help='Path to the Kinetics pretrained model')
     parser.add_argument('--proposal_path_train', default=None, type=str2none, help='Path to the extracted proposals')

@@ -3,6 +3,7 @@ build/
 datasets/
 examples/
 STEP.egg-info/
+test/
 
 .vscode/
 __pycache__/

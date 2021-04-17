@@ -5,11 +5,11 @@
 
 cd ../
 
-data_root="/data/truppr/ava/"
+data_root="/data/CLASP-DATA/CLASP2-STEP/data"
 save_root="/data/Dan/ava_v2_1/cache/"
 kinetics_pretrain="pretrained/i3d_kinetics.pth"
 
-name="Cls"
+name="Cls-cam13"
 base_net="i3d"
 det_net="two_branch"
 # resume_path="Auto"
@@ -23,9 +23,9 @@ pool_mode="align"
 pool_size=7
 
 # training schedule
-num_workers=16
-max_epochs=10 #14
-batch_size=4
+num_workers=4 # 16
+max_epochs=10 # 14
+batch_size=1
 optimizer="adam"
 base_lr=5e-5
 det_lr0=1e-4

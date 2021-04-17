@@ -28,7 +28,7 @@ from utils.eval_utils import ava_evaluation
 from external.ActivityNet.Evaluation.get_ava_performance import read_labelmap
 
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"]="0,1,2,3"  # specify which GPU(s) to be used
+os.environ["CUDA_VISIBLE_DEVICES"]="6,7"  # specify which GPU(s) to be used
 
 args = parse_config()
 
@@ -44,9 +44,9 @@ except ImportError:
 args.image_size = (WIDTH, HEIGHT)
 label_dict = {}
 if args.num_classes != 80:
-    if args.num_classes == 3:
+    if args.num_classes == 3: # CLASP
         label_map = os.path.join(args.data_root, 'label/ava_finetune.pbtxt')
-    else: #60
+    else: # ava-60
         label_map = os.path.join(args.data_root, 'label/ava_action_list_v2.1_for_activitynet_2018.pbtxt')
     categories, class_whitelist = read_labelmap(open(label_map, 'r'))
     classes = [(val['id'], val['name']) for val in categories]
@@ -71,7 +71,7 @@ best_mAP = 0
 
 def main():
     global best_mAP
-
+    # Log File Setup
     args.exp_name = '{}-max{}-{}-{}'.format(args.name, args.max_iter, args.base_net, args.det_net)
     args.save_root = os.path.join(args.save_root, args.exp_name+'/')
     if not os.path.isdir(args.save_root):
@@ -82,11 +82,11 @@ def main():
     log_file.write(args.exp_name+'\n')
 
     ################ DataLoader setup #################
-
+    # Data Augmentation
     print('Loading Dataset...')
     augmentation = TubeAugmentation(args.image_size, args.means, args.stds, do_flip=args.do_flip, do_crop=args.do_crop, do_photometric=args.do_photometric, scale=args.scale_norm, do_erase=args.do_erase)
     log_file.write("Data augmentation: "+ str(augmentation))
-
+    # DataLoader
     train_dataset = AVADataset(args.data_root, 'train', args.input_type, args.T, args.NUM_CHUNKS[args.max_iter], args.fps, augmentation, proposal_path=args.proposal_path_train, stride=1, anchor_mode=args.anchor_mode, num_classes=args.num_classes, foreground_only=True)
     val_dataset = AVADataset(args.data_root, 'val', args.input_type, args.T, args.NUM_CHUNKS[args.max_iter], args.fps, BaseTransform(args.image_size, args.means, args.stds,args.scale_norm), proposal_path=args.proposal_path_val, stride=1, anchor_mode=args.anchor_mode, num_classes=args.num_classes, foreground_only=True)
 
@@ -108,7 +108,6 @@ def main():
     nets['base_net'] = BaseNet(args)
     # ROI pooling
     nets['roi_net'] = ROINet(args.pool_mode, args.pool_size)
-
     # detection network
     for i in range(args.max_iter):
         if args.det_net == "two_branch":
@@ -118,12 +117,12 @@ def main():
     if not args.no_context:
         # context branch
         nets['context_net'] = ContextNet(args)
-    
+    # Transfer model to GPU
     for key in nets:
         nets[key] = nets[key].cuda()
 
     ################ Training setup #################
-    ################ Optimizer and Scheduler setup #################
+    # Optimizer Setup
     params = get_params(nets, args)
     if args.optimizer == 'sgd':
         optimizer = optim.SGD(params, lr=args.det_lr, momentum=args.momentum, weight_decay=args.weight_decay)
@@ -131,18 +130,16 @@ def main():
         optimizer = optim.Adam(params, lr=args.det_lr)
     else:
         raise NotImplementedError
-
+    # Scheduler Setup
     if args.scheduler == "cosine":
         scheduler = WarmupCosineLR(optimizer, args.milestones, args.min_ratio, args.cycle_decay, args.warmup_iters)
     else:
         scheduler = WarmupStepLR(optimizer, args.milestones, args.warmup_iters)
-
     # Initialize AMP if needed
     if args.fp16:
         models, optimizer = amp.initialize([net for _,net in nets.items()], optimizer, opt_level="O1")
         for i, key in enumerate(nets):
             nets[key] = models[i]
-
     # DataParallel is used
     nets['base_net'] = torch.nn.DataParallel(nets['base_net'])
     if not args.no_context:
@@ -153,7 +150,6 @@ def main():
         nets['det_net%d' % i].set_device('cuda:%d' % ((i+1)%gpu_count))
 
     ############ Pretrain & Resume ###########
-
     # load pretrained model if needed
     if args.pretrain_path is not None:
         if os.path.isfile(args.pretrain_path):
@@ -222,14 +218,28 @@ def main():
             del checkpoint
             torch.cuda.empty_cache()
 
+    # View Finetune Argument
+    if args.view_ft:
+        # Adjust the view
+        args.start_epochs = 0
+        args.start_iteration = 1
+        # Adjust the scheduler
+        # print(scheduler.last_epoch)
+        # scheduler.last_epoch=0 # here iterations are epochs for scheduler
+        args.milestones = [int(np.ceil(len(train_dataset) / args.batch_size))*(cycle+1) for cycle in range(args.max_epochs)]
+        # Scheduler Setup
+        if args.scheduler == "cosine":
+            scheduler = WarmupCosineLR(optimizer, args.milestones, args.min_ratio, args.cycle_decay, args.warmup_iters)
+        else:
+            scheduler = WarmupStepLR(optimizer, args.milestones, args.warmup_iters)
     ######################################################
-
+    
     for arg in sorted(vars(args)):
         print(arg, getattr(args, arg))
         log_file.write(str(arg)+': '+str(getattr(args, arg))+'\n')
 
-    for i in range(args.max_iter):
-        log_file.write(str(nets['det_net%d' % i])+'\n\n')
+    # for i in range(args.max_iter):
+    #     log_file.write(str(nets['det_net%d' % i])+'\n\n')
 
     # Start training
     train(args, nets, optimizer, scheduler, train_dataloader, val_dataloader, log_file)

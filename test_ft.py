@@ -1,4 +1,6 @@
+# 
 
+### Before testing, change the label to test label val.pkl
 """
 Copyright (C) 2019 NVIDIA Corporation.  All rights reserved.
 Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode).
@@ -28,12 +30,18 @@ from data.augmentations import BaseTransform
 from utils.eval_utils import ava_evaluation
 from external.ActivityNet.Evaluation.get_ava_performance import read_labelmap
 
+os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"]="7"  # specify which GPU(s) to be used
 
 def main():
 
     ################## Load pretrained model and configurations ###################
 
     checkpoint_path = 'pretrained/ava_step.pth'
+    # checkpoint_path = "/data/CLASP-DATA/pretrained/STEP/bestModel/RGB/side/checkpoint_best_rgb_v2.pth" #all side, no top
+    # checkpoint_path = "/data/Dan/ava_v2_1/cache/STEP-topdown-part(600+)-max3-i3d-two_branch/checkpoint_best.pth" # part finetune
+    checkpoint_path = "/data/CLASP-DATA/pretrained/STEP/bestModel/RGB/topdown/checkpoint_best_rgb_td.pth"
+
     if os.path.isfile(checkpoint_path):
         print ("Loading pretrain model from %s" % checkpoint_path)
         map_location = 'cuda:0'
@@ -42,20 +50,29 @@ def main():
     else:
         raise ValueError("Pretrain model not found!", checkpoint_path)
 
+        
+    args.data_root = "/data/CLASP-DATA/CLASP2-STEP/data"
+    args.save_root = f"test/td-demo-model-ori"
+
     if not os.path.isdir(args.save_root):
         os.makedirs(args.save_root)
-    
+
     label_dict = {}
-    if args.num_classes == 60:
-        label_map = os.path.join(args.data_root, 'label/ava_action_list_v2.1_for_activitynet_2018.pbtxt')
+    if args.num_classes != 80:
+        if args.num_classes == 3:
+            label_map = os.path.join(args.data_root, 'label/ava_finetune.pbtxt')
+        else: #60
+            label_map = os.path.join(args.data_root, 'label/ava_action_list_v2.1_for_activitynet_2018.pbtxt')
         categories, class_whitelist = read_labelmap(open(label_map, 'r'))
         classes = [(val['id'], val['name']) for val in categories]
-        id2class = {c[0]: c[1] for c in classes}    # gt class id (1~80) --> class name
+        id2class = {c[0]: c[1] for c in classes}    # gt class id (1~3) --> class name
         for i, c in enumerate(sorted(list(class_whitelist))):
             label_dict[i] = c
     else:
         for i in range(80):
             label_dict[i] = i+1
+    args.label_dict = label_dict
+    args.id2class = {1:'p2p', 2: 'xfr', 3:'bkgd'}
 
     ################ Define models #################
 
@@ -97,7 +114,8 @@ def main():
     
     ################ DataLoader setup #################
 
-    dataset = AVADataset(args.data_root, 'test', args.input_type, args.T, args.NUM_CHUNKS[args.max_iter], args.fps, BaseTransform(args.image_size, args.means, args.stds,args.scale_norm), proposal_path=args.proposal_path_val, stride=1, anchor_mode=args.anchor_mode, num_classes=args.num_classes, foreground_only=False)
+    # dataset = AVADataset(args.data_root, 'test', args.input_type, args.T, args.NUM_CHUNKS[args.max_iter], args.fps, BaseTransform(args.image_size, args.means, args.stds,args.scale_norm), proposal_path=args.proposal_path_val, stride=1, anchor_mode=args.anchor_mode, num_classes=args.num_classes, foreground_only=False)
+    dataset = AVADataset(args.data_root, 'val', args.input_type, args.T, args.NUM_CHUNKS[args.max_iter], args.fps, BaseTransform(args.image_size, args.means, args.stds,args.scale_norm), proposal_path=args.proposal_path_val, stride=1, anchor_mode=args.anchor_mode, num_classes=args.num_classes, foreground_only=True)
     dataloader = torch.utils.data.DataLoader(dataset, args.batch_size, num_workers=args.num_workers,
                                   shuffle=False, collate_fn=detection_collate, pin_memory=True)
 
@@ -110,12 +128,12 @@ def main():
     output_files = []
     fouts = []
     for i in range(args.max_iter):
-        output_file = args.save_root+'testing_result-iter'+str(i+1)+'.csv'
+        output_file = os.path.join(args.save_root,'testing_result-iter'+str(i+1)+'.csv')
         output_files.append(output_file)
         f = open(output_file, 'w')
         fouts.append(f)
 
-    gt_file = args.save_root+'testing_gt.csv'
+    gt_file = os.path.join(args.save_root, 'testing_gt.csv')
     fout = open(gt_file, 'w')
 
     torch.cuda.synchronize()
@@ -226,7 +244,7 @@ def main():
         all_metrics.append(metrics)
 
     # Logging
-    log_name = args.save_root+"testing_results.log"
+    log_name = os.path.join(args.save_root, "testing_results.log")
     log_file = open(log_name, "w", 1)
     prt_str = ''
     for i in range(args.max_iter):

@@ -1,4 +1,3 @@
-
 """
 Copyright (C) 2019 NVIDIA Corporation.  All rights reserved.
 Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode).
@@ -6,17 +5,18 @@ Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses
 
 import os
 import sys
+import glob
+import time
+import numpy as np
+from datetime import datetime
+import torchvision
+from collections import OrderedDict
+#from tensorboardX import SummaryWriter
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.utils.data
-import torchvision
-import numpy as np
-from collections import OrderedDict
-import time
-from datetime import datetime
-#from tensorboardX import SummaryWriter
-import glob
 
 from config import parse_config
 from models import BaseNet, ROINet, TwoBranchNet, ContextNet
@@ -33,8 +33,9 @@ os.environ["CUDA_VISIBLE_DEVICES"]="7"  # specify which GPU(s) to be used
 def main():
 
     ################## Customize your configuratons here ###################
-
-    checkpoint_path = '/data/Dan/ava_v2_1/cache/STEP-max3-i3d-two_branch/checkpoint_best.pth'
+    # checkpoint_path = '/data/CLASP-DATA/pretrained/STEP/bestModel/RGB/topdown/checkpoint_best_rgb_20200501_td1113.pth'
+    # checkpoint_path = "/data/Dan/ava_v2_1/cache/STEP-topdown-part-max3-i3d-two_branch/checkpoint_best.pth"
+    checkpoint_path = "/data/CLASP-DATA/pretrained/STEP/bestModel/RGB/side/checkpoint_best_rgb_v2.pth"
     if os.path.isfile(checkpoint_path):
         print ("Loading pretrain model from %s" % checkpoint_path)
         map_location = 'cuda:0'
@@ -44,8 +45,9 @@ def main():
         raise ValueError("Pretrain model not found!", checkpoint_path)
 
     # TODO: Set data_root to the customized input dataset
-    args.data_root = 'examples/rgb_frames'
-    args.save_root = os.path.join(os.path.dirname(args.data_root), 'results/')
+    args.data_root = '/data/ALERT-SHARE/20191023exp2training/frames/10fps/topdown'
+    args.data_root = '/data/CLASP-DATA/CLASP2-STEP/data/key-frame_Test'
+    args.save_root = os.path.join(os.path.dirname(args.data_root), 'results-keyframe/')
     args.batch_size=1
     args.anchor_mode='1'
     if not os.path.isdir(args.save_root):
@@ -55,13 +57,11 @@ def main():
         print("already exists " + str(args.save_root))
 
     # TODO: modify this setting according to the actual frame rate and file name
-    source_fps = 30
-    im_format = 'frame%05d.jpg'
+    source_fps = 10
+    im_format = 'frame_%05d.jpg'
     conf_thresh = 0.4
     global_thresh = 0.8    # used for cross-class NMS
-    args.id2class = {1:'xfr', 2: 'tfr', 3:'background'}
-    # args.id2class[1] = 'transfer' #'give'
-    # args.id2class[2] = 'transfer' #'take'
+    args.id2class = {1:'p2p', 2: 'xfr', 3:'bkgd'}
     
     ################ Define models #################
 
@@ -218,13 +218,13 @@ def main():
                 
                 t_rest.stop()
                 # visualize results
-                # if not os.path.isdir(os.path.join(args.save_root, info['video_name'])):
-                #     os.makedirs(os.path.join(args.save_root, info['video_name']))
-                # print (info)
-                # overlay_image(os.path.join(args.data_root, info['video_name'], im_format % info['fid']),
-                #               os.path.join(args.save_root, info['video_name'], im_format % info['fid']),
-                #               pred_boxes = merged_result,
-                #               id2class = args.id2class)
+                if not os.path.isdir(os.path.join(args.save_root, info['video_name'])):
+                    os.makedirs(os.path.join(args.save_root, info['video_name']))
+                print(info['fid'])
+                overlay_image(os.path.join(args.data_root, info['video_name'], im_format % info['fid']),
+                              os.path.join(args.save_root, info['video_name'], im_format % info['fid']),
+                              pred_boxes = merged_result,
+                              id2class = args.id2class)
 
                 # # write to files
                 # for key in merged_result:

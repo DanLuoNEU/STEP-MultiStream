@@ -6,18 +6,23 @@
 
 cd ../
 
-data_root="/data/truppr/ava/"
+data_root="/data/CLASP-DATA/CLASP2-STEP/data"
 save_root="/data/Dan/ava_v2_1/cache/"
+# classification pretrain_path
 # pretrain_path="/data/Dan/ava_v2_1/cache/Cls-max1-i3d-two_branch/checkpoint_best.pth"
-pretrain_path="/data/CLASP-DATA/DEMO-DATA/bestModel/RGB/side/checkpoint_best_rgb_cls_v2.pth"
+# pretrain_path="/data/CLASP-DATA/pretrained/STEP/bestModel/RGB/side/checkpoint_best_rgb_cls_v2.pth"
+pretrain_path=None
+# pretrain_path="/data/Dan/ava_v2_1/cache/Cls-cam13-max1-i3d-two_branch/checkpoint_best.pth"
 
-name="STEP"
+name="STEP-cam13cam11"
 base_net="i3d"
 det_net="two_branch"
 resume_path="Auto"
+# resume_path="/data/CLASP-DATA/pretrained/STEP/bestModel/RGB/side/checkpoint_best_rgb_v2.pth"
+resume_path="/data/Dan/ava_v2_1/cache/STEP-cam13-max3-i3d-two_branch/checkpoint_best.pth"
 
 T=3
-max_iter=3 #3    # index starts from 1
+max_iter=3   # index starts from 1
 iterative_mode="temporal"
 anchor_mode="1"
 temporal_mode="predict"
@@ -25,9 +30,9 @@ pool_mode="align"
 pool_size=7
 
 # training schedule
-num_workers=16
-max_epochs=50 # 14
-batch_size=4 # 8
+num_workers=4
+max_epochs=5 # 15
+batch_size=1 # 8
 optimizer="adam"
 base_lr=7.5e-5
 det_lr0=1.5e-4
@@ -36,7 +41,7 @@ save_step=250 # 11465
 print_step=20 # 500
 scheduler="cosine"
 milestones="-1"
-warmup_iters=50 # 1000
+warmup_iters=300 # 1000
 
 # losses
 dropout=0.3
@@ -71,4 +76,5 @@ freeze_stats="True"
     --scale_norm $scale_norm --do_flip $do_flip --do_crop $do_crop --do_photometric $do_photometric --do_erase $do_erase \
     --fc_dim $fc_dim --dropout $dropout --NUM_SAMPLE $NUM_SAMPLE --scheduler $scheduler --warmup_iters $warmup_iters \
     --cls_thresh $cls_thresh --reg_thresh $reg_thresh --max_pos_num $max_pos_num --neg_ratio $neg_ratio \
-    --freeze_affine $freeze_affine --freeze_stats $freeze_stats --lambda_reg $lambda_reg --lambda_neighbor $lambda_neighbor 
+    --freeze_affine $freeze_affine --freeze_stats $freeze_stats --lambda_reg $lambda_reg --lambda_neighbor $lambda_neighbor \
+    --view_ft
