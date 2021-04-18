@@ -49,8 +49,7 @@ def main():
         args = checkpoint['cfg']
     else:
         raise ValueError("Pretrain model not found!", checkpoint_path)
-
-        
+      
     args.data_root = "/data/CLASP-DATA/CLASP2-STEP/data"
     args.save_root = f"test/td-demo-model-ori"
 
@@ -65,7 +64,7 @@ def main():
             label_map = os.path.join(args.data_root, 'label/ava_action_list_v2.1_for_activitynet_2018.pbtxt')
         categories, class_whitelist = read_labelmap(open(label_map, 'r'))
         classes = [(val['id'], val['name']) for val in categories]
-        id2class = {c[0]: c[1] for c in classes}    # gt class id (1~3) --> class name
+        id2class = {c[0]: c[1] for c in classes}    # gt class id (1~3/60) --> class name
         for i, c in enumerate(sorted(list(class_whitelist))):
             label_dict[i] = c
     else:
