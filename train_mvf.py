@@ -1,37 +1,38 @@
-"""
-Copyright (C) 2019 NVIDIA Corporation.  All rights reserved.
-Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode).
-"""
+# Whole Architecture For Action Detection
+# 06/14/2021, Dan
 
+# Requirements
+## System
 import os
 import time
 import glob
 import numpy as np
 from datetime import datetime
 from collections import OrderedDict
+## PyTorch
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.utils.data
 import torchvision
-
-from config import parse_config
-from models import BaseNet, ROINet, TwoBranchNet, ContextNet
+## Packages
+from config_mvf import parse_config
+from models import ROINet
+from models.networks_mvf import BaseNet
+from models.two_branch_mvf import TwoBranchNet
+from models.utils_mvf.checkpoint import load_checkpoint
 from external.maskrcnn_benchmark.roi_layers import nms
-from utils.utils import inference, train_select, AverageMeter, get_gpu_memory
+from utils.utils_mvf import inference, train_select, AverageMeter, get_gpu_memory
 from utils.tube_utils import flatten_tubes, valid_tubes
-from utils.solver import WarmupCosineLR, WarmupStepLR, get_params
-from data.ava import AVADataset, detection_collate, WIDTH, HEIGHT
+from utils.solver_mvf import WarmupCosineLR, WarmupStepLR, get_params
+from data.mvf import MVFDataset, detection_collate, WIDTH, HEIGHT, TEM_REDUCE
 from data.augmentations import TubeAugmentation, BaseTransform
 from utils.eval_utils import ava_evaluation
 from external.ActivityNet.Evaluation.get_ava_performance import read_labelmap
 
-os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"]="6,7"  # specify which GPU(s) to be used
 
+# Prepare arguments
 args = parse_config()
-args.no_context = True # If True, comment ln 396,451; if False, uncomment
-
 try:
     import apex
     from apex import amp
@@ -40,14 +41,14 @@ except ImportError:
     print ('Warning: If you want to use fp16, please apex with cuda support (https://github.com/NVIDIA/apex) and update pytorch to 1.0')
     args.fp16 = False
     pass
-
+## Input Image Size
 args.image_size = (WIDTH, HEIGHT)
 label_dict = {}
 if args.num_classes != 80:
-    if args.num_classes == 60: # ava-60
+    if args.num_classes == 3: # CLASP
+        label_map = os.path.join(args.data_root, 'label/ava_finetune.pbtxt')
+    else: # ava-60
         label_map = os.path.join(args.data_root, 'label/ava_action_list_v2.1_for_activitynet_2018.pbtxt')
-    else: # CLASP
-        label_map = os.path.join(args.data_root, '20211007-label_3cls/ava_finetune.pbtxt')
     categories, class_whitelist = read_labelmap(open(label_map, 'r'))
     classes = [(val['id'], val['name']) for val in categories]
     id2class = {c[0]: c[1] for c in classes}    # gt class id (1~3) --> class name
@@ -58,25 +59,26 @@ else:
         label_dict[i] = i+1
 args.label_dict = label_dict
 args.id2class = id2class
-
 ## set random seeds
 np.random.seed(args.man_seed)
 torch.manual_seed(args.man_seed)
 if args.cuda:
     torch.cuda.manual_seed_all(args.man_seed)
-
+## GPU
+os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"]="1"  # specify which GPU(s) to be used
 gpu_count = torch.cuda.device_count()
 torch.backends.cudnn.benchmark=True
 best_mAP = 0
 
 def main():
     global best_mAP
-    # Log File Setup
-    args.exp_name = '{}-max{}-{}-{}'.format(args.name, args.max_iter, args.base_net, args.det_net)
+    # Experiment Folder
+    args.exp_name = '{}-max{}'.format(args.name, args.max_iter)
     args.save_root = os.path.join(args.save_root, args.exp_name+'/')
     if not os.path.isdir(args.save_root):
         os.makedirs(args.save_root)
-
+    # Log File Setup
     log_name = args.save_root+"training-"+datetime.strftime(datetime.now(), '%Y%m%d-%H%M%S')+".log"
     log_file = open(log_name, "w", 1)
     log_file.write(args.exp_name+'\n')
@@ -87,12 +89,8 @@ def main():
     augmentation = TubeAugmentation(args.image_size, args.means, args.stds, do_flip=args.do_flip, do_crop=args.do_crop, do_photometric=args.do_photometric, scale=args.scale_norm, do_erase=args.do_erase)
     log_file.write("Data augmentation: "+ str(augmentation))
     # DataLoader
-    train_dataset = AVADataset(args.data_root, 'train', args.input_type, args.T, args.NUM_CHUNKS[args.max_iter], args.fps, augmentation, proposal_path=args.proposal_path_train, stride=1, anchor_mode=args.anchor_mode, num_classes=args.num_classes, foreground_only=True)
-    val_dataset = AVADataset(args.data_root, 'val', args.input_type, args.T, args.NUM_CHUNKS[args.max_iter], args.fps, BaseTransform(args.image_size, args.means, args.stds,args.scale_norm), proposal_path=args.proposal_path_val, stride=1, anchor_mode=args.anchor_mode, num_classes=args.num_classes, foreground_only=True)
-
-    if args.milestones[0] == -1:
-        args.milestones = [int(np.ceil(len(train_dataset) / args.batch_size) * args.max_epochs)]
-
+    train_dataset = MVFDataset(args.data_root, 'train', args.input_type, args.T, args.NUM_CHUNKS[args.max_iter], args.fps, augmentation, proposal_path=args.proposal_path_train, stride=1, anchor_mode=args.anchor_mode, num_classes=args.num_classes, foreground_only=True)
+    val_dataset = MVFDataset(args.data_root, 'val', args.input_type, args.T, args.NUM_CHUNKS[args.max_iter], args.fps, BaseTransform(args.image_size, args.means, args.stds,args.scale_norm), proposal_path=args.proposal_path_val, stride=1, anchor_mode=args.anchor_mode, num_classes=args.num_classes, foreground_only=True)
     train_dataloader = torch.utils.data.DataLoader(train_dataset, args.batch_size, num_workers=args.num_workers,
                                   shuffle=True, collate_fn=detection_collate, pin_memory=True)
     val_dataloader = torch.utils.data.DataLoader(val_dataset, args.batch_size, num_workers=args.num_workers,
@@ -101,8 +99,7 @@ def main():
     log_file.write("Validation size: " + str(len(val_dataset)) + "\n")
     print('Training STEP on ', train_dataset.name)
 
-    ################ define models #################
-
+    ################ Build Models #################
     nets = OrderedDict()
     # backbone network
     nets['base_net'] = BaseNet(args)
@@ -110,13 +107,7 @@ def main():
     nets['roi_net'] = ROINet(args.pool_mode, args.pool_size)
     # detection network
     for i in range(args.max_iter):
-        if args.det_net == "two_branch":
-            nets['det_net%d' % i] = TwoBranchNet(args)
-        else:
-            raise NotImplementedError
-    if not args.no_context:
-        # context branch
-        nets['context_net'] = ContextNet(args)
+        nets['det_net%d' % i] = TwoBranchNet(args)
     # Transfer model to GPU
     for key in nets:
         nets[key] = nets[key].cuda()
@@ -131,6 +122,8 @@ def main():
     else:
         raise NotImplementedError
     # Scheduler Setup
+    if args.milestones[0] == -1:
+        args.milestones = [int(np.ceil(len(train_dataset) / args.batch_size) * args.max_epochs)]
     if args.scheduler == "cosine":
         scheduler = WarmupCosineLR(optimizer, args.milestones, args.min_ratio, args.cycle_decay, args.warmup_iters)
     else:
@@ -142,27 +135,23 @@ def main():
             nets[key] = models[i]
     # DataParallel is used
     nets['base_net'] = torch.nn.DataParallel(nets['base_net'])
-    if not args.no_context:
-        nets['context_net'] = torch.nn.DataParallel(nets['context_net'])
     for i in range(args.max_iter):
         # distribute models to fit in GPU memory
         nets['det_net%d' % i].to('cuda:%d' % ((i+1)%gpu_count))
         nets['det_net%d' % i].set_device('cuda:%d' % ((i+1)%gpu_count))
 
     ############ Pretrain & Resume ###########
-    # load pretrained model if needed
+    # Load pretrained model if needed
     if args.pretrain_path is not None:
         if os.path.isfile(args.pretrain_path):
             print ("Loading pretrain model from %s" % args.pretrain_path)
             checkpoint = torch.load(args.pretrain_path, map_location='cuda:0')
 
             nets['base_net'].load_state_dict(checkpoint['base_net'])
-            if not args.no_context and 'context_net' in checkpoint:
-                nets['context_net'].load_state_dict(checkpoint['context_net'])
             for i in range(args.max_iter):
                 model_dict = nets['det_net%d' % i].state_dict()
                 pretrained_dict = checkpoint.get('det_net%d' % i, checkpoint["det_net0"])    # load from classfication pretrained model, so only det_net0 is loaded
-                pretrained_dict = {k:v for k,v in pretrained_dict.items() if k in model_dict and k.find('global_cls') <= -1}    # last layer (classifier) is not loaded
+                pretrained_dict = {k:v for k,v in pretrained_dict.items() if k in model_dict and k.find('new_fc') <= -1}    # last layer (classifier) is not loaded
                 model_dict.update(pretrained_dict)
                 nets['det_net%d' % i].load_state_dict(model_dict)
         else:
@@ -198,8 +187,6 @@ def main():
             checkpoint = torch.load(model_path, map_location='cuda:0')
 
             nets['base_net'].load_state_dict(checkpoint['base_net'])
-            if not args.no_context and 'context_net' in checkpoint:
-                nets['context_net'].load_state_dict(checkpoint['context_net'])
             for i in range(args.max_iter):
                 nets['det_net%d' % i].load_state_dict(checkpoint['det_net%d' % i])
 
@@ -217,22 +204,6 @@ def main():
 
             del checkpoint
             torch.cuda.empty_cache()
-
-    # View Finetune Argument
-    if args.model_ft:
-        # Adjust the view
-        args.start_epochs = 0
-        args.start_iteration = 1
-        # Adjust the scheduler
-        # print(scheduler.last_epoch)
-        # scheduler.last_epoch=0 # here iterations are epochs for scheduler
-        # args.milestones = [int(np.ceil(len(train_dataset) / args.batch_size))*(cycle+1) for cycle in range(args.max_epochs)]
-        args.milestones = [int(np.ceil(len(train_dataset) / args.batch_size) * args.max_epochs)]
-        # Scheduler Setup
-        if args.scheduler == "cosine":
-            scheduler = WarmupCosineLR(optimizer, args.milestones, args.min_ratio, args.cycle_decay, args.warmup_iters)
-        else:
-            scheduler = WarmupStepLR(optimizer, args.milestones, args.warmup_iters)
     ######################################################
     
     for arg in sorted(vars(args)):
@@ -259,8 +230,6 @@ def train(args, nets, optimizer, scheduler, train_dataloader, val_dataloader, lo
     losses_local_loc = AverageMeter(200)
     losses_neighbor_loc = AverageMeter(200)
 
-#    writer = SummaryWriter(args.save_root+"summary"+datetime.strftime(datetime.now(), '%Y%m%d-%H%M%S'))
-
     ################ Training loop #################
 
     torch.cuda.synchronize()
@@ -271,19 +240,16 @@ def train(args, nets, optimizer, scheduler, train_dataloader, val_dataloader, lo
 
     while epochs < args.max_epochs:
         for _, (images, targets, tubes, infos) in enumerate(train_dataloader):
-
-            images = images.cuda()
-
             # adjust learning rate
             scheduler.step()
             lr = optimizer.param_groups[-1]['lr']
-
+            ##########################
+            # Prepare Images Input
+            images = images.cuda()
             # get conv features
             conv_feat = nets['base_net'](images)
-            context_feat = None
-            if not args.no_context:
-                context_feat = nets['context_net'](conv_feat)
-
+            BT,C_conv,W_conv,H_conv= conv_feat.shape
+            conv_feat = conv_feat.view(args.batch_size, -1, C_conv, W_conv, H_conv) # (1,24,1024,14,14)
             ############# Inference to get candidates for each iteration ########
 
             # randomly sample a fixed number of tubes
@@ -295,7 +261,7 @@ def train(args, nets, optimizer, scheduler, train_dataloader, val_dataloader, lo
             for _, net in nets.items():
                 net.eval()
             with torch.no_grad():
-                history, _ = inference(args, conv_feat, context_feat, nets, args.max_iter-1, tubes)
+                history, _ = inference(args, conv_feat, nets, args.max_iter-1, tubes)
             for _, net in nets.items():
                 net.train()
 
@@ -305,7 +271,6 @@ def train(args, nets, optimizer, scheduler, train_dataloader, val_dataloader, lo
 
             # loop for each step
             for i in range(1, args.max_iter+1):    # index from 1
-
                 # adaptively get the start chunk
                 chunks = args.NUM_CHUNKS[i]
                 max_chunks = args.NUM_CHUNKS[args.max_iter]
@@ -318,25 +283,24 @@ def train(args, nets, optimizer, scheduler, train_dataloader, val_dataloader, lo
                 selected_tubes, target_tubes = train_select(i, history[i-2], targets, tubes,  args)
 
                 ######### Start training ########
-
                 # flatten list of tubes
                 flat_targets, _ = flatten_tubes(target_tubes, batch_idx=False)
                 flat_tubes, _ = flatten_tubes(selected_tubes, batch_idx=True)    # add batch_idx for ROI pooling
+                ## extend flat_tubes for MVF network
+                flat_tubes_all = np.zeros((flat_tubes.shape[0], flat_tubes.shape[1]*TEM_REDUCE, flat_tubes.shape[2]), dtype=np.float32)
+                for i_tube in range(flat_tubes.shape[0]):
+                    for i_T in range(flat_tubes.shape[1]):
+                        flat_tubes_all[i_tube,i_T,:] = flat_tubes[i_tube,i_T//TEM_REDUCE,:]
                 flat_targets = torch.FloatTensor(flat_targets).to(conv_feat)
                 flat_tubes = torch.FloatTensor(flat_tubes).to(conv_feat)
+                flat_tubes_all = torch.FloatTensor(flat_tubes_all).to(conv_feat)
 
                 # ROI Pooling
-                pooled_feat = nets['roi_net'](conv_feat[:, T_start:T_start+T_length].contiguous(), flat_tubes)
+                pooled_feat = nets['roi_net'](conv_feat[:, T_start*TEM_REDUCE:(T_start+T_length)*TEM_REDUCE].contiguous(), flat_tubes_all)
                 _,C,W,H = pooled_feat.size()
-                pooled_feat = pooled_feat.view(-1, T_length, C, W, H)
+                pooled_feat = pooled_feat.view(-1, T_length*TEM_REDUCE, C, W, H)
 
-                temp_context_feat = None
-                if not args.no_context:
-                    temp_context_feat = torch.zeros((pooled_feat.size(0),context_feat.size(1),T_length,1,1)).to(context_feat)
-                    for p in range(pooled_feat.size(0)):
-                        temp_context_feat[p] = context_feat[int(flat_tubes[p,0,0].item()/T_length),:,T_start:T_start+T_length].contiguous().clone()
-
-                _,_,_,_, cur_loss_global_cls, cur_loss_local_loc, cur_loss_neighbor_loc = nets['det_net%d' % (i-1)](pooled_feat, context_feat=temp_context_feat, tubes=flat_tubes, targets=flat_targets)
+                _,_,_,_, cur_loss_global_cls, cur_loss_local_loc, cur_loss_neighbor_loc = nets['det_net%d' % (i-1)](pooled_feat, tubes=flat_tubes, targets=flat_targets)
                 cur_loss_global_cls = cur_loss_global_cls.mean()
                 cur_loss_local_loc = cur_loss_local_loc.mean()
                 cur_loss_neighbor_loc = cur_loss_neighbor_loc.mean()
@@ -366,7 +330,6 @@ def train(args, nets, optimizer, scheduler, train_dataloader, val_dataloader, lo
             ############### Print logs and save models ############
 
             iteration += 1
-
             if iteration % args.print_step == 0 and iteration>0:
 
                 gpu_memory = get_gpu_memory()
@@ -394,7 +357,6 @@ def train(args, nets, optimizer, scheduler, train_dataloader, val_dataloader, lo
                     'epochs': epochs+1,
                     'iteration': iteration,
                     'base_net': nets['base_net'].state_dict(),
-                    # 'context_net': nets['context_net'].state_dict(),
                     'optimizer': optimizer.state_dict(),
                     'scheduler': scheduler.state_dict(),
                     'val_mAP': best_mAP,
@@ -449,7 +411,6 @@ def train(args, nets, optimizer, scheduler, train_dataloader, val_dataloader, lo
                     'epochs': epochs+1,
                     'iteration': iteration,
                     'base_net': nets['base_net'].state_dict(),
-                    # 'context_net': nets['context_net'].state_dict(),
                     'optimizer': optimizer.state_dict(),
                     'scheduler': scheduler.state_dict(),
                     'val_mAP': best_mAP,
@@ -514,13 +475,11 @@ def validate(args, val_dataloader, nets, iteration=0, iou_thresh=0.5):
 
             # get conv features
             conv_feat = nets['base_net'](images)
-            context_feat = None
-            if not args.no_context:
-                context_feat = nets['context_net'](conv_feat)
-
+            BT,C_conv,W_conv,H_conv= conv_feat.shape
+            conv_feat = conv_feat.view(args.batch_size, -1, C_conv, W_conv, H_conv) # (1,24,1024,14,14)
             ############## Inference ##############
 
-            history, _ = inference(args, conv_feat, context_feat, nets, args.max_iter, tubes)
+            history, _ = inference(args, conv_feat, nets, args.max_iter, tubes)
 
             #################### Evaluation #################
 
@@ -588,12 +547,13 @@ def validate(args, val_dataloader, nets, iteration=0, iou_thresh=0.5):
                                                     label_dict[cl_ind],
                                                     s))
     fout.close()
-
+    gpu_memory = get_gpu_memory()
+    print("GPU Usage:", gpu_memory)
     all_metrics = []
     for i in range(args.max_iter):
         fouts[i].close()
 
-        metrics = ava_evaluation(os.path.join(args.data_root, '20211007-label_3cls/'), output_files[i], gt_file)
+        metrics = ava_evaluation(os.path.join(args.data_root, 'label/'), output_files[i], gt_file)
         all_metrics.append(metrics)
     
     return all_metrics

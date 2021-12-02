@@ -8,17 +8,17 @@ Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses
 
 import os
 import sys
+import glob
+import time
+import numpy as np
+from datetime import datetime
+from collections import OrderedDict
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.utils.data
 import torchvision
-import numpy as np
-from collections import OrderedDict
-import time
-from datetime import datetime
-#from tensorboardX import SummaryWriter
-import glob
 
 from config import parse_config
 from models import BaseNet, ROINet, TwoBranchNet, ContextNet
@@ -31,16 +31,16 @@ from utils.eval_utils import ava_evaluation
 from external.ActivityNet.Evaluation.get_ava_performance import read_labelmap
 
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"]="7"  # specify which GPU(s) to be used
+os.environ["CUDA_VISIBLE_DEVICES"]="5"  # specify which GPU(s) to be used
 
 def main():
 
     ################## Load pretrained model and configurations ###################
 
-    checkpoint_path = 'pretrained/ava_step.pth'
+    # checkpoint_path = 'pretrained/ava_step.pth'
     # checkpoint_path = "/data/CLASP-DATA/pretrained/STEP/bestModel/RGB/side/checkpoint_best_rgb_v2.pth" #all side, no top
     # checkpoint_path = "/data/Dan/ava_v2_1/cache/STEP-topdown-part(600+)-max3-i3d-two_branch/checkpoint_best.pth" # part finetune
-    checkpoint_path = "/data/CLASP-DATA/pretrained/STEP/bestModel/RGB/topdown/checkpoint_best_rgb_td.pth"
+    checkpoint_path = "/data/Dan/ava_v2_1/cache/STEP-kinetics400_KRImixed-no_context-1cls-T3i3-max3-i3d-two_branch/checkpoint_best.pth"
 
     if os.path.isfile(checkpoint_path):
         print ("Loading pretrain model from %s" % checkpoint_path)
@@ -51,27 +51,31 @@ def main():
         raise ValueError("Pretrain model not found!", checkpoint_path)
       
     args.data_root = "/data/CLASP-DATA/CLASP2-STEP/data"
-    args.save_root = f"test/td-demo-model-ori"
-
+    args.save_root = f"test/kriMixed-1cls-test/1cls-conf07"
+    args.conf_thresh = 0.7
+    print('conf_thresh:', args.conf_thresh)
+    
     if not os.path.isdir(args.save_root):
         os.makedirs(args.save_root)
 
     label_dict = {}
     if args.num_classes != 80:
-        if args.num_classes == 3:
-            label_map = os.path.join(args.data_root, 'label/ava_finetune.pbtxt')
-        else: #60
-            label_map = os.path.join(args.data_root, 'label/ava_action_list_v2.1_for_activitynet_2018.pbtxt')
+        if args.num_classes == 60: # ava-60
+            label_map = os.path.join(args.data_root, 'label_1cls/ava_action_list_v2.1_for_activitynet_2018.pbtxt')
+        else: # CLASP
+            label_map = os.path.join(args.data_root, 'label_1cls/ava_finetune.pbtxt')
         categories, class_whitelist = read_labelmap(open(label_map, 'r'))
         classes = [(val['id'], val['name']) for val in categories]
-        id2class = {c[0]: c[1] for c in classes}    # gt class id (1~3/60) --> class name
+        id2class = {c[0]: c[1] for c in classes}    # gt class id (1~3) --> class name
         for i, c in enumerate(sorted(list(class_whitelist))):
             label_dict[i] = c
     else:
         for i in range(80):
             label_dict[i] = i+1
     args.label_dict = label_dict
-    args.id2class = {1:'p2p', 2: 'xfr', 3:'bkgd'}
+    # args.id2class = {1:'p2p', 2:'xfr', 3:'bkgd'}
+    # args.id2class = {1:'bkgd', 2:'xfr'}
+    args.id2class = {1:'xfr'}
 
     ################ Define models #################
 
@@ -114,7 +118,7 @@ def main():
     ################ DataLoader setup #################
 
     # dataset = AVADataset(args.data_root, 'test', args.input_type, args.T, args.NUM_CHUNKS[args.max_iter], args.fps, BaseTransform(args.image_size, args.means, args.stds,args.scale_norm), proposal_path=args.proposal_path_val, stride=1, anchor_mode=args.anchor_mode, num_classes=args.num_classes, foreground_only=False)
-    dataset = AVADataset(args.data_root, 'val', args.input_type, args.T, args.NUM_CHUNKS[args.max_iter], args.fps, BaseTransform(args.image_size, args.means, args.stds,args.scale_norm), proposal_path=args.proposal_path_val, stride=1, anchor_mode=args.anchor_mode, num_classes=args.num_classes, foreground_only=True)
+    dataset = AVADataset(args.data_root, 'test', args.input_type, args.T, args.NUM_CHUNKS[args.max_iter], args.fps, BaseTransform(args.image_size, args.means, args.stds,args.scale_norm), proposal_path=args.proposal_path_val, stride=1, anchor_mode=args.anchor_mode, num_classes=args.num_classes, foreground_only=True)
     dataloader = torch.utils.data.DataLoader(dataset, args.batch_size, num_workers=args.num_workers,
                                   shuffle=False, collate_fn=detection_collate, pin_memory=True)
 
@@ -239,7 +243,7 @@ def main():
     for i in range(args.max_iter):
         fouts[i].close()
 
-        metrics = ava_evaluation(os.path.join(args.data_root, 'label/'), output_files[i], gt_file)
+        metrics = ava_evaluation(os.path.join(args.data_root, 'label_1cls/'), output_files[i], gt_file)
         all_metrics.append(metrics)
 
     # Logging

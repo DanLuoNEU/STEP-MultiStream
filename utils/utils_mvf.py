@@ -2,6 +2,7 @@
 Copyright (C) 2019 NVIDIA Corporation.  All rights reserved.
 Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode).
 """
+from data.mvf import TEM_REDUCE
 import time
 import numpy as np
 import pickle
@@ -13,7 +14,9 @@ import torch.distributed as dist
 
 from utils.tube_utils import extrapolate_tubes, valid_tubes, decode_coef, flatten_tubes, compute_tube_iou
 
-def inference(args, conv_feat, context_feat, nets, exec_iter, tubes):
+TEM_REDUCE = 8
+
+def inference(args, conv_feat, nets, exec_iter, tubes):
     """
     Inference on two-branch networks of different steps.
     In training, it is used to collect all candidate tubes.
@@ -33,7 +36,20 @@ def inference(args, conv_feat, context_feat, nets, exec_iter, tubes):
 
     # flatten list of tubes
     flat_tubes, tubes_nums = flatten_tubes(tubes, batch_idx=True)    # add batch_idx for ROI pooling
+    ## extend flat_tubes for MVF network
+    # flat_tubes_all = np.zeros((flat_tubes.shape[0], flat_tubes.shape[1], flat_tubes.shape[2]), dtype=np.float32)
+    # for i_tube in range(flat_tubes.shape[0]):
+    #     for i_T in range(flat_tubes.shape[1]):
+    #         flat_tubes_all[i_tube,i_T,:] = flat_tubes[i_tube,i_T//TEM_REDUCE,:]
+    flat_tubes_all = np.zeros((flat_tubes.shape[0], conv_feat.shape[1], flat_tubes.shape[2]), dtype=np.float32)
+    for i_tube in range(flat_tubes.shape[0]):
+        for i_T in range(conv_feat.shape[1]):
+            if flat_tubes.shape[1] == conv_feat.shape[1]/TEM_REDUCE:
+                flat_tubes_all[i_tube,i_T,:] = flat_tubes[i_tube,i_T//TEM_REDUCE,:]
+            else:
+                flat_tubes_all[i_tube,i_T,:] = flat_tubes[i_tube,0,:]
     flat_tubes = torch.FloatTensor(flat_tubes).to(conv_feat)
+    flat_tubes_all = torch.FloatTensor(flat_tubes_all).to(conv_feat)
 
     history = []
     trajectory = []
@@ -46,18 +62,13 @@ def inference(args, conv_feat, context_feat, nets, exec_iter, tubes):
         half_T = int(args.T/2)
     
         # ROI Pooling
-        pooled_feat = nets['roi_net'](conv_feat[:, T_start:T_start+T_length].contiguous(), flat_tubes)
+        # pooled_feat = nets['roi_net'](conv_feat[:, T_start*TEM_REDUCE:(T_start+T_length)*TEM_REDUCE].contiguous(), flat_tubes_all)
+        pooled_feat = nets['roi_net'](conv_feat[:, T_start*TEM_REDUCE:(T_start+T_length)*TEM_REDUCE].contiguous(), flat_tubes_all[:,T_start*TEM_REDUCE:(T_start+T_length)*TEM_REDUCE,:])
         _,C,W,H = pooled_feat.size()
-        pooled_feat = pooled_feat.view(-1, T_length,C,W,H)
+        pooled_feat = pooled_feat.view(-1, T_length*TEM_REDUCE,C,W,H)
                         
         # detection head
-        temp_context_feat = None
-        if not args.no_context:
-            temp_context_feat = torch.zeros((pooled_feat.size(0),context_feat.size(1),T_length,1,1)).to(context_feat)
-            for p in range(pooled_feat.size(0)):
-                temp_context_feat[p] = context_feat[int(flat_tubes[p,0,0].item()/T_length),:,T_start:T_start+T_length].contiguous().clone()
-
-        global_prob, local_loc, first_loc, last_loc, _,_,_ = nets['det_net%d' % (i-1)](pooled_feat, context_feat=temp_context_feat, tubes=None, targets=None)
+        global_prob, local_loc, first_loc, last_loc, _,_,_ = nets['det_net%d' % (i-1)](pooled_feat, tubes=None, targets=None)
 
 
         ########## prepare data for next iteration ###########

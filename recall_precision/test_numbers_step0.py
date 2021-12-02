@@ -1,7 +1,6 @@
-"""
-Copyright (C) 2019 NVIDIA Corporation.  All rights reserved.
-Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode).
-"""
+# Get Precision,Recall numbers for test annotations
+# 20210709, Dan  
+### Before testing, change the label to test label test.pkl
 
 import os
 import sys
@@ -22,21 +21,18 @@ from models import BaseNet, ROINet, TwoBranchNet, ContextNet
 from external.maskrcnn_benchmark.roi_layers import nms
 from utils.utils import inference, train_select, AverageMeter, get_gpu_memory, Timer
 from utils.tube_utils import flatten_tubes, valid_tubes, compute_box_iou
-from utils.vis_utils import overlay_image
-from data.customize import CustomizedDataset, detection_collate, WIDTH, HEIGHT
+from data.dataset_test import DatasetTest, detection_collate, WIDTH, HEIGHT
 from data.augmentations import BaseTransform
 
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"]="5,7"  # specify which GPU(s) to be used
-bool_vis, bool_res = True, True
+os.environ["CUDA_VISIBLE_DEVICES"]="5"  # specify which GPU(s) to be used
 
 def main():
     t0 = time.time()
     ################## Customize your configuratons here ###################
     # checkpoint_path = '/data/CLASP-DATA/pretrained/STEP/bestModel/RGB/topdown/checkpoint_best_rgb_20200501_td1113.pth'
     # checkpoint_path = "/data/CLASP-DATA/pretrained/STEP/bestModel/RGB/side/checkpoint_best_rgb_v2.pth"
-    # checkpoint_path = "/data/Dan/ava_v2_1/cache/STEP-kinetics400_KRImixed_PVDsd_withFA-no_context-2cls-T3i3-max3-i3d-two_branch/checkpoint_best.pth"
-    checkpoint_path = "/data/Dan/ava_v2_1/cache/STEP-kinetics400_KRImixed_PVDsd_3cls-no_context-T3i3-max3-i3d-two_branch/checkpoint_best.pth"
+    checkpoint_path = "/data/Dan/ava_v2_1/cache/STEP-kinetics400_KRImixed_PVDs-no_context-2cls-T3i3-max3-i3d-two_branch/checkpoint_best.pth"
 
     if os.path.isfile(checkpoint_path):
         print ("Loading pretrain model from %s" % checkpoint_path)
@@ -47,10 +43,11 @@ def main():
         raise ValueError("Pretrain model not found!", checkpoint_path)
 
     # TODO: Set data_root to the customized input dataset
-    # args.data_root = '/data/ALERT-SHARE/20191023exp2training/frames/10fps/topdown'
-    args.data_root = '/home/dan/ws/STEP-MultiStream/exps/frames'
-    args.save_root = os.path.join(os.path.dirname(args.data_root), 'demo_results/kinetics400_KRImixed_PVDsd_3cls-no_context_conf03_tc-mv_mi1/')
-    name_results='results_CPT300-330_mi1.txt'
+    path_label = "/data/CLASP-DATA/CLASP2-STEP/data/label_2cls/train.pkl" # test.pkl
+    args.save_root = 'test/PVDs-2cls-train_val/Recall_Precision'
+    if not os.path.exists(args.save_root):
+        os.makedirs(args.save_root)
+    fout = open(os.path.join(args.save_root, f'results_train_conf0{sys.argv[1]}.txt'), 'w')
     args.batch_size=1
     args.num_workers=1
     args.anchor_mode='1'
@@ -61,25 +58,14 @@ def main():
         print("already exists " + str(args.save_root))
 
     # TODO: modify this setting according to the actual frame rate and file name
-    source_fps = 10
-    target_fps = 10
-    im_format = '%04d.jpg'
-    
-    args.max_iter=1 # 1
-    if args.max_iter==3:    
-        args.T=9
-        conf_thresh = 0.3
-    else:                   
-        args.T=3
-        conf_thresh = 0.2
+    fps_source = 30 # KRI dataset
+    fps_target = 15 # Test Dataset
+    im_format = '%06d.jpg'
+    conf_thresh = int(sys.argv[1])/10 # 0.4
     global_thresh = 0.8    # used for cross-class NMS
     # args.id2class = {1:'p2p', 2: 'xfr', 3:'bkgd'}
-    if '3cls' in checkpoint_path:
-        args.id2class = {1:'bkgd', 2: 'xfr',3:'tc_mv'}
-    elif '2cls' in checkpoint_path:
-        args.id2class = {1:'bkgd', 2: 'xfr'}
-    elif '1cls' in checkpoint_path:
-        args.id2class = {1:'xfr'}
+    args.id2class = {1:'bkgd', 2:'xfr'}
+    # args.id2class = {1:'xfr'}
     
     ################ Define models #################
 
@@ -121,7 +107,7 @@ def main():
     
     ################ DataLoader setup #################
 
-    dataset = CustomizedDataset(args.data_root, args.T, args.NUM_CHUNKS[args.max_iter], source_fps, args.fps, BaseTransform(args.image_size, args.means, args.stds,args.scale_norm), anchor_mode=args.anchor_mode, im_format=im_format)
+    dataset = DatasetTest(path_label, args.T, args.NUM_CHUNKS[args.max_iter], fps_target, BaseTransform(args.image_size, args.means, args.stds,args.scale_norm), anchor_mode=args.anchor_mode, im_format=im_format)
     dataloader = torch.utils.data.DataLoader(dataset, args.batch_size, num_workers=args.num_workers,
                                   shuffle=False, collate_fn=detection_collate, pin_memory=True)
 
@@ -130,7 +116,6 @@ def main():
     for _, net in nets.items():
         net.eval()
 
-    fout = open(os.path.join(args.save_root, name_results), 'w')
     torch.cuda.synchronize()
     
     t_base = Timer("base",logger=None)
@@ -138,7 +123,7 @@ def main():
     t_2b = Timer("2b",logger=None)
     t_rest = Timer("rest",logger=None)
     with torch.no_grad():
-        for _, (images, tubes, infos) in enumerate(dataloader):
+        for sid, (images, tubes, infos) in enumerate(dataloader):
 
             _, _, channels, height, width = images.size()
             images = images.cuda()
@@ -235,24 +220,18 @@ def main():
                         merged_result[key] = [(l, s) for l,s in zip(temp[1], temp[2])]
                 
                 t_rest.stop()
-                # visualize results
-                if bool_vis:
-                    if not os.path.isdir(os.path.join(args.save_root, info['video_name'])):
-                        os.makedirs(os.path.join(args.save_root, info['video_name']))
-                    overlay_image(os.path.join(args.data_root, info['video_name'], im_format % info['fid']),
-                              os.path.join(args.save_root, info['video_name'], im_format % info['fid']),
-                              pred_boxes = merged_result, id2class = args.id2class)
+                
+                print(f'{(time.time()-t0)/60:.1f} min: {sid}/{len(dataset)}', sys.argv[1], info['video_name'], info['fid'], get_gpu_memory())
+
                 # write to files
-                if bool_res:
-                    for key in merged_result:
-                        box = np.asarray(key.split(','), dtype=np.float32)
-                        for l, s in merged_result[key]:
-                            fout.write('{0},{1:04},{2:.4},{3:.4},{4:.4},{5:.4},{6},{7:.4}\n'.format(
-                                                    info['video_name'],
-                                                    info['fid'],
-                                                    box[0],box[1],box[2],box[3],
-                                                    l, s))
-                print(info['fid'], get_gpu_memory())
+                for key in merged_result:
+                    box = np.asarray(key.split(','), dtype=np.float32)
+                    for l, s in merged_result[key]:
+                        fout.write('{0},{1:04},{2:.4},{3:.4},{4:.4},{5:.4},{6},{7:.4}\n'.format(
+                                                info['video_name'].split('/')[-1],
+                                                info['fid'],
+                                                box[0],box[1],box[2],box[3],
+                                                l, s))
             torch.cuda.synchronize()
             
                     
@@ -263,5 +242,7 @@ def main():
     print(f"2b avg time: {(Timer.timers['2b']/len(dataloader)):0.4f} seconds")
     print(f"rest avg time: {(Timer.timers['rest']/len(dataloader)):0.4f} seconds")
 
+
 if __name__ == "__main__":
     main()
+

@@ -222,8 +222,6 @@ def flatten_tubes(tubes, batch_idx=False):
         flat_tubes: Tensor with shape [-1, T, dim(+1 if batch_idx)]  (dim 0 is the batch_idx)
         tubes_nums: a list storing num_tubes of each element
     """
-
-
     _, T, dim = tubes[0].shape
 
     flat_tubes = []

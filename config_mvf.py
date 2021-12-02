@@ -19,23 +19,21 @@ def parse_config():
     parser.add_argument('--name', default='Debug', help='Experiment Name')
     parser.add_argument('--data_root', default='/data/Dan/ava_v2_1/', help='Location of dataset root directory')
     parser.add_argument('--save_root', default='/data/Dan/ava_v2_1/cache', help='Location to save checkpoint models')
-    parser.add_argument('--base_net', default='i3d', help='Architecture used for backbone network')
-    parser.add_argument('--det_net', default='two_branch', help='Architecture used for backbone network')
     parser.add_argument('--no_context', action='store_true', help='If true, context branch is no used.')
-    parser.set_defaults(no_context=False)
     parser.add_argument('--fp16', action='store_true', help='If true, fp16 is used.')
     parser.set_defaults(fp16=False)
-    parser.add_argument('--model_ft', action='store_true', help='If true, fp16 is used.')
-    parser.set_defaults(model_ft=False)
+    parser.add_argument('--view_ft', action='store_true', help='If true, fp16 is used.')
+    parser.set_defaults(view_ft=False)
     
+    parser.add_argument('--resnet_pretrain', default=None, type=str2none, help='Path to the Kinetics pretrained model')
     parser.add_argument('--kinetics_pretrain', default=None, type=str2none, help='Path to the Kinetics pretrained model')
     parser.add_argument('--proposal_path_train', default=None, type=str2none, help='Path to the extracted proposals')
     parser.add_argument('--proposal_path_val', default=None, type=str2none, help='Path to the extracted proposals')
     parser.add_argument('--input_type', default='rgb', type=str, help='Input type for model: rgb | flow | 2s')
     parser.add_argument('--dataset', default='ava', help='dataset name')
-    parser.add_argument('--num_classes', default=60, type=int, help='Number of classes')
+    parser.add_argument('--num_classes', default=3, type=int, help='Number of classes')
     parser.add_argument('--T', default=3, type=int, help='Sequence length for a tube')
-    parser.add_argument('--fps', default=12, type=int, help='FPS for sequence')
+    parser.add_argument('--fps', default=6, type=int, help='FPS for sequence')
     parser.add_argument('--num_workers', default=1, type=int, help='Number of workers used in dataloading')
     parser.add_argument('--man_seed', default=123, type=int, help='manualseed for reproduction')
     parser.add_argument('--cuda', default=True, type=str2bool, help='whether to use GPU')
@@ -43,7 +41,6 @@ def parse_config():
     parser.add_argument('--max_iter', default=1, type=int, help='the number of iterative updates, start from 1')
 
     ############ Trianing configs ##############
-
     parser.add_argument('--batch_size', default=2, type=int, help='Batch size for training')
     parser.add_argument('--max_epochs', default=20, type=int, help='Number of training epochs')
     parser.add_argument('--start_epochs', default=0, type=int, help='starting number of training epochs')
@@ -103,19 +100,18 @@ def parse_config():
     parser.add_argument('--min_ratio', default=0., type=float, help='Minimum ratio decay for base_lr.')
     parser.add_argument('--warmup_iters', default=1000, type=int, help='The number of iterations for linear warmup.')
     
-    
-    ## Parse arguments
+    # Parse arguments
     args = parser.parse_args()
-
+    ## Milestones padding list
     args.milestones = [int(val) for val in args.milestones.split(',')]
+    ## the number of chunks for temporal iterative updates
     if args.iterative_mode == "spatial":
-        args.NUM_CHUNKS = {1: 1, 2: 1, 3: 1}    # the number of chunks for temporal iterative updates
+        args.NUM_CHUNKS = {1: 1, 2: 1, 3: 1}
     elif args.iterative_mode == "temporal":
-        args.NUM_CHUNKS = {1: 1, 2: 1, 3: 3, 4: 3}    # the number of chunks for temporal iterative updates
+        args.NUM_CHUNKS = {1: 1, 2: 1, 3: 3, 4: 3}
     elif args.iterative_mode == "temporal2":
-        args.NUM_CHUNKS = {1: 1, 2: 3, 3: 3, 4: 5}    # the number of chunks for temporal iterative updates
-
-    # parse a list of cls_thresh or reg_thresh, do padding automatically
+        args.NUM_CHUNKS = {1: 1, 2: 3, 3: 3, 4: 5}
+    ## parse a list of cls_thresh or reg_thresh, do padding automatically
     args.cls_thresh = [float(val) for val in args.cls_thresh.split(',')]
     if len(args.cls_thresh) < args.max_iter:
         for i in range(args.max_iter-len(args.cls_thresh)):
@@ -124,13 +120,9 @@ def parse_config():
     if len(args.reg_thresh) < args.max_iter:
         for i in range(args.max_iter-len(args.reg_thresh)):
             args.reg_thresh.append(args.reg_thresh[-1])
-
-    if args.base_net == "i3d":    # confirm settings for I3D backbone
-        args.scale_norm = 2
-        args.means = (0,0,0)
-        args.stds = (1,1,1)
-    if args.input_type =="flow":
-        args.scale_norm = 0
+    ## for pretrained mvf-resnet50 on Kinetics-400
+    args.means = (0,0,0)
+    args.stds = (1,1,1)
         
 
     return args

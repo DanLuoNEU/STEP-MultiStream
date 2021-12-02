@@ -7,21 +7,22 @@
 cd ../
 
 data_root="/data/CLASP-DATA/CLASP2-STEP/data"
+fps=15 # PVD 15 KRI 30
 save_root="/data/Dan/ava_v2_1/cache/"
 # classification pretrain_path
+# pretrain_path=None
 # pretrain_path="/data/Dan/ava_v2_1/cache/Cls-max1-i3d-two_branch/checkpoint_best.pth"
 # pretrain_path="/data/CLASP-DATA/pretrained/STEP/bestModel/RGB/side/checkpoint_best_rgb_cls_v2.pth"
-pretrain_path=None
-# pretrain_path="/data/Dan/ava_v2_1/cache/Cls-cam13-max1-i3d-two_branch/checkpoint_best.pth"
+pretrain_path="/data/Dan/ava_v2_1/cache/Cls-kinetics400_KRImixed_PVDsd_3cls-no_context-2cls-T9i1-max1-i3d-two_branch/checkpoint_best.pth"
 
-name="STEP-cam13cam11"
+name="STEP-kinetics400_KRImixed_PVDsd_3cls-no_context-T3i3"
 base_net="i3d"
 det_net="two_branch"
 resume_path="Auto"
 # resume_path="/data/CLASP-DATA/pretrained/STEP/bestModel/RGB/side/checkpoint_best_rgb_v2.pth"
-resume_path="/data/Dan/ava_v2_1/cache/STEP-cam13-max3-i3d-two_branch/checkpoint_best.pth"
 
-T=3
+num_classes=3
+T=3 # 3
 max_iter=3   # index starts from 1
 iterative_mode="temporal"
 anchor_mode="1"
@@ -31,7 +32,7 @@ pool_size=7
 
 # training schedule
 num_workers=4
-max_epochs=5 # 15
+max_epochs=10 # 10
 batch_size=1 # 8
 optimizer="adam"
 base_lr=7.5e-5
@@ -62,14 +63,14 @@ do_flip="True"
 do_crop="True"
 do_photometric="True"
 do_erase="True"
-freeze_affine="True"
-freeze_stats="True"
+freeze_affine="True" # do not update BN
+freeze_stats="True" # do not update BN statistics
 
 
-/home/dan/anaconda3/envs/py36pt110/bin/python train_ft.py --data_root $data_root --save_root $save_root --num_classes 3 \
+/home/dan/anaconda3/envs/py36pt110/bin/python train_ft.py --data_root $data_root --save_root $save_root --num_classes $num_classes \
     --name $name --pretrain_path $pretrain_path --resume_path $resume_path \
-    --base_net $base_net --det_net $det_net --max_iter $max_iter --T $T \
-    --iterative_mode $iterative_mode --anchor_mode $anchor_mode --anchor_mode $anchor_mode --temporal_mode $temporal_mode \
+    --base_net $base_net --det_net $det_net --max_iter $max_iter --T $T --fps $fps\
+    --iterative_mode $iterative_mode --anchor_mode $anchor_mode --temporal_mode $temporal_mode \
     --pool_mode $pool_mode --pool_size $pool_size --save_step $save_step --topk $topk --evaluate_topk $evaluate_topk \
     --num_workers $num_workers --max_epochs $max_epochs --batch_size $batch_size --print_step $print_step \
     --optimizer $optimizer --base_lr $base_lr --det_lr $det_lr --det_lr0 $det_lr0 --milestones $milestones \
@@ -77,4 +78,4 @@ freeze_stats="True"
     --fc_dim $fc_dim --dropout $dropout --NUM_SAMPLE $NUM_SAMPLE --scheduler $scheduler --warmup_iters $warmup_iters \
     --cls_thresh $cls_thresh --reg_thresh $reg_thresh --max_pos_num $max_pos_num --neg_ratio $neg_ratio \
     --freeze_affine $freeze_affine --freeze_stats $freeze_stats --lambda_reg $lambda_reg --lambda_neighbor $lambda_neighbor \
-    --view_ft
+    # --model_ft

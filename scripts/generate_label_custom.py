@@ -23,7 +23,9 @@ with open(csv_path, 'r') as fin:
         label = int(label)
         pid = int(pid)
         # Avoid same pid
-        while pid in list_pid:
+        while True:
+            if pid not in list_pid:
+                break
             pid += 1
         list_pid.append(pid)
 

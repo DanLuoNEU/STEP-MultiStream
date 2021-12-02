@@ -5,21 +5,22 @@ Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses
 
 import os
 import os.path
-import torch
-import torch.utils.data as data
-import pickle
-import numpy as np
 import cv2
 import glob
+import numpy as np
+import pickle
+import random
+
+import torch
+import torch.utils.data as data
+
 from utils.tube_utils import scale_tubes, scale_tubes_abs
 from external.ActivityNet.Evaluation.get_ava_performance import read_labelmap
 from .data_utils import generate_anchors
-import random
-
 
 WIDTH, HEIGHT = 400, 400
 TEM_REDUCE = 4    # 4 for I3D backbone
-NUM_CLASSES = 3 # 60
+# NUM_CLASSES = 3 # 60
 
 
 def make_list(label_path, chunks=1, stride=1, foreground_only=True):
@@ -43,7 +44,7 @@ def make_list(label_path, chunks=1, stride=1, foreground_only=True):
         frames = sorted(annots[videoname].keys())
 
         # loop through each frame
-        for fid in np.arange(1, 1799, stride):    # AVA v2.1 annotations at timestamps 902:1798 inclusive, clasp starts from 0
+        for fid in np.arange(0, 1799, stride):    # clasp starts from 0
         # for fid in np.arange(902, 1799, stride):    # AVA v2.1 annotations at timestamps 902:1798 inclusive
 
             # no foreground label
@@ -105,7 +106,7 @@ def get_target_tubes(root, boxes, labels, num_classes=60):
         Shape of gt_tubes: [num_tubes, chunks, 4+num_classes]
     """
 
-    chunks = len(boxes[0])
+    chunks = len(boxes[0]) # 0 means the first person
 
     # background frame
     if chunks == 0:
@@ -114,15 +115,15 @@ def get_target_tubes(root, boxes, labels, num_classes=60):
     # label_map = os.path.join(root, 'label/ava_action_list_v2.1_for_activitynet_2018.pbtxt')
     # categories, class_whitelist = read_labelmap(open(label_map, 'r'))
     # classes = np.array(list(class_whitelist)) - 1
-    label_map = os.path.join(root, 'label/ava_finetune.pbtxt')
+    label_map = os.path.join(root, '20211007-label_3cls/ava_finetune.pbtxt')
     categories, class_whitelist = read_labelmap(open(label_map, 'r'))
     classes = np.array(list(class_whitelist))
 
     gt_tubes = np.zeros((len(boxes), chunks, 4), dtype=np.float32)
     # gt_classes = np.zeros((len(boxes), chunks, 80), dtype=np.float32)
     gt_classes = np.zeros((len(boxes), chunks, num_classes), dtype=np.float32)
-    for i in range(len(boxes)):
-        for t in range(chunks):
+    for i in range(len(boxes)): # PID   
+        for t in range(chunks): # Step 
             if boxes[i][t]:
                 gt_tubes[i,t] = boxes[i][t]
                 for l in labels[i][t]:
@@ -145,12 +146,15 @@ def read_images(path, videoname, fid, num=36, fps=12):
 
 
     images = []
+    list_folders=os.listdir(os.path.join(path, videoname))
+    list_folders.sort()
+    fid_max=int(list_folders[-1])-1
     
     # left of middel frame
     num_left = int(num/2)
     i = 1
     while num_left > 0:
-        img_path = os.path.join(path, videoname+'/{:05d}/'.format(fid-i))
+        img_path = os.path.join(path, videoname+'/{:05d}/'.format(max(0,fid-i)))
         images.extend(_load_images(img_path, num=min(num_left, fps), fps=fps, direction='backward'))
 
         num_left -= fps
@@ -162,7 +166,7 @@ def read_images(path, videoname, fid, num=36, fps=12):
     num_right = int(np.ceil(num/2))
     i = 0
     while num_right > 0:
-        img_path = os.path.join(path, videoname+'/{:05d}/'.format(fid+i))
+        img_path = os.path.join(path, videoname+'/{:05d}/'.format(min(fid+i,fid_max)))
         images.extend(_load_images(img_path, num=min(num_right, fps), fps=fps, direction='forward'))
 
         num_right -= fps
@@ -173,7 +177,7 @@ def read_images(path, videoname, fid, num=36, fps=12):
 
 def _load_images(path, num, fps=12, direction='forward'):
     """
-    Load images in a folder wiht given num and fps, direction can be either 'forward' or 'backward'
+    Load images in a folder with given num and fps, direction can be either 'forward' or 'backward'
     """
 
     img_names = glob.glob(os.path.join(path, '*.jpg'))
@@ -203,6 +207,7 @@ def _load_images(path, num, fps=12, direction='forward'):
             raise ValueError("Image not found!", img_name)
 
     return images
+
 
 def get_proposals(proposal_path):
     """
@@ -259,8 +264,6 @@ class AVADataset(data.Dataset):
             num_class: int, number of action classes, 60 | 80
             foreground_only: bool, whether include frames with no foreground actions (usually False for val and test)
         """
-
-
         self.name = 'ava'
         self.root = root
         self.mode = mode
@@ -278,13 +281,13 @@ class AVADataset(data.Dataset):
 
         self.imgpath_rgb = os.path.join(root, 'frames/')
         if self.mode == 'train':
-            self.label_path = os.path.join(root, 'label/train.pkl')
+            self.label_path = os.path.join(root, '20211007-label_3cls/train.pkl')
         elif self.mode == 'val':
-            self.label_path = os.path.join(root, 'label/val.pkl')
+            self.label_path = os.path.join(root, '20211007-label_3cls/val.pkl')
         else:
             self.stride = 1
-            self.label_path = os.path.join(root, 'label/val.pkl')
-            self.foreground_only = False
+            self.label_path = os.path.join(root, '20211007-label_3cls/test.pkl')
+            # self.foreground_only = False # Original code has this
            
         data_list, videoname_list = make_list(self.label_path, self.chunks, self.stride, self.foreground_only)
         if proposal_path is not None:
@@ -295,7 +298,6 @@ class AVADataset(data.Dataset):
                 # remove the data with no proposals
                 if videoname_list[d[0]] in self.proposals and d[1] in self.proposals[videoname_list[d[0]]]:
                     self.data.append(d)
-
         else:
             self.proposals = None
             self.data = data_list

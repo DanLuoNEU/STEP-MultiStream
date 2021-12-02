@@ -2,12 +2,16 @@ apex/
 build/
 datasets/
 examples/
+exps/
+runs/
 STEP.egg-info/
 test/
 
 .vscode/
 __pycache__/
 */__pycache__/
+*/runs/
 
 model.txt
 pretrained/
+**/.mp4

@@ -7,21 +7,22 @@ import os
 import os.path
 import cv2
 import glob
-import numpy as np
 import pickle
 import random
+import numpy as np
 
 import torch
 import torch.utils.data as data
 
-from utils.tube_utils import scale_tubes, scale_tubes_abs
-from external.ActivityNet.Evaluation.get_ava_performance import read_labelmap
 from .data_utils import generate_anchors
 from .augmentations import jaccard_numpy
+from utils.tube_utils import scale_tubes, scale_tubes_abs
+from external.ActivityNet.Evaluation.get_ava_performance import read_labelmap
 
-WIDTH, HEIGHT = 400, 400
-TEM_REDUCE = 4    # 4 for I3D backbone
-# NUM_CLASSES = 3 # 60
+# IN original MVF paper, 8 frames as input clip for 64-images standing for 10s video(Kinetics-400)
+WIDTH, HEIGHT = 224, 224 # 224, 224
+TEM_REDUCE = 8 
+NUM_CLASSES = 3 # 60
 
 
 def make_list(label_path, chunks=1, stride=1, foreground_only=True):
@@ -29,14 +30,12 @@ def make_list(label_path, chunks=1, stride=1, foreground_only=True):
     Loop for each video and frame (with "step")
     Return a list of selected tubes, gt_boxes
     """
-
     # load annotaion file
     with open(os.path.join(label_path),'rb') as fin:
         annots = pickle.load(fin)
-
+    # Initialize lists
     data_list = []
     videoname_list = []
-
     # loop through each video
     vid = 0
     for videoname in sorted(annots.keys()):
@@ -45,9 +44,7 @@ def make_list(label_path, chunks=1, stride=1, foreground_only=True):
         frames = sorted(annots[videoname].keys())
 
         # loop through each frame
-        for fid in np.arange(0, 1799, stride):    # AVA v2.1 annotations at timestamps 902:1798 inclusive, clasp starts from 0
-        # for fid in np.arange(902, 1799, stride):    # AVA v2.1 annotations at timestamps 902:1798 inclusive
-
+        for fid in np.arange(1, 3000, stride): # CLASP can use annotation for 3000s(50min) video  
             # no foreground label
             if foreground_only and (not fid in frames):
                 continue
@@ -98,7 +95,7 @@ def make_list(label_path, chunks=1, stride=1, foreground_only=True):
     return data_list, videoname_list
 
 
-def get_target_tubes(root, boxes, labels, num_classes=60):
+def get_target_tubes(root, boxes, labels, num_classes=3):
     """
     Input:
         boxes: list of tubes (list of boxes (list))
@@ -106,20 +103,11 @@ def get_target_tubes(root, boxes, labels, num_classes=60):
     Output
         Shape of gt_tubes: [num_tubes, chunks, 4+num_classes]
     """
-
     chunks = len(boxes[0])
-
     # background frame
     if chunks == 0:
         return np.zeros((1, chunks, 4+num_classes), dtype=np.float32)
-
-    # label_map = os.path.join(root, 'label/ava_action_list_v2.1_for_activitynet_2018.pbtxt')
-    # categories, class_whitelist = read_labelmap(open(label_map, 'r'))
-    # classes = np.array(list(class_whitelist)) - 1
-    label_map = os.path.join(root, '20211007-label_3cls/ava_finetune.pbtxt')
-    categories, class_whitelist = read_labelmap(open(label_map, 'r'))
-    classes = np.array(list(class_whitelist))
-
+    # foreground frame
     gt_tubes = np.zeros((len(boxes), chunks, 4), dtype=np.float32)
     # gt_classes = np.zeros((len(boxes), chunks, 80), dtype=np.float32)
     gt_classes = np.zeros((len(boxes), chunks, num_classes), dtype=np.float32) # only for 3 class finetune
@@ -130,32 +118,25 @@ def get_target_tubes(root, boxes, labels, num_classes=60):
                 for l in labels[i][t]:
                     gt_classes[i,t,l-1] = 1    # foreground labels in annotation start from 1
 
-    if num_classes == 60:
-        gt_classes = gt_classes[:,:,classes]
     gt = np.concatenate((gt_tubes, gt_classes), axis=2)
 
     return gt
 
 
-def read_images(path, videoname, fid, num=36, fps=12):
+def read_images(path, videoname, fid, num=24, fps=6):
     """
     Load images from disk for middel frame fid with given num and fps
 
     return:
         a list of array with shape (num, H,W,C)
     """
-
-
     images = []
-    list_folders=os.listdir(os.path.join(path, videoname))
-    list_folders.sort()
-    fid_max=int(list_folders[-1])-1
     
-    # left of middle frame
+    # left of middel frame
     num_left = int(num/2)
     i = 1
     while num_left > 0:
-        img_path = os.path.join(path, videoname+'/{:05d}/'.format(max(0,fid-i)))
+        img_path = os.path.join(path, videoname+'/{:05d}/'.format(fid-i))
         images.extend(_load_images(img_path, num=min(num_left, fps), fps=fps, direction='backward'))
 
         num_left -= fps
@@ -163,11 +144,11 @@ def read_images(path, videoname, fid, num=36, fps=12):
     # reverse list
     images = images[::-1]
 
-    # right of middle frame
+    # right of middel frame
     num_right = int(np.ceil(num/2))
     i = 0
     while num_right > 0:
-        img_path = os.path.join(path, videoname+'/{:05d}/'.format(min(fid+i,fid_max)))
+        img_path = os.path.join(path, videoname+'/{:05d}/'.format(fid+i))
         images.extend(_load_images(img_path, num=min(num_right, fps), fps=fps, direction='forward'))
 
         num_right -= fps
@@ -176,9 +157,9 @@ def read_images(path, videoname, fid, num=36, fps=12):
     return np.stack(images, axis=0)
 
 
-def _load_images(path, num, fps=12, direction='forward'):
+def _load_images(path, num, fps=6, direction='forward'):
     """
-    Load images in a folder with given num and fps, direction can be either 'forward' or 'backward'
+    Load images in a folder wiht given num and fps, direction can be either 'forward' or 'backward'
     """
 
     img_names = glob.glob(os.path.join(path, '*.jpg'))
@@ -207,6 +188,7 @@ def _load_images(path, num, fps=12, direction='forward'):
             raise ValueError("Image not found!", img_name)
 
     return images
+
 
 def sample_anchors(anchors, pos_num=1, neg_ratio=1, pos_thresh=0.75, neg_thresh=0.2, mode='train'):
     """ sampling positive and negative boxes near anchors"""
@@ -272,12 +254,11 @@ def sample_anchors(anchors, pos_num=1, neg_ratio=1, pos_thresh=0.75, neg_thresh=
     return new_anchors
 
 
-class AVADataset(data.Dataset):
+class MVFDataset(data.Dataset):
     """AVA Action Detection Dataset
     to access input sequence, GT tubes and proposal tubes
     """
-
-    def __init__(self, root, mode, input_type, T=3, chunks=1, fps=12, transform=None, stride=1, num_classes=60, foreground_only=False):
+    def __init__(self, root, mode, input_type, T=3, chunks=1, fps=6, transform=None, stride=1, num_classes=3, foreground_only=False):
         """
         Args:
             root: str, root path of the dataset
@@ -285,16 +266,14 @@ class AVADataset(data.Dataset):
             mode: str, 'train', 'val' or 'test'
             T: int, tube length
             chunks: int, number of chunks
-            fps: int, frame rate (default 12)
+            fps: int, frame rate (default 6)
             transform: list of class, data augmentation / preprocessing
             stride: int, used for scan through whole video (usually set it to T/2 for training)
             anchor_mode: str, what anchor to use, 'gt' | 'cache' | '1' | '2' | '3' | '4' 
             num_class: int, number of action classes, 60 | 80
             foreground_only: bool, whether include frames with no foreground actions (usually False for val and test)
         """
-
-
-        self.name = 'ava'
+        self.name = 'clasp'
         self.root = root
         self.mode = mode
         self.input_type = input_type
@@ -309,12 +288,12 @@ class AVADataset(data.Dataset):
 
         self.imgpath_rgb = os.path.join(root, 'frames/')
         if self.mode == 'train':
-            self.label_path = os.path.join(root, '20211007-label_3cls/train.pkl')
+            self.label_path = os.path.join("/data/Dan/ava_v2_1/", 'label/train.pkl')
         elif self.mode == 'val':
-            self.label_path = os.path.join(root, '20211007-label_3cls/val.pkl')
+            self.label_path = os.path.join("/data/Dan/ava_v2_1/", 'label/val.pkl')
         else:
             self.stride = 1
-            self.label_path = os.path.join(root, '20211007-label_3cls/val.pkl')
+            self.label_path = os.path.join("/data/Dan/ava_v2_1/", 'label/val.pkl')
             self.foreground_only = False
            
         data_list, videoname_list = make_list(self.label_path, self.chunks, self.stride, self.foreground_only)
@@ -328,7 +307,7 @@ class AVADataset(data.Dataset):
         Return:
             images: FloatTensor, shape [T, C, H, W]
             target_tubes: FloatTensor, shape [num_selected, 4+num_classes]    (including labels)
-            selected_anchors: FloatTensor, shape [num_selected, T, 4]
+            selected_anchors: FloatTensor, shape [num_selected, T, 4], num_selected=num_pos(1)+num_neg(3)
             info: dict ['vid', 'sf', 'label', 'num_selected']
         """
 
@@ -360,9 +339,9 @@ class AVADataset(data.Dataset):
 
         # use (sampled) ground truths as anchor tubes
         anchors = gt_tubes[:, int(self.chunks/2), :4]
-        anchors = sample_anchors(anchors, neg_ratio=3, mode=self.mode)
-        anchor_tubes = np.tile(np.expand_dims(anchors, axis=1), (1,self.T,1))
-
+        anchors = sample_anchors(anchors, neg_ratio=3, mode=self.mode) 
+        anchor_tubes = np.tile(np.expand_dims(anchors, axis=1), (1,self.T,1)) # (1pos+3neg,self.T,4(coordinates))
+        # anchor_tubes = np.tile(np.expand_dims(anchors, axis=1), (1,self.T*TEM_REDUCE,1)) # (1pos+3neg,self.T,4(coordinates))
         # rescale tubes to absolute position
         gt_tubes[:,:,:4] = scale_tubes_abs(gt_tubes[:,:,:4], WIDTH, HEIGHT)
         anchor_tubes = scale_tubes_abs(anchor_tubes, WIDTH, HEIGHT)

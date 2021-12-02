@@ -303,8 +303,6 @@ class RandomErase(object):
             if xe + We <= x2 and ye + He <= y2:
                 return [int(xe), int(ye), int(xe+We), int(ye+He)]
 
-            
-
 
 class RandomSampleCrop(object):
     """Crop

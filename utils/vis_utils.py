@@ -34,18 +34,19 @@ def overlay_image(image_path, output_path, gt_boxes=None, pred_boxes=None, id2cl
 
     if pred_boxes is not None:
         for key in pred_boxes:
-            if (len(pred_boxes[key])==1) and (pred_boxes[key][0][0]==3):
+            if (len(pred_boxes[key])==1) and (id2class[pred_boxes[key][0][0]]!='xfr'):
                 continue
             box = np.asarray(key.split(','), dtype=np.float32)
             box[::2] *= W
             box[1::2] *= H
-            draw_rectangle(draw, box, outline="red")
+            # draw_rectangle(draw, box, outline="red") # One bounding box for one result
 
             count = 0
             for label, score in pred_boxes[key]:
                 # Dont show background
-                if id2class[label]=="bkgd":
+                if id2class[label]!="xfr":
                     continue
+                draw_rectangle(draw, box, outline="red") # No Background
                 draw.text((box[0]+10, box[1]+10+count*20), '{}'.format(id2class[label] if id2class is not None else label), fill="red",font=font)
                 break
                 count += 1

@@ -10,18 +10,17 @@ import glob
 import numpy as np
 import pickle
 import random
-
 import torch
 import torch.utils.data as data
 
+from .data_utils import generate_anchors
 from utils.tube_utils import scale_tubes, scale_tubes_abs
 from external.ActivityNet.Evaluation.get_ava_performance import read_labelmap
-from .data_utils import generate_anchors
-from .augmentations import jaccard_numpy
 
-WIDTH, HEIGHT = 400, 400
-TEM_REDUCE = 4    # 4 for I3D backbone
-# NUM_CLASSES = 3 # 60
+# IN original MVF paper, 8 frames as input clip for 64-images standing for 10s video(Kinetics-400)
+WIDTH, HEIGHT = 224, 224
+TEM_REDUCE = 8    # 4 for I3D backbone
+NUM_CLASSES = 3 # 60
 
 
 def make_list(label_path, chunks=1, stride=1, foreground_only=True):
@@ -45,8 +44,7 @@ def make_list(label_path, chunks=1, stride=1, foreground_only=True):
         frames = sorted(annots[videoname].keys())
 
         # loop through each frame
-        for fid in np.arange(0, 1799, stride):    # AVA v2.1 annotations at timestamps 902:1798 inclusive, clasp starts from 0
-        # for fid in np.arange(902, 1799, stride):    # AVA v2.1 annotations at timestamps 902:1798 inclusive
+        for fid in np.arange(0, 3000, stride):    # clasp starts from 0
 
             # no foreground label
             if foreground_only and (not fid in frames):
@@ -98,7 +96,7 @@ def make_list(label_path, chunks=1, stride=1, foreground_only=True):
     return data_list, videoname_list
 
 
-def get_target_tubes(root, boxes, labels, num_classes=60):
+def get_target_tubes(root, boxes, labels, num_classes=3):
     """
     Input:
         boxes: list of tubes (list of boxes (list))
@@ -107,37 +105,27 @@ def get_target_tubes(root, boxes, labels, num_classes=60):
         Shape of gt_tubes: [num_tubes, chunks, 4+num_classes]
     """
 
-    chunks = len(boxes[0])
+    chunks = len(boxes[0]) # 0 means the first person
 
     # background frame
     if chunks == 0:
         return np.zeros((1, chunks, 4+num_classes), dtype=np.float32)
 
-    # label_map = os.path.join(root, 'label/ava_action_list_v2.1_for_activitynet_2018.pbtxt')
-    # categories, class_whitelist = read_labelmap(open(label_map, 'r'))
-    # classes = np.array(list(class_whitelist)) - 1
-    label_map = os.path.join(root, '20211007-label_3cls/ava_finetune.pbtxt')
-    categories, class_whitelist = read_labelmap(open(label_map, 'r'))
-    classes = np.array(list(class_whitelist))
-
     gt_tubes = np.zeros((len(boxes), chunks, 4), dtype=np.float32)
-    # gt_classes = np.zeros((len(boxes), chunks, 80), dtype=np.float32)
-    gt_classes = np.zeros((len(boxes), chunks, num_classes), dtype=np.float32) # only for 3 class finetune
-    for i in range(len(boxes)):
-        for t in range(chunks):
+    gt_classes = np.zeros((len(boxes), chunks, num_classes), dtype=np.float32)
+    for i in range(len(boxes)): # PID   
+        for t in range(chunks): # Step 
             if boxes[i][t]:
                 gt_tubes[i,t] = boxes[i][t]
                 for l in labels[i][t]:
-                    gt_classes[i,t,l-1] = 1    # foreground labels in annotation start from 1
+                    gt_classes[i,t,l-1] = 1    
 
-    if num_classes == 60:
-        gt_classes = gt_classes[:,:,classes]
     gt = np.concatenate((gt_tubes, gt_classes), axis=2)
 
     return gt
 
 
-def read_images(path, videoname, fid, num=36, fps=12):
+def read_images(path, videoname, fid, num=24, fps=6):
     """
     Load images from disk for middel frame fid with given num and fps
 
@@ -151,7 +139,7 @@ def read_images(path, videoname, fid, num=36, fps=12):
     list_folders.sort()
     fid_max=int(list_folders[-1])-1
     
-    # left of middle frame
+    # left of middel frame
     num_left = int(num/2)
     i = 1
     while num_left > 0:
@@ -163,7 +151,7 @@ def read_images(path, videoname, fid, num=36, fps=12):
     # reverse list
     images = images[::-1]
 
-    # right of middle frame
+    # right of middel frame
     num_right = int(np.ceil(num/2))
     i = 0
     while num_right > 0:
@@ -176,7 +164,7 @@ def read_images(path, videoname, fid, num=36, fps=12):
     return np.stack(images, axis=0)
 
 
-def _load_images(path, num, fps=12, direction='forward'):
+def _load_images(path, num, fps=6, direction='forward'):
     """
     Load images in a folder with given num and fps, direction can be either 'forward' or 'backward'
     """
@@ -186,6 +174,7 @@ def _load_images(path, num, fps=12, direction='forward'):
         img_names = glob.glob(os.path.join(path, '*.png'))
         if len(img_names) == 0:
             raise ValueError("Image path {} not Found".format(path))
+        # raise ValueError("Image path {} not Found".format(path))
     img_names = sorted(img_names)
 
     # resampling according to fps
@@ -208,93 +197,63 @@ def _load_images(path, num, fps=12, direction='forward'):
 
     return images
 
-def sample_anchors(anchors, pos_num=1, neg_ratio=1, pos_thresh=0.75, neg_thresh=0.2, mode='train'):
-    """ sampling positive and negative boxes near anchors"""
 
-    neg_num = pos_num * neg_ratio
+def get_proposals(proposal_path):
+    """
+    Load pre-extracted proposals
 
-    new_anchors = []
-    for i in range(anchors.shape[0]):
-        anchor = anchors[i]
-        w = anchor[2] - anchor[0]
-        h = anchor[3] - anchor[1]
-        x = anchor[0] + 0.5*w
-        y = anchor[1] + 0.5*h
+    Output
+        Shape of tubes: [num_tubes, num, 4]
+    """
 
-        pos_anchors = []
-        neg_anchors = []
-        if mode == 'train':
-            for j in range(50):    # maximum trail 50
-                # sample a box near anchor
-                new_w = random.uniform(0.8*w, min(1,1.2*w))
-                new_h = random.uniform(0.8*h, min(1,1.2*h))
-                new_x = random.uniform(max(0.5*new_w, x-0.2*w), min(1-0.5*new_w, x+0.2*w))
-                new_y = random.uniform(max(0.5*new_h, y-0.2*h), min(1-0.5*new_h, y+0.2*h))
-    
-                new_anchor = np.array([new_x-0.5*new_w, new_y-0.5*new_h,
-                                       new_x+0.5*new_w, new_y+0.5*new_h], dtype=np.float)
-                ious = jaccard_numpy(anchors, new_anchor)
-                if len(pos_anchors)<pos_num and ious[i] > pos_thresh and (ious < neg_thresh).sum() == (ious.shape[0]-1):
-                    pos_anchors.append(new_anchor)
-                elif len(neg_anchors)<neg_num and (ious < neg_thresh).sum() == ious.shape[0]:
-                    neg_anchors.append(new_anchor)
-    
-                if len(pos_anchors)==pos_num:
-                    break
-        else:
-            pos_anchors.append(anchor)
+    with open(proposal_path) as fin:
+        outputs = fin.read().splitlines()
 
-        for j in range(50):    # maximum trail 50
-            # sample a box near anchor
-            new_w = random.choice((random.uniform(0.3*w, 0.7*w), min(1,random.uniform(1.5*w,2*w))))
-            new_h = random.choice((random.uniform(0.3*h, 0.7*h), min(1,random.uniform(1.5*h,2*h))))
-            new_x = random.choice((random.uniform(max(0.5*new_w, x-w), max(0.5*new_w, x-0.3*w)), \
-                                   random.uniform(min(1-0.5*new_w, x+0.3*w), min(1-0.5*new_w, x+w))))
-            new_y = random.choice((random.uniform(max(0.5*new_h, x-h), max(0.5*new_h, y-0.3*h)), \
-                                   random.uniform(min(1-0.5*new_h, y+0.3*h), min(1-0.5*new_h, y+h))))
+        results = {}
+        for output in outputs:
+            videoname = output.split(',')[0]
+            fid = int(output.split(',')[1])
+            box = output.split(',')[2:6]
+#            label = int(output.split(',')[-3])
+#            pid = int(output.split(',')[-2])
+            score = float(output.split(',')[-1])
+            if score < 0.8:    # only keep confident proposals
+                continue
 
-            new_anchor = np.array([new_x-0.5*new_w, new_y-0.5*new_h,
-                                   new_x+0.5*new_w, new_y+0.5*new_h], dtype=np.float)
-            ious = jaccard_numpy(anchors, new_anchor)
-            if len(neg_anchors)<neg_num and (ious < neg_thresh).sum() == ious.shape[0]:
-                neg_anchors.append(new_anchor)
+            if videoname in results:
+                if fid in results[videoname]:
+                    if not [float(b) for b in box] in results[videoname][fid]:
+                        results[videoname][fid].append([float(b) for b in box])
+                else:
+                    results[videoname][fid] = [[float(b) for b in box]]
+            else:
+                results[videoname] = {fid: [[float(b) for b in box]]}
 
-            if len(neg_anchors)==neg_num:
-                break
-
-        if len(pos_anchors):
-            new_anchors.extend(pos_anchors)
-        else:
-            new_anchors.append(anchor)
-        new_anchors.extend(neg_anchors)
-
-    new_anchors = np.stack(new_anchors, axis=0)
-    return new_anchors
+    return results
 
 
-class AVADataset(data.Dataset):
+class MVFDataset(data.Dataset):
     """AVA Action Detection Dataset
     to access input sequence, GT tubes and proposal tubes
     """
 
-    def __init__(self, root, mode, input_type, T=3, chunks=1, fps=12, transform=None, stride=1, num_classes=60, foreground_only=False):
+    def __init__(self, root, mode, input_type, T=3, chunks=1, fps=12, transform=None, proposal_path=None, stride=1, anchor_mode="1", num_classes=60, foreground_only=False):
         """
         Args:
             root: str, root path of the dataset
-            input_type: str, 'rgb' | 'flow' | 'stack' | 'label'
+            input_type: str, 'rgb' | 'label'
             mode: str, 'train', 'val' or 'test'
             T: int, tube length
             chunks: int, number of chunks
             fps: int, frame rate (default 12)
             transform: list of class, data augmentation / preprocessing
+            proposal_path: str, path to the proposals
             stride: int, used for scan through whole video (usually set it to T/2 for training)
-            anchor_mode: str, what anchor to use, 'gt' | 'cache' | '1' | '2' | '3' | '4' 
+            anchor_mode: str, what anchor to use, '1' | '2' | '3' | '4' 
             num_class: int, number of action classes, 60 | 80
             foreground_only: bool, whether include frames with no foreground actions (usually False for val and test)
         """
-
-
-        self.name = 'ava'
+        self.name = 'clasp'
         self.root = root
         self.mode = mode
         self.input_type = input_type
@@ -303,32 +262,44 @@ class AVADataset(data.Dataset):
         self.fps = fps
         self.transform = transform
         self.stride = stride
+        self.proposal_path = proposal_path
         self.num_classes = num_classes
+        self.anchor_mode = anchor_mode
         self.foreground_only = foreground_only
 
 
         self.imgpath_rgb = os.path.join(root, 'frames/')
         if self.mode == 'train':
-            self.label_path = os.path.join(root, '20211007-label_3cls/train.pkl')
+            self.label_path = os.path.join(root, 'label/train.pkl')
         elif self.mode == 'val':
-            self.label_path = os.path.join(root, '20211007-label_3cls/val.pkl')
+            self.label_path = os.path.join(root, 'label/val.pkl')
         else:
             self.stride = 1
-            self.label_path = os.path.join(root, '20211007-label_3cls/val.pkl')
+            self.label_path = os.path.join(root, 'label/val.pkl')
             self.foreground_only = False
            
         data_list, videoname_list = make_list(self.label_path, self.chunks, self.stride, self.foreground_only)
-        self.data = data_list
+        if proposal_path is not None:
+            self.proposals = get_proposals(proposal_path)
+
+            self.data = []
+            for i, d in enumerate(data_list):
+                # remove the data with no proposals
+                if videoname_list[d[0]] in self.proposals and d[1] in self.proposals[videoname_list[d[0]]]:
+                    self.data.append(d)
+        else:
+            self.proposals = None
+            self.data = data_list
 
         self.video_name = videoname_list
-        print(self.mode+' set | Datalist len: ', len(data_list))
+        print(self.mode+' set | Datalist len: ', len(self.data))
 
     def __getitem__(self, index):
         """
         Return:
             images: FloatTensor, shape [T, C, H, W]
             target_tubes: FloatTensor, shape [num_selected, 4+num_classes]    (including labels)
-            selected_anchors: FloatTensor, shape [num_selected, T, 4]
+            selected_anchors: FloatTensor, shape [num_selected, T, 4], num_selected=num_pos(1)+num_neg(3)
             info: dict ['vid', 'sf', 'label', 'num_selected']
         """
 
@@ -345,10 +316,18 @@ class AVADataset(data.Dataset):
         else:
             images = None
 
+        # load proposals if needed
+        proposals = None
+        if self.proposals is not None:
+            if videoname in self.proposals and fid in self.proposals[videoname]:
+                proposals = self.proposals[videoname][fid]
+                proposals = np.asarray(proposals, dtype=np.float)
+                proposals = np.tile(np.expand_dims(proposals, axis=1), (1,self.T,1))
+
         if self.input_type != 'label':
             # data augmentation
             if self.transform is not None:
-                images, gt_tubes, _ = self.transform(images, gt_tubes, None)
+                images, gt_tubes, proposals = self.transform(images, gt_tubes, proposals)
 
             if self.input_type == 'rgb':
                 # BGR to RGB (for opencv)
@@ -358,10 +337,24 @@ class AVADataset(data.Dataset):
             images = torch.from_numpy(images).permute(0,3,1,2)
 
 
-        # use (sampled) ground truths as anchor tubes
-        anchors = gt_tubes[:, int(self.chunks/2), :4]
-        anchors = sample_anchors(anchors, neg_ratio=3, mode=self.mode)
-        anchor_tubes = np.tile(np.expand_dims(anchors, axis=1), (1,self.T,1))
+        # get anchor tubes
+        if proposals is None:
+            if self.anchor_mode == "1":
+                anchors = generate_anchors([4/3, 2], [5/6, 3/4])
+                anchor_tubes = np.tile(np.expand_dims(anchors, axis=1), (1,self.T,1))
+            elif self.anchor_mode == "2":
+                anchors = generate_anchors([4/3,2,3], [5/6,3/4,1/2]) 
+                anchor_tubes = np.tile(np.expand_dims(anchors, axis=1), (1,self.T,1))
+            elif self.anchor_mode == "3":
+                anchors = generate_anchors([4/3,2,3,4], [5/6,3/4,1/2,1/4]) 
+                anchor_tubes = np.tile(np.expand_dims(anchors, axis=1), (1,self.T,1))
+            elif self.anchor_mode == "4":
+                anchors = generate_anchors([4/3,2,3,4,5], [5/6,3/4,1/2,1/4,0]) 
+                anchor_tubes = np.tile(np.expand_dims(anchors, axis=1), (1,self.T,1))
+            else:    # void anchor
+                anchor_tubes = np.zeros([1,self.T,4])
+        else:
+            anchor_tubes = proposals
 
         # rescale tubes to absolute position
         gt_tubes[:,:,:4] = scale_tubes_abs(gt_tubes[:,:,:4], WIDTH, HEIGHT)

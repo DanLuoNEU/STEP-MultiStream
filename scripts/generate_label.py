@@ -9,6 +9,8 @@ if 'train' in csv_path:
     output_file = os.path.join(output_root, 'train.pkl')
 elif 'val' in csv_path:
     output_file = os.path.join(output_root, 'val.pkl')
+elif 'test' in csv_path:
+    output_file = os.path.join(output_root, 'test.pkl')
 else:
     raise ValueError(csv_path)
 

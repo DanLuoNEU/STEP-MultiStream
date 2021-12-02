@@ -6,17 +6,20 @@
 cd ../
 
 data_root="/data/CLASP-DATA/CLASP2-STEP/data"
+fps=15
 save_root="/data/Dan/ava_v2_1/cache/"
 kinetics_pretrain="pretrained/i3d_kinetics.pth"
 
-name="Cls-cam13"
+name="Cls-kinetics400_KRImixed_PVDsd_3cls-no_context-2cls-T9i1"
 base_net="i3d"
 det_net="two_branch"
 # resume_path="Auto"
+resume_path="/data/Dan/ava_v2_1/cache/Cls-kinetics400_KRImixed-no_context-2cls-T9i1-max1-i3d-two_branch/checkpoint_best.pth" # for 2cls
 ## No --fp16 for this, this model is pretrained with fp32
-resume_path="pretrained/ava_cls.pth"
+# resume_path="pretrained/ava_cls.pth"
 
-T=9
+num_classes=3
+T=9 # 9
 max_iter=1    # index starts from 1
 iterative_mode="spatial"
 pool_mode="align"
@@ -51,7 +54,7 @@ freeze_affine="True"
 freeze_stats="True"
 
 
-/home/dan/anaconda3/envs/py36pt110/bin/python train_cls_ft.py --data_root $data_root --save_root $save_root \
+/home/dan/anaconda3/envs/py36pt110/bin/python train_cls_ft.py --data_root $data_root --fps $fps --save_root $save_root \
     --name $name --resume_path $resume_path --kinetics_pretrain $kinetics_pretrain \
     --base_net $base_net --det_net $det_net --max_iter $max_iter --T $T \
     --iterative_mode $iterative_mode \
@@ -60,4 +63,5 @@ freeze_stats="True"
     --optimizer $optimizer --base_lr $base_lr --det_lr $det_lr --det_lr0 $det_lr0 --milestones $milestones \
     --scale_norm $scale_norm --do_flip $do_flip --do_crop $do_crop --do_photometric $do_photometric --do_erase $do_erase \
     --fc_dim $fc_dim --dropout $dropout  --scheduler $scheduler --warmup_iters $warmup_iters \
-    --freeze_affine $freeze_affine --freeze_stats $freeze_stats --num_classes 3
+    --freeze_affine $freeze_affine --freeze_stats $freeze_stats --num_classes $num_classes \
+    --model_ft
