@@ -34,7 +34,8 @@ def main():
 
     ################## Customize your configuratons here ###################
 
-    checkpoint_path = 'pretrained/20200329_checkpoint_best.pth' # 'pretrained/20200329_checkpoint_best.pth' # 'pretrained/ft_step_90cam20.pth'
+    # checkpoint_path = 'pretrained/20200329_checkpoint_best.pth' # 'pretrained/ft_step_90cam20.pth'
+    checkpoint_path = '/data/CLASP-DATA/pretrained/STEP/bestModel/RGB/side/checkpoint_best_rgb_v2.pth'
     if os.path.isfile(checkpoint_path):
         print ("Loading pretrain model from %s" % checkpoint_path)
         map_location = 'cuda:0'
@@ -44,7 +45,8 @@ def main():
         raise ValueError("Pretrain model not found!", checkpoint_path)
 
     # TODO: Set data_root to the customized input dataset
-    args.data_root = '/data/CLASP-DATA/20200227-trimmed/demo/' # '/data/CLASP-DATA/20200227-trimmed/frames/cam18-p2p-1/' # '/data/CLASP-DATA/20200227-trimmed/demo'
+    # args.data_root = '/data/CLASP-DATA/20200227-trimmed/demo/' # '/data/CLASP-DATA/20200227-trimmed/frames/cam18-p2p-1/'
+    args.data_root = '/data/ALERT-SHARE/exp2training-10fps/'
     args.save_root = os.path.join(os.path.dirname(args.data_root), 'results/')
     if not os.path.isdir(args.save_root):
         print("making " + str(args.save_root))
@@ -54,15 +56,13 @@ def main():
 
     # TODO: modify this setting according to the actual frame rate and file name
     source_fps = 30
-    im_format = 'frame%05d.jpg'
+    im_format = 'cam20_%06d.jpg'
     conf_thresh = 0.4
     global_thresh = 0.8    # used for cross-class NMS
     # modify the label
     # print(args.id2class)
     # exit(0)
-    args.id2class = {1:'transfer', 2: 'transfer', 3:'background'}
-    # args.id2class[1] = 'transfer' #'give'
-    # args.id2class[2] = 'transfer' #'take'
+    args.id2class = {1:'xfr', 2: 'p2p', 3:'background'}
     
     ################ Define models #################
 
