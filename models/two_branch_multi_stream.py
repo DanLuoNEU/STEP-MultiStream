@@ -2,15 +2,17 @@
 Copyright (C) 2019 NVIDIA Corporation.  All rights reserved.
 Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode).
 """
+import os
+import sys
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import os
 
-from .networks import weights_init
-from .i3dpt_2S import I3D_head
-import sys
+from .i3dpt_multi_stream import I3D_head
+from .networks_multi_stream import weights_init
+
+
 sys.path.append('../')
 from utils.tube_utils import encode_coef
 
@@ -26,9 +28,9 @@ def build_conv(base_name='i3d', input_type='rgb', kinetics_pretrain=None, mode='
         model_dict = i3d.state_dict()
 
         if input_type == 'rgb':
-            kinetics_pretrain=kinetics_pretrain.split('|')[0]
+            kinetics_pretrain=kinetics_pretrain.split('+')[0]
         elif input_type == 'flow':
-            kinetics_pretrain=kinetics_pretrain.split('|')[1]
+            kinetics_pretrain=kinetics_pretrain.split('+')[1]
 
         if kinetics_pretrain is not None:
             if os.path.isfile(kinetics_pretrain):

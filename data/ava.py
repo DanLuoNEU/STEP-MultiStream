@@ -115,7 +115,7 @@ def get_target_tubes(root, boxes, labels, num_classes=60):
     # label_map = os.path.join(root, 'label/ava_action_list_v2.1_for_activitynet_2018.pbtxt')
     # categories, class_whitelist = read_labelmap(open(label_map, 'r'))
     # classes = np.array(list(class_whitelist)) - 1
-    label_map = os.path.join(root, '20211007-label_3cls/ava_finetune.pbtxt')
+    label_map = os.path.join(root, 'label/ava_finetune.pbtxt')
     categories, class_whitelist = read_labelmap(open(label_map, 'r'))
     classes = np.array(list(class_whitelist))
 
@@ -248,7 +248,9 @@ class AVADataset(data.Dataset):
     to access input sequence, GT tubes and proposal tubes
     """
 
-    def __init__(self, root, mode, input_type, T=3, chunks=1, fps=12, transform=None, proposal_path=None, stride=1, anchor_mode="1", num_classes=60, foreground_only=False):
+    def __init__(self, root, mode, input_type, T=3, chunks=1, fps=12, 
+                transform=None, proposal_path=None, stride=1, 
+                anchor_mode="1", num_classes=60, foreground_only=False):
         """
         Args:
             root: str, root path of the dataset
@@ -281,12 +283,12 @@ class AVADataset(data.Dataset):
 
         self.imgpath_rgb = os.path.join(root, 'frames/')
         if self.mode == 'train':
-            self.label_path = os.path.join(root, '20211007-label_3cls/train.pkl')
+            self.label_path = os.path.join(root, 'label/train.pkl')
         elif self.mode == 'val':
-            self.label_path = os.path.join(root, '20211007-label_3cls/val.pkl')
+            self.label_path = os.path.join(root, 'label/val.pkl')
         else:
             self.stride = 1
-            self.label_path = os.path.join(root, '20211007-label_3cls/test.pkl')
+            self.label_path = os.path.join(root, 'label/test.pkl')
             # self.foreground_only = False # Original code has this
            
         data_list, videoname_list = make_list(self.label_path, self.chunks, self.stride, self.foreground_only)

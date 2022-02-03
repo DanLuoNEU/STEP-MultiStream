@@ -2,7 +2,6 @@
 Copyright (C) 2019 NVIDIA Corporation.  All rights reserved.
 Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode).
 """
-
 import os
 import torch
 import torch.nn as nn
@@ -10,7 +9,7 @@ import torch.nn.functional as F
 import torch.nn.init as init
 import torchvision
 
-from .i3dpt_2S import I3D
+from .i3dpt_multi_stream import I3D
 from external.maskrcnn_benchmark.roi_layers import ROIAlign, ROIPool
 
 
@@ -52,14 +51,14 @@ class BaseNet(nn.Module):
     Backbone network of the model
     """
 
-    def __init__(self, cfg, input_type='rgb'):
+    def __init__(self, cfg):
         super(BaseNet, self).__init__()
         
         self.base_name = cfg.base_net
         self.kinetics_pretrain = cfg.kinetics_pretrain
         self.freeze_stats = cfg.freeze_stats
         self.freeze_affine = cfg.freeze_affine
-        self.input_type = input_type
+        self.input_type = cfg.input_type
         self.fp16 = cfg.fp16
 
         if self.base_name == "i3d":
@@ -109,11 +108,12 @@ def build_base_i3d(kinetics_pretrain=None, freeze_affine=True, input_type='rgb')
     print (f"Building I3D {input_type} model...")
     i3d = I3D(input_type=input_type, num_classes=400)
 
+    # '|' would cause BrokenPipe bug in VSCode Debug as one of the arguments
     if input_type == 'rgb':
-        kinetics_pretrain=kinetics_pretrain.split('|')[0]
+        kinetics_pretrain=kinetics_pretrain.split('+')[0]
     elif input_type == 'flow':
-        kinetics_pretrain=kinetics_pretrain.split('|')[1]
-        
+        kinetics_pretrain=kinetics_pretrain.split('+')[1]
+    
     if kinetics_pretrain is not None:
         if os.path.isfile(kinetics_pretrain):
             print (f"Loading I3D {input_type} pretrained on Kinetics dataset from {kinetics_pretrain}...")

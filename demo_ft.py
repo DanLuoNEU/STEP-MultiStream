@@ -27,7 +27,7 @@ from data.customize import CustomizedDataset, detection_collate, WIDTH, HEIGHT
 from data.augmentations import BaseTransform
 
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"]="5,7"  # specify which GPU(s) to be used
+os.environ["CUDA_VISIBLE_DEVICES"]="7"  # specify which GPU(s) to be used
 bool_vis, bool_res = True, True
 
 def main():
@@ -36,7 +36,8 @@ def main():
     # checkpoint_path = '/data/CLASP-DATA/pretrained/STEP/bestModel/RGB/topdown/checkpoint_best_rgb_20200501_td1113.pth'
     # checkpoint_path = "/data/CLASP-DATA/pretrained/STEP/bestModel/RGB/side/checkpoint_best_rgb_v2.pth"
     # checkpoint_path = "/data/Dan/ava_v2_1/cache/STEP-kinetics400_KRImixed_PVDsd_withFA-no_context-2cls-T3i3-max3-i3d-two_branch/checkpoint_best.pth"
-    checkpoint_path = "/data/Dan/ava_v2_1/cache/STEP-kinetics400_KRImixed_PVDsd_3cls-no_context-T3i3-max3-i3d-two_branch/checkpoint_best.pth"
+    checkpoint_path = "/data/Dan/ava_v2_1/cache/20211213-STEP-kinetics400_KRImixed_PVDsd_3cls_clean-no_context-T1i3-fps10-Finetune-max3-i3d-two_branch/checkpoint_best.pth"
+    checkpoint_path = "/data/Dan/ava_v2_1/cache/STEP-kinetics400_KRImixed_2cls-no_context-T1i3-fps10-b1-max3-i3d-two_branch/checkpoint_best.pth"
 
     if os.path.isfile(checkpoint_path):
         print ("Loading pretrain model from %s" % checkpoint_path)
@@ -47,10 +48,20 @@ def main():
         raise ValueError("Pretrain model not found!", checkpoint_path)
 
     # TODO: Set data_root to the customized input dataset
+    args.max_iter=3 # 1
+    if args.max_iter==3:    
+        args.T=1 #3 
+        conf_thresh = 0.3
+        global_thresh = 0.8
+    else:
+        args.T=3 #9
+        conf_thresh = 0.4
+        global_thresh = 0.6    # used for cross-class NMS
     # args.data_root = '/data/ALERT-SHARE/20191023exp2training/frames/10fps/topdown'
     args.data_root = '/home/dan/ws/STEP-MultiStream/exps/frames'
-    args.save_root = os.path.join(os.path.dirname(args.data_root), 'demo_results/kinetics400_KRImixed_PVDsd_3cls-no_context_conf03_tc-mv_mi1/')
-    name_results='results_CPT300-330_mi1.txt'
+    args.save_root = os.path.join(os.path.dirname(args.data_root), 
+                    f'demo_results/STEP-kinetics400_KRImixed_2cls-no_context-T1i3-fps10-b1-max3-i3d-two_branch/T{args.T}i{args.max_iter}/')
+    name_results=f'results_KRI_T{args.T}i{args.max_iter}.txt'
     args.batch_size=1
     args.num_workers=1
     args.anchor_mode='1'
@@ -63,16 +74,8 @@ def main():
     # TODO: modify this setting according to the actual frame rate and file name
     source_fps = 10
     target_fps = 10
-    im_format = '%04d.jpg'
+    im_format = '%06d.jpg'
     
-    args.max_iter=1 # 1
-    if args.max_iter==3:    
-        args.T=9
-        conf_thresh = 0.3
-    else:                   
-        args.T=3
-        conf_thresh = 0.2
-    global_thresh = 0.8    # used for cross-class NMS
     # args.id2class = {1:'p2p', 2: 'xfr', 3:'bkgd'}
     if '3cls' in checkpoint_path:
         args.id2class = {1:'bkgd', 2: 'xfr',3:'tc_mv'}

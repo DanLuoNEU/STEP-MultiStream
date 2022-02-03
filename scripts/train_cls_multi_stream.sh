@@ -6,17 +6,17 @@
 cd ../
 
 data_root="/data/truppr/ava/"
-save_root="/data/Dan/ava_v2_1/cache/"
-kinetics_pretrain="pretrained/i3d_flow_kinetics.pth"
+save_root="/data/Dan/ava_v2_1/cache"
+kinetics_pretrain="pretrained/i3d_kinetics.pth|pretrained/i3d_flow_kinetics.pth"
 
-name="Cls_of"
+name="Cls_2s"
 base_net="i3d"
 det_net="two_branch"
 resume_path="Auto"
 ## No --fp16 for this, this model is pretrained with fp32
 # resume_path="pretrained/ava_cls.pth"
 
-input_type="flow"
+input_type="2s"
 T=9
 max_iter=1    # index starts from 1
 iterative_mode="spatial"
@@ -24,13 +24,13 @@ pool_mode="align"
 pool_size=7
 
 # training schedule
-num_workers=16
-max_epochs=14
+num_workers=8
+max_epochs=15 #10 #14
 batch_size=4
 optimizer="adam"
 base_lr=5e-5
 det_lr0=1e-4
-det_lr=5e-4
+det_lr=5e-5 #5e-5
 # save_step=22930
 save_step=251
 print_step=20
@@ -52,7 +52,7 @@ freeze_affine="True"
 freeze_stats="True"
 
 
-/home/dan/anaconda3/envs/py36pt110/bin/python train_cls_of.py --data_root $data_root --save_root $save_root \
+python train_cls_2s.py --data_root $data_root --save_root $save_root \
     --name $name --resume_path $resume_path --kinetics_pretrain $kinetics_pretrain \
     --base_net $base_net --det_net $det_net --max_iter $max_iter --T $T \
     --iterative_mode $iterative_mode --input_type $input_type\

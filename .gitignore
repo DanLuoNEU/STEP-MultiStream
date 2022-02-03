@@ -3,6 +3,7 @@ build/
 datasets/
 examples/
 exps/
+logs/
 runs/
 STEP.egg-info/
 test/
@@ -14,4 +15,5 @@ __pycache__/
 
 model.txt
 pretrained/
-**/.mp4
+**/*.mp4
+**/*.out

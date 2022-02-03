@@ -1,3 +1,5 @@
+# 01/24/2022,Dan
+# This file is trying to do single-stream STEP classification training step
 """
 Copyright (C) 2019 NVIDIA Corporation.  All rights reserved.
 Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode).
@@ -10,27 +12,34 @@ import numpy as np
 from datetime import datetime
 from collections import OrderedDict
 
+#args.device = torch.device("cuda:0" if args.cuda and torch.cuda.is_available() else "cpu")
+os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"]="0,1"  # specify which GPU(s) to be used
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.utils.data
+from torch.utils.tensorboard import SummaryWriter
 import torchvision
 
 from config import parse_config
-from models import BaseNet, ROINet, TwoBranchNet, ContextNet
+from models import BaseNet, ROINet
+from models.networks_multi_stream import BaseNet, ROINet
+from models.two_branch_multi_stream import TwoBranchNet, ContextNet
 from utils.utils import inference, train_select, AverageMeter, get_gpu_memory, select_proposals
 from utils.tube_utils import flatten_tubes, valid_tubes
 from utils.solver import WarmupCosineLR, WarmupStepLR, get_params
-from data.ava_cls import AVADataset, detection_collate, WIDTH, HEIGHT
-from data.augmentations import TubeAugmentation, BaseTransform
+from data.clasp_cls_multi_stream import CLASPDataset, detection_collate, WIDTH, HEIGHT
+from data.augmentations_multi_stream import TubeAugmentation, BaseTransform
 from utils.eval_utils import ava_evaluation
 from external.ActivityNet.Evaluation.get_ava_performance import read_labelmap
 
-
+# Arguments
 args = parse_config()
+args.image_size = (WIDTH, HEIGHT)
 args.max_iter = 1    # only 1 step for classification pretraining
 args.no_context = True # Avoid context and check, ln 397,451
-
+# fp16 configure+
 try:
     import apex
     from apex import amp
@@ -39,43 +48,34 @@ except ImportError:
     print ('Warning: If you want to use fp16, please apex with cuda support (https://github.com/NVIDIA/apex) and update pytorch to 1.0')
     args.fp16 = False
     pass
-
-args.image_size = (WIDTH, HEIGHT)
+# Label Dictionary
 label_dict = {}
-
-if args.num_classes == 80:
-    for i in range(80):
-        label_dict[i] = i+1
-elif args.num_classes == 60:
-    label_map = os.path.join(args.data_root, 'label/ava_action_list_v2.1_for_activitynet_2018.pbtxt')
-    categories, class_whitelist = read_labelmap(open(label_map, 'r'))
-    classes = [(val['id'], val['name']) for val in categories]
-    id2class = {c[0]: c[1] for c in classes}    # gt class id (1~80) --> class name
-    for i, c in enumerate(sorted(list(class_whitelist))):
-        label_dict[i] = c
-else:
-    label_map = os.path.join(args.data_root, 'label/ava_finetune.pbtxt')
+if args.num_classes != 80:
+    if args.num_classes == 60: # ava-60
+        label_map = os.path.join(args.data_root, 'label/ava_action_list_v2.1_for_activitynet_2018.pbtxt')
+    else: # CLASP
+        label_map = os.path.join(args.data_root, 'label/ava_finetune.pbtxt')
     categories, class_whitelist = read_labelmap(open(label_map, 'r'))
     classes = [(val['id'], val['name']) for val in categories]
     id2class = {c[0]: c[1] for c in classes}    # gt class id (1~3) --> class name
     for i, c in enumerate(sorted(list(class_whitelist))):
         label_dict[i] = c
-    
-
+else:
+    for i in range(80):
+        label_dict[i] = i+1
+args.label_dict = label_dict
+args.id2class = id2class
 ## set random seeds
 np.random.seed(args.man_seed)
 torch.manual_seed(args.man_seed)
 if args.cuda:
     torch.cuda.manual_seed_all(args.man_seed)
 
-#args.device = torch.device("cuda:0" if args.cuda and torch.cuda.is_available() else "cpu")
-os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"]="5,6"  # specify which GPU(s) to be used
 gpu_count = torch.cuda.device_count()
 torch.backends.cudnn.benchmark=True
 
 def main():
-
+    # Exp Log
     args.exp_name = '{}-max{}-{}-{}'.format(args.name, args.max_iter, args.base_net, args.det_net)
     args.save_root = os.path.join(args.save_root, args.exp_name+'/')
 
@@ -85,26 +85,36 @@ def main():
     log_name = args.save_root+"training-"+datetime.strftime(datetime.now(), '%Y%m%d-%H%M%S')+".log"
     log_file = open(log_name, "w", 1)
     log_file.write(args.exp_name+'\n')
-
     ################ DataLoader setup #################
-
     print('Loading Dataset...')
-    augmentation = TubeAugmentation(args.image_size, args.means, args.stds, do_flip=args.do_flip, do_crop=args.do_crop, do_photometric=args.do_photometric, scale=args.scale_norm, do_erase=args.do_erase)
+    augmentation = TubeAugmentation(size=args.image_size, scale=args.scale_norm, input_type=args.input_type, 
+                                    do_flip=args.do_flip, do_crop=args.do_crop, 
+                                    do_photometric=args.do_photometric, do_erase=args.do_erase)
     log_file.write("Data augmentation: "+ str(augmentation))
 
-    train_dataset = AVADataset(args.data_root, 'train', args.input_type, args.T, args.NUM_CHUNKS[args.max_iter], args.fps, augmentation, stride=1, num_classes=args.num_classes, foreground_only=True)
-    val_dataset = AVADataset(args.data_root, 'val', args.input_type, args.T, args.NUM_CHUNKS[args.max_iter], args.fps, BaseTransform(args.image_size, args.means, args.stds,args.scale_norm), stride=1, num_classes=args.num_classes, foreground_only=True)
+    train_dataset = CLASPDataset(args.data_root, 'train', args.input_type, 
+                                args.T, args.NUM_CHUNKS[args.max_iter], args.fps,
+                                augmentation, stride=1, num_classes=args.num_classes,
+                                foreground_only=True)
+    val_dataset = CLASPDataset(args.data_root, 'val', args.input_type, args.T,
+                                args.NUM_CHUNKS[args.max_iter], args.fps, 
+                                BaseTransform(args.image_size, args.means, args.stds,
+                                args.scale_norm,args.input_type), stride=1, num_classes=args.num_classes, 
+                                foreground_only=True)
 
     if args.milestones[0] == -1:
         args.milestones = [int(np.ceil(len(train_dataset) / args.batch_size) * args.max_epochs)]
 
     train_dataloader = torch.utils.data.DataLoader(train_dataset, args.batch_size, num_workers=args.num_workers,
                                   shuffle=True, collate_fn=detection_collate, pin_memory=True)
-    val_dataloader = torch.utils.data.DataLoader(val_dataset, args.batch_size, num_workers=args.num_workers,
+    val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=args.batch_size, num_workers=args.num_workers,
                                   shuffle=False, collate_fn=detection_collate, pin_memory=True)
     log_file.write("Training size: " + str(len(train_dataset)) + "\n")
     log_file.write("Validation size: " + str(len(val_dataset)) + "\n")
-    print('Training STEP on ', train_dataset.name)
+    if 'PVD' in args.exp_name:
+        print('Training STEP on ', train_dataset.name, 'PVD data')
+    else:
+        print('Training STEP on ', train_dataset.name, 'KRI data')
 
     ################ define models #################
 
@@ -223,7 +233,6 @@ def main():
         optimizer = optim.SGD(params, lr=args.det_lr, momentum=args.momentum, weight_decay=args.weight_decay)
     elif args.optimizer == 'adam':
         optimizer = optim.Adam(params, lr=args.det_lr)
-        # optimizer = optim.Adam(filter(lambda x : x.requires_grad, nets['det_net0'].parameters()),lr=args.det_lr, weight_decay=args.weight_decay) # Tried, but didnt work
     else:
         raise NotImplementedError
 
@@ -243,10 +252,8 @@ def main():
     for arg in sorted(vars(args)):
         print(arg, getattr(args, arg))
         log_file.write(str(arg)+': '+str(getattr(args, arg))+'\n')
-
-    for i in range(args.max_iter):
-        log_file.write(str(nets['det_net%d' % i])+'\n\n')
-    
+    # for i in range(args.max_iter):
+    #     log_file.write(str(nets['det_net%d' % i])+'\n\n')
     params_num = [sum(p.numel() for p in nets['base_net'].parameters() if p.requires_grad)]
     if not args.no_context:
         params_num.append(sum(p.numel() for p in nets['context_net'].parameters() if p.requires_grad))
@@ -265,7 +272,7 @@ def train(args, nets, optimizer, scheduler, train_dataloader, val_dataloader, lo
     # loss counters
     batch_time = AverageMeter(200)
     losses = AverageMeter(200)
-
+    writer = SummaryWriter(f'logs/{args.name}_Batch{args.batch_size}')
 #    writer = SummaryWriter(args.save_root+"summary"+datetime.strftime(datetime.now(), '%Y%m%d-%H%M%S'))
 
     ################ Training loop #################
@@ -389,7 +396,7 @@ def train(args, nets, optimizer, scheduler, train_dataloader, val_dataloader, lo
                              'loss {:.3f}({:.3f}) Timer {:0.3f}({:0.3f}) GPU usage: {}'.format(
                                 epochs+1, args.max_epochs, epoch_size, iteration, lr,
                                 losses.val, losses.avg, batch_time.val, batch_time.avg, gpu_memory)
-
+                writer.add_scalar('loss_cls', losses.avg, iteration)
                 torch.cuda.synchronize()
                 t0 = time.perf_counter()
                 log_file.write(print_line+'\n')
@@ -444,9 +451,9 @@ def train(args, nets, optimizer, scheduler, train_dataloader, val_dataloader, lo
                     all_metrics[-1]["PascalBoxes_PerformanceByCategory/AP@0.5IOU/{}".format(id2class[i])]))
     
     
-    #        writer.add_scalar('mAP', all_metrics[-1]['PascalBoxes_Precision/mAP@0.5IOU'], iteration)
-    #        for key, ap in all_metrics[-1].items():
-    #            writer.add_scalar(key, ap, iteration)
+            writer.add_scalar('mAP', all_metrics[-1]['PascalBoxes_Precision/mAP@0.5IOU'], iteration)
+            for key, ap in all_metrics[-1].items():
+                writer.add_scalar(key, ap, iteration)
     
             if all_metrics[-1]['PascalBoxes_Precision/mAP@0.5IOU'] > best_mAP:
                 best_mAP = all_metrics[-1]['PascalBoxes_Precision/mAP@0.5IOU']
@@ -478,7 +485,7 @@ def train(args, nets, optimizer, scheduler, train_dataloader, val_dataloader, lo
 
 
     log_file.close()
-#    writer.close()
+    writer.close()
 
 
 def validate(args, val_dataloader, nets, iteration=0, iou_thresh=0.5):

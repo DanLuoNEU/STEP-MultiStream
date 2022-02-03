@@ -1,5 +1,5 @@
 """
-04/20/2020, Dan
+04/30/2020, Dan
 Copyright (C) 2019 NVIDIA Corporation.  All rights reserved.
 Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode).
 """
@@ -19,19 +19,21 @@ import torchvision
 #from tensorboardX import SummaryWriter
 
 from config import parse_config
-from models.networks_of import BaseNet, ROINet 
-from models.two_branch_of import TwoBranchNet, ContextNet
+from models.networks_2S import BaseNet, ROINet 
+from models.two_branch_2S import TwoBranchNet, ContextNet
 from utils.utils import inference, train_select, AverageMeter, get_gpu_memory, select_proposals
 from utils.tube_utils import flatten_tubes, valid_tubes
 from utils.solver import WarmupCosineLR, WarmupStepLR, get_params
-from data.ava_cls_of import AVADataset, detection_collate, WIDTH, HEIGHT
-from data.augmentations_of import TubeAugmentation, BaseTransform
+from data.ava_cls_2S import AVADataset, detection_collate, WIDTH, HEIGHT
+from data.augmentations_2S import TubeAugmentation, BaseTransform
 from utils.eval_utils import ava_evaluation
 from external.ActivityNet.Evaluation.get_ava_performance import read_labelmap
 
 
 args = parse_config()
 args.max_iter = 1    # only 1 step for classification pretraining
+args.pret_rgb="/data/Dan/ava_v2_1/cache/Cls-max1-i3d-two_branch/checkpoint_best.pth"
+args.pret_of ="/data/Dan/ava_v2_1/cache/Cls_of-max1-i3d-two_branch/checkpoint_best.pth"
 
 try:
     import apex
@@ -47,16 +49,15 @@ label_dict = {}
 if args.num_classes != 80:
     if args.num_classes == 3:
         label_map = os.path.join(args.data_root, 'label/ava_finetune.pbtxt')
-    else: # 60
+    elif args.num_classes == 60:
         label_map = os.path.join(args.data_root, 'label/ava_action_list_v2.1_for_activitynet_2018.pbtxt')
     categories, class_whitelist = read_labelmap(open(label_map, 'r'))
     classes = [(val['id'], val['name']) for val in categories]
-    id2class = {c[0]: c[1] for c in classes}    # gt class id (1~3) --> class name
+    id2class = {c[0]: c[1] for c in classes}    # gt class id (1~x) --> class name
     for i, c in enumerate(sorted(list(class_whitelist))):
         label_dict[i] = c
-
 else:
-    for i in range(80):
+    for i in range(80): # 80 classes
         label_dict[i] = i+1
 
 ## set random seeds
@@ -67,7 +68,7 @@ if args.cuda:
 
 #args.device = torch.device("cuda:0" if args.cuda and torch.cuda.is_available() else "cpu")
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"]="4,5,6,7"  # specify which GPU(s) to be used
+os.environ["CUDA_VISIBLE_DEVICES"]="2,3,4,7"  # specify which GPU(s) to be used
 gpu_count = torch.cuda.device_count()
 torch.backends.cudnn.benchmark=True
 
@@ -75,8 +76,6 @@ def main():
 
     args.exp_name = '{}-max{}-{}-{}'.format(args.name, args.max_iter, args.base_net, args.det_net)
     args.save_root = os.path.join(args.save_root, args.exp_name+'/')
-    args.scale_norm = 0
-
     if not os.path.isdir(args.save_root):
         os.makedirs(args.save_root)
 
@@ -87,11 +86,11 @@ def main():
     ################ DataLoader setup #################
 
     print('Loading Dataset...')
-    augmentation = TubeAugmentation(args.image_size, args.means, args.stds, do_flip=args.do_flip, do_crop=args.do_crop, do_photometric=args.do_photometric, scale=args.scale_norm, do_erase=args.do_erase)
+    augmentation = TubeAugmentation(args.image_size, scale=args.scale_norm, input_type=args.input_type,
+                                    do_flip=args.do_flip, do_crop=args.do_crop, do_photometric=args.do_photometric, do_erase=args.do_erase)
     log_file.write("Data augmentation: "+ str(augmentation))
-
     train_dataset = AVADataset(args.data_root, 'train', args.input_type, args.T, args.NUM_CHUNKS[args.max_iter], args.fps, augmentation, stride=1, num_classes=args.num_classes, foreground_only=True)
-    val_dataset = AVADataset(args.data_root, 'val', args.input_type, args.T, args.NUM_CHUNKS[args.max_iter], args.fps, BaseTransform(args.image_size, args.means, args.stds,args.scale_norm), stride=1, num_classes=args.num_classes, foreground_only=True)
+    val_dataset = AVADataset(args.data_root, 'val', args.input_type, args.T, args.NUM_CHUNKS[args.max_iter], args.fps, BaseTransform(size=args.image_size, scale=args.scale_norm, input_type='2s'), stride=1, num_classes=args.num_classes, foreground_only=True)
 
     if args.milestones[0] == -1:
         args.milestones = [int(np.ceil(len(train_dataset) / args.batch_size) * args.max_epochs)]
@@ -106,28 +105,41 @@ def main():
 
     ################ define models #################
 
-    nets = OrderedDict()
+    nets_rgb = OrderedDict()
+    nets_of = OrderedDict()
     # backbone network
-    nets['base_net'] = BaseNet(args)
+    nets_rgb['base_net'] = BaseNet(args,'rgb')
+    nets_of['base_net'] = BaseNet(args,'flow')
     # ROI pooling
-    nets['roi_net'] = ROINet(args.pool_mode, args.pool_size)
+    nets_rgb['roi_net'] = ROINet(args.pool_mode, args.pool_size)
+    nets_of['roi_net'] = ROINet(args.pool_mode, args.pool_size)
 
     # detection network
     for i in range(args.max_iter):
         if args.det_net == "two_branch":
-            nets['det_net%d' % i] = TwoBranchNet(args, cls_only=True)
+            nets_rgb['det_net%d' % i] = TwoBranchNet(args, cls_only=True, input_type='rgb')
+            nets_of['det_net%d' % i] = TwoBranchNet(args, cls_only=True, input_type='flow')
         else:
             raise NotImplementedError
     if not args.no_context:
         # context branch
-        nets['context_net'] = ContextNet(args)
+        nets_rgb['context_net'] = ContextNet(args,'rgb')
+        nets_of['context_net'] = ContextNet(args,'flow')
     
-    for key in nets:
-        nets[key] = nets[key].cuda()
+    for key in nets_rgb:
+        nets_rgb[key] = nets_rgb[key].cuda()
+    for key in nets_of:
+        nets_of[key] = nets_of[key].cuda()
 
     ################ Training setup #################
     ################ Optimizer and Scheduler setup #################
-    params = get_params(nets, args)
+    # Two ways to solve the conflict
+    ## 1. Two optimizers
+    ## 2. Two nets and concatenate params
+    # params = get_params(nets, args) # bug: name is not base_net etc.
+    params_rgb = get_params(nets_rgb,args)
+    params_of = get_params(nets_of,args)
+    params = params_rgb + params_of
     if args.optimizer == 'sgd':
         optimizer = optim.SGD(params, lr=args.det_lr, momentum=args.momentum, weight_decay=args.weight_decay)
     elif args.optimizer == 'adam':
@@ -142,18 +154,24 @@ def main():
 
     # Initialize AMP if needed
     if args.fp16:
-        models, optimizer = amp.initialize([net for _,net in nets.items()], optimizer, opt_level="O1")
-        for i, key in enumerate(nets):
-            nets[key] = models[i]
+        models, optimizer = amp.initialize([net for _,net in nets_rgb.items()], optimizer, opt_level="O1")
+        for i, key in enumerate(nets_rgb):
+            nets_rgb[key] = models[i]
+        models, optimizer = amp.initialize([net for _,net in nets_of.items()], optimizer, opt_level="O1")
+        for i, key in enumerate(nets_of):
+            nets_of[key] = models[i]
 
     # DataParallel is used
-    nets['base_net'] = torch.nn.DataParallel(nets['base_net'])
+    nets_rgb['base_net'] = torch.nn.DataParallel(nets_rgb['base_net'])
+    nets_of['base_net'] = torch.nn.DataParallel(nets_of['base_net'])
     if not args.no_context:
-        nets['context_net'] = torch.nn.DataParallel(nets['context_net'])
+        nets_rgb['context_net'] = torch.nn.DataParallel(nets_rgb['context_net'])
+        nets_of['context_net'] = torch.nn.DataParallel(nets_of['context_net'])
     for i in range(args.max_iter):
-        # distribute models to fit in GPU memory
-        nets['det_net%d' % i].to('cuda:%d' % ((i+1)%gpu_count))
-        nets['det_net%d' % i].set_device('cuda:%d' % ((i+1)%gpu_count))
+        nets_rgb['det_net%d' % i].to('cuda:%d' % ((i+1)/gpu_count))
+        nets_rgb['det_net%d' % i].set_device('cuda:%d' % ((i+1)/gpu_count))
+        nets_of['det_net%d' % i].to('cuda:%d' % ((i+1)/gpu_count))
+        nets_of['det_net%d' % i].set_device('cuda:%d' % ((i+1)/gpu_count))
 
     ############ Pretrain & Resume ###########
 
@@ -179,21 +197,18 @@ def main():
             if not os.path.isfile(model_path):
                 raise ValueError("Resume model not found!", args.resume_path)
         
-        # Assume that the resume model has the SAME class labels as the training one
         if model_path is not None:
             print ("Resuming trained model from %s" % model_path)
             checkpoint = torch.load(model_path, map_location='cpu')
 
-            nets['base_net'].load_state_dict(checkpoint['base_net'])
+            nets_rgb['base_net'].load_state_dict(checkpoint['base_net_rgb'])
+            nets_of['base_net'].load_state_dict(checkpoint['base_net_of'])
             if not args.no_context and 'context_net' in checkpoint:
-                nets['context_net'].load_state_dict(checkpoint['context_net'])
+                nets_rgb['context_net'].load_state_dict(checkpoint['context_net_rgb'])
+                nets_of['context_net'].load_state_dict(checkpoint['context_net_of'])
             for i in range(args.max_iter):
-                nets['det_net%d' % i].load_state_dict(checkpoint['det_net%d' % i])
-
-            if 'optimizer' in checkpoint:
-                optimizer.load_state_dict(checkpoint['optimizer'])
-            if 'scheduler' in checkpoint:
-                scheduler.load_state_dict(checkpoint['scheduler'])
+                nets_rgb['det_net%d' % i].load_state_dict(checkpoint['det_net_rgb%d' % i])
+                nets_of['det_net%d' % i].load_state_dict(checkpoint['det_net_of%d' % i])
 
             args.start_iteration = checkpoint['iteration']
             if checkpoint['iteration'] % int(np.ceil(len(train_dataset)/args.batch_size)) == 0:
@@ -203,7 +218,26 @@ def main():
 
             del checkpoint
             torch.cuda.empty_cache()
+        else:
+            # Reading model from the pretrained ones
+            print ("Retrieving trained model from %s" % args.pret_rgb)
+            checkpoint_rgb = torch.load(args.pret_rgb, map_location='cpu')
+            print ("Retrieving trained model from %s" % args.pret_of)
+            checkpoint_of = torch.load(args.pret_of, map_location='cpu')
 
+            nets_rgb['base_net'].load_state_dict(checkpoint_rgb['base_net'])
+            nets_of['base_net'].load_state_dict(checkpoint_of['base_net'])
+            if not args.no_context and 'context_net' in checkpoint_rgb:
+                nets_rgb['context_net'].load_state_dict(checkpoint_rgb['context_net'])
+            if not args.no_context and 'context_net' in checkpoint_of:
+                nets_of['context_net'].load_state_dict(checkpoint_of['context_net'])
+            for i in range(args.max_iter):
+                nets_rgb['det_net%d' % i].load_state_dict(checkpoint_rgb['det_net%d' % i])
+                nets_of['det_net%d' % i].load_state_dict(checkpoint_of['det_net%d' % i])
+            
+            del checkpoint_rgb
+            del checkpoint_of
+            torch.cuda.empty_cache()
     ######################################################
 
     for arg in sorted(vars(args)):
@@ -211,22 +245,30 @@ def main():
         log_file.write(str(arg)+': '+str(getattr(args, arg))+'\n')
 
     for i in range(args.max_iter):
-        log_file.write(str(nets['det_net%d' % i])+'\n\n')
+        log_file.write(str(nets_rgb['det_net%d' % i])+'\n\n')
+        log_file.write(str(nets_of['det_net%d' % i])+'\n\n')
     
-    params_num = [sum(p.numel() for p in nets['base_net'].parameters() if p.requires_grad)]
+    params_num = [sum(p.numel() for p in nets_rgb['base_net'].parameters() if p.requires_grad)]
     if not args.no_context:
-        params_num.append(sum(p.numel() for p in nets['context_net'].parameters() if p.requires_grad))
+        params_num.append(sum(p.numel() for p in nets_rgb['context_net'].parameters() if p.requires_grad))
     for i in range(args.max_iter):
-        params_num.append(sum(p.numel() for p in nets['det_net%d' % i].parameters() if p.requires_grad))
+        params_num.append(sum(p.numel() for p in nets_rgb['det_net%d' % i].parameters() if p.requires_grad))
+    params_num.append(sum(p.numel() for p in nets_of['base_net'].parameters() if p.requires_grad))
+    if not args.no_context:
+        params_num.append(sum(p.numel() for p in nets_of['context_net'].parameters() if p.requires_grad))
+    for i in range(args.max_iter):
+        params_num.append(sum(p.numel() for p in nets_of['det_net%d' % i].parameters() if p.requires_grad))
     log_file.write("Number of parameters: "+str(params_num)+'\n\n')
 
     # Start training
-    train(args, nets, optimizer, scheduler, train_dataloader, val_dataloader, log_file)
+    train(args, nets_rgb, nets_of, optimizer, scheduler, train_dataloader, val_dataloader, log_file)
 
 
-def train(args, nets, optimizer, scheduler, train_dataloader, val_dataloader, log_file):
+def train(args, nets_rgb, nets_of, optimizer, scheduler, train_dataloader, val_dataloader, log_file):
 
-    for _, net in nets.items():
+    for _, net in nets_rgb.items():
+        net.train()
+    for _, net in nets_of.items():
         net.train()
 
     # loss counters
@@ -246,18 +288,23 @@ def train(args, nets, optimizer, scheduler, train_dataloader, val_dataloader, lo
     epoch_size = int(np.ceil(len(train_dataloader.dataset) / args.batch_size))
 
     while epochs < args.max_epochs:
-        for data_id, (images, targets, tubes, infos) in enumerate(train_dataloader):
-            images = images.cuda()
-
+        for data_id, (images_c, targets, tubes, infos) in enumerate(train_dataloader):
+            images = images_c[:,:,:3,:,:].cuda()
+            flows = images_c[:,:,3:,:,:].cuda()
+            # print(images, flows)
             # adjust learning rate
             scheduler.step()
             lr = optimizer.param_groups[-1]['lr']
 
             # get conv features
-            conv_feat = nets['base_net'](images)
-            context_feat = None
+            conv_feat_rgb = nets_rgb['base_net'](images)
+            context_feat_rgb = None
             if not args.no_context:
-                context_feat = nets['context_net'](conv_feat)
+                context_feat_rgb = nets_rgb['context_net'](conv_feat_rgb)
+            conv_feat_of = nets_of['base_net'](flows)
+            context_feat_of = None
+            if not args.no_context:
+                context_feat_of = nets_of['context_net'](conv_feat_of)
 
             ########### Forward pass for the two-branch header ############
 
@@ -304,21 +351,31 @@ def train(args, nets, optimizer, scheduler, train_dataloader, val_dataloader, lo
             # flatten list of tubes
             flat_targets, tubes_nums = flatten_tubes(target_tubes, batch_idx=False)
             flat_tubes, _ = flatten_tubes(selected_tubes, batch_idx=True)    # add batch_idx for ROI pooling
-            flat_targets = torch.FloatTensor(flat_targets).to(conv_feat)
-            flat_tubes = torch.FloatTensor(flat_tubes).to(conv_feat)    # gpu:0 for ROI pooling
+            flat_targets = torch.FloatTensor(flat_targets).to(conv_feat_rgb)
+            flat_tubes = torch.FloatTensor(flat_tubes).to(conv_feat_rgb)
+            flat_targets_of = flat_targets.to(conv_feat_of)
+            flat_tubes_of = flat_tubes.to(conv_feat_of)
 
             # ROI Pooling
-            pooled_feat = nets['roi_net'](conv_feat[:, T_start:T_start+T_length].contiguous(), flat_tubes)
-            _,C,W,H = pooled_feat.size()
-            pooled_feat = pooled_feat.view(-1, T_length, pooled_feat.size(1), W, H)
+            pooled_feat_rgb = nets_rgb['roi_net'](conv_feat_rgb[:, T_start:T_start+T_length].contiguous(), flat_tubes)
+            pooled_feat_of = nets_of['roi_net'](conv_feat_of[:, T_start:T_start+T_length].contiguous(), flat_tubes_of)
+            _,C,W,H = pooled_feat_rgb.size()
+            pooled_feat_rgb = pooled_feat_rgb.view(-1, T_length, pooled_feat_rgb.size(1), W, H)
+            pooled_feat_of = pooled_feat_of.view(-1, T_length, pooled_feat_of.size(1), W, H)
 
-            temp_context_feat = None
+            temp_context_feat_rgb = None
+            temp_context_feat_of = None
             if not args.no_context:
-                temp_context_feat = torch.zeros((pooled_feat.size(0),context_feat.size(1),T_length,1,1)).to(context_feat)
-                for p in range(pooled_feat.size(0)):
-                    temp_context_feat[p] = context_feat[int(flat_tubes[p,0,0].item()/T_length),:,T_start:T_start+T_length].contiguous().clone()
+                temp_context_feat_rgb = torch.zeros((pooled_feat_rgb.size(0),context_feat_rgb.size(1),T_length,1,1)).to(context_feat_rgb)
+                temp_context_feat_of = torch.zeros((pooled_feat_of.size(0),context_feat_of.size(1),T_length,1,1)).to(context_feat_of)
+                for p in range(pooled_feat_rgb.size(0)):
+                    temp_context_feat_rgb[p] = context_feat_rgb[int(flat_tubes[p,0,0].item()/T_length),:,T_start:T_start+T_length].contiguous().clone()
+                    temp_context_feat_of[p] = context_feat_of[int(flat_tubes_of[p,0,0].item()/T_length),:,T_start:T_start+T_length].contiguous().clone()
 
-            _,_,_,_, cur_loss_global_cls, _, _ = nets['det_net0'](pooled_feat, context_feat=temp_context_feat, tubes=flat_tubes, targets=flat_targets)
+            _,_,_,_, cur_loss_global_cls_rgb, _, _ = nets_rgb['det_net0'](pooled_feat_rgb, context_feat=temp_context_feat_rgb, tubes=flat_tubes, targets=flat_targets)
+            _,_,_,_, cur_loss_global_cls_of, _, _ = nets_of['det_net0'](pooled_feat_of, context_feat=temp_context_feat_of, tubes=flat_tubes_of, targets=flat_targets_of)
+            # Fuse the loss
+            cur_loss_global_cls = 0.5*cur_loss_global_cls_rgb+0.5*cur_loss_global_cls_of
             cur_loss_global_cls = cur_loss_global_cls.mean()
 
             ########### Gradient updates ############
@@ -338,7 +395,6 @@ def train(args, nets, optimizer, scheduler, train_dataloader, val_dataloader, lo
             #     print(nets['det_net0'].global_cls.weight.grad)
             #     print(cur_loss_global_cls.item())
             optimizer.step()
-
 
             ############### Print logs and save models ############
 
@@ -368,21 +424,24 @@ def train(args, nets, optimizer, scheduler, train_dataloader, val_dataloader, lo
                 save_dict = {
                     'epochs': epochs+1,
                     'iteration': iteration,
-                    'base_net': nets['base_net'].state_dict(),
-                    'context_net': nets['context_net'].state_dict(),
+                    'base_net_rgb': nets_rgb['base_net'].state_dict(),
+                    'context_net_rgb': nets_rgb['context_net'].state_dict(),
+                    'base_net_of': nets_of['base_net'].state_dict(),
+                    'context_net_of': nets_of['context_net'].state_dict(),
                     'optimizer': optimizer.state_dict(),
                     'scheduler': scheduler.state_dict(),
                     'val_mAP': best_mAP,
                     'cfg': args}
                 for i in range(args.max_iter):
-                    save_dict['det_net%d' % i] = nets['det_net%d' % i].state_dict()
+                    save_dict['det_net_rgb%d' % i] = nets_rgb['det_net%d' % i].state_dict()
+                    save_dict['det_net_of%d' % i] = nets_of['det_net%d' % i].state_dict()
                 torch.save(save_dict, save_name)
 
                 # only keep the latest model
                 if os.path.isfile(args.save_root+'checkpoint_'+str(iteration-args.save_step) + '.pth'):
                     os.remove(args.save_root+'checkpoint_'+str(iteration-args.save_step) + '.pth')
                     print (args.save_root+'checkpoint_'+str(iteration-args.save_step) + '.pth  removed!')
-            # break
+
             # For consistency when resuming from the middle of an epoch
             if iteration % epoch_size == 0 and iteration > 0:
                 break
@@ -394,10 +453,12 @@ def train(args, nets, optimizer, scheduler, train_dataloader, val_dataloader, lo
             torch.cuda.synchronize()
             tvs = time.perf_counter()
     
-            for _, net in nets.items():
+            for _, net in nets_rgb.items():
+                net.eval() # switch net to evaluation mode
+            for _, net in nets_of.items():
                 net.eval() # switch net to evaluation mode
             print('Validating at ', iteration)
-            all_metrics = validate(args, val_dataloader, nets, iteration, iou_thresh=args.iou_thresh)
+            all_metrics = validate(args, val_dataloader, nets_rgb, nets_of, iteration, iou_thresh=args.iou_thresh)
     
             prt_str = ''
             for i in range(args.max_iter):
@@ -422,18 +483,22 @@ def train(args, nets, optimizer, scheduler, train_dataloader, val_dataloader, lo
                 save_dict = {
                     'epochs': epochs+1,
                     'iteration': iteration,
-                    'base_net': nets['base_net'].state_dict(),
-                    'context_net': nets['context_net'].state_dict(),
+                    'base_net_rgb': nets_rgb['base_net'].state_dict(),
+                    'context_net_rgb': nets_rgb['context_net'].state_dict(),
+                    'base_net_of': nets_of['base_net'].state_dict(),
+                    'context_net_of': nets_of['context_net'].state_dict(),
                     'optimizer': optimizer.state_dict(),
                     'scheduler': scheduler.state_dict(),
                     'val_mAP': best_mAP,
                     'cfg': args}
                 for i in range(args.max_iter):
-                    save_dict['det_net%d' % i] = nets['det_net%d' % i].state_dict()
-    
+                    save_dict['det_net_rgb%d' % i] = nets_rgb['det_net%d' % i].state_dict()
+                    save_dict['det_net_of%d' % i] = nets_of['det_net%d' % i].state_dict()
                 torch.save(save_dict, save_name)
     
-            for _, net in nets.items():
+            for _, net in nets_rgb.items():
+                net.train() # switch net to training mode
+            for _, net in nets_of.items():
                 net.train() # switch net to training mode
             torch.cuda.synchronize()
             t0 = time.perf_counter()
@@ -448,7 +513,7 @@ def train(args, nets, optimizer, scheduler, train_dataloader, val_dataloader, lo
 #    writer.close()
 
 
-def validate(args, val_dataloader, nets, iteration=0, iou_thresh=0.5):
+def validate(args, val_dataloader, nets_rgb, nets_of, iteration=0, iou_thresh=0.5):
     """
     Test the model on validation set
     """
@@ -466,7 +531,7 @@ def validate(args, val_dataloader, nets, iteration=0, iou_thresh=0.5):
     fout = open(gt_file, 'w')
 
     with torch.no_grad():    # for evaluation
-        for num, (images, targets, tubes, infos) in enumerate(val_dataloader):
+        for num, (images_c, targets, tubes, infos) in enumerate(val_dataloader):
 
             if (num+1) % 100 == 0:
                 print ("%d / %d" % (num+1, len(val_dataloader.dataset)/args.batch_size))
@@ -483,14 +548,19 @@ def validate(args, val_dataloader, nets, iteration=0, iou_thresh=0.5):
                                     box[0], box[1], box[2], box[3],
                                     label))
 
-            _, _, channels, height, width = images.size()
-            images = images.cuda()
+            _, _, channels, height, width = images_c.size()
+            images = images_c[:,:,:3,:,:].cuda()
+            flows = images_c[:,:,3:,:,:].cuda()
 
             # get conv features
-            conv_feat = nets['base_net'](images)
-            context_feat = None
+            conv_feat_rgb = nets_rgb['base_net'](images)
+            context_feat_rgb = None
             if not args.no_context:
-                context_feat = nets['context_net'](conv_feat)
+                context_feat_rgb = nets_rgb['context_net'](conv_feat_rgb)
+            conv_feat_of = nets_of['base_net'](flows)
+            context_feat_of = None
+            if not args.no_context:
+                context_feat_of = nets_of['context_net'](conv_feat_of)
 
             ############## Inference ##############
 
@@ -505,21 +575,28 @@ def validate(args, val_dataloader, nets, iteration=0, iou_thresh=0.5):
 
             # flatten list of tubes
             flat_tubes, tubes_nums = flatten_tubes(selected_tubes, batch_idx=True)    # add batch_idx for ROI pooling
-            flat_tubes = torch.FloatTensor(flat_tubes).to(conv_feat)    # gpu:0 for ROI pooling
+            flat_tubes = torch.FloatTensor(flat_tubes).to(conv_feat_rgb)    # gpu:0 for ROI pooling
+            flat_tubes_of = flat_tubes.to(conv_feat_of)    # gpu:0 for ROI pooling
 
-            # ROI Pooling
-            pooled_feat = nets['roi_net'](conv_feat[:, T_start:T_start+T_length].contiguous(), flat_tubes)
-            _,C,W,H = pooled_feat.size()
-            pooled_feat = pooled_feat.view(-1, T_length, pooled_feat.size(1), W, H)
+            # ROI Pooling            
+            pooled_feat_rgb = nets_rgb['roi_net'](conv_feat_rgb[:, T_start:T_start+T_length].contiguous(), flat_tubes)
+            pooled_feat_of = nets_of['roi_net'](conv_feat_of[:, T_start:T_start+T_length].contiguous(), flat_tubes)
+            _,C,W,H = pooled_feat_rgb.size()
+            pooled_feat_rgb = pooled_feat_rgb.view(-1, T_length, pooled_feat_rgb.size(1), W, H)
+            pooled_feat_of = pooled_feat_of.view(-1, T_length, pooled_feat_of.size(1), W, H)
 
-            temp_context_feat = None
+
+            temp_context_feat_rgb = None
+            temp_context_feat_of = None
             if not args.no_context:
-                temp_context_feat = torch.zeros((pooled_feat.size(0),context_feat.size(1),T_length,1,1)).to(context_feat)
-                for p in range(pooled_feat.size(0)):
-                    temp_context_feat[p] = context_feat[int(flat_tubes[p,0,0].item()/T_length),:,T_start:T_start+T_length].contiguous().clone()
-
-            global_prob, _,_,_, _,_,_ = nets['det_net0'](pooled_feat, context_feat=temp_context_feat, tubes=None, targets=None)
-
+                temp_context_feat_rgb = torch.zeros((pooled_feat_rgb.size(0),context_feat_rgb.size(1),T_length,1,1)).to(context_feat_rgb)
+                temp_context_feat_of = torch.zeros((pooled_feat_of.size(0),context_feat_of.size(1),T_length,1,1)).to(context_feat_of)
+                for p in range(pooled_feat_rgb.size(0)):
+                    temp_context_feat_rgb[p] = context_feat_rgb[int(flat_tubes[p,0,0].item()/T_length),:,T_start:T_start+T_length].contiguous().clone()
+                    temp_context_feat_of[p] = context_feat_of[int(flat_tubes_of[p,0,0].item()/T_length),:,T_start:T_start+T_length].contiguous().clone()
+            global_prob_rgb, _,_,_, _,_,_ = nets_rgb['det_net0'](pooled_feat_rgb, context_feat=temp_context_feat_rgb, tubes=None, targets=None)
+            global_prob_of, _,_,_, _,_,_ = nets_of['det_net0'](pooled_feat_of, context_feat=temp_context_feat_of, tubes=None, targets=None)
+            global_prob = 0.5*global_prob_rgb + 0.5*global_prob_of
             #################### Evaluation #################
 
             # loop for each batch

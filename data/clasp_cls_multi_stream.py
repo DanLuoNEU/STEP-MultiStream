@@ -1,26 +1,43 @@
+# Dan, 01/23/2022
+# Dataloader for Single-Stream or Two-Stream STEP
+# Optical flow are stored as .flo files now
 """
 Copyright (C) 2019 NVIDIA Corporation.  All rights reserved.
 Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode).
 """
-
 import os
 import os.path
 import cv2
 import glob
+import numpy as np
 import pickle
 import random
-import numpy as np
+import PIL.Image as PIL_Image
+
 import torch
 import torch.utils.data as data
 
-from utils.tube_utils import scale_tubes, scale_tubes_abs
-from external.ActivityNet.Evaluation.get_ava_performance import read_labelmap
 from .data_utils import generate_anchors
 from .augmentations import jaccard_numpy
+from utils.tube_utils import scale_tubes, scale_tubes_abs
+from external.ActivityNet.Evaluation.get_ava_performance import read_labelmap
 
 WIDTH, HEIGHT = 400, 400
 TEM_REDUCE = 4    # 4 for I3D backbone
-NUM_CLASSES = 3 # 60
+
+def readFlow(name):
+    f = open(name, 'rb')
+
+    header = f.read(4)
+    if header.decode("utf-8") != 'PIEH':
+        raise Exception('Flow file header does not contain PIEH')
+
+    width = np.fromfile(f, np.int32, 1).squeeze()
+    height = np.fromfile(f, np.int32, 1).squeeze()
+
+    flow = np.fromfile(f, np.float32, width * height * 2).reshape((height, width, 2))
+
+    return flow.astype(np.float32)
 
 
 def make_list(label_path, chunks=1, stride=1, foreground_only=True):
@@ -44,11 +61,9 @@ def make_list(label_path, chunks=1, stride=1, foreground_only=True):
         frames = sorted(annots[videoname].keys())
 
         # loop through each frame
-        for fid in np.arange(1, 1799, stride):    # AVA v2.1 annotations at timestamps 902:1798 inclusive, clasp starts from 0
-        # for fid in np.arange(902, 1799, stride):    # AVA v2.1 annotations at timestamps 902:1798 inclusive
-
+        for fid in np.arange(0, 12000, stride):    # CLASP starts from 0 to 12000, the annnotated video sample cannot be longer than 200 hours
             # no foreground label
-            if foreground_only and (not fid in frames):
+            if foreground_only and (fid not in frames):
                 continue
 
             # with foreground labels
@@ -63,19 +78,19 @@ def make_list(label_path, chunks=1, stride=1, foreground_only=True):
                     temp_boxes = [[] for _ in range(chunks)]
                     temp_labels = [[] for _ in range(chunks)]
                     temp_persons = [[] for _ in range(chunks)]
-                    # center frame
+                    # center chunk
                     mid = int(chunks/2)
                     temp_boxes[mid] = val['box']
                     temp_labels[mid] = val['label']
                     temp_persons[mid] = pid
 
-                    # previous frames
+                    # previous chunks
                     for t in range(1, mid+1):
                         if fid-t in frames and pid in annots[videoname][fid-t]:    # valid frame with ground truth
                             temp_boxes[mid-t] = annots[videoname][fid-t][pid]['box']
                             temp_labels[mid-t] = annots[videoname][fid-t][pid]['label']
                             temp_persons[mid-t] = pid
-                    # future frames
+                    # future chunks
                     for t in range(1, mid+1):
                         if fid+t in frames and pid in annots[videoname][fid+t]:    # valid frame with ground truth
                             temp_boxes[mid+t] = annots[videoname][fid+t][pid]['box']
@@ -106,7 +121,7 @@ def get_target_tubes(root, boxes, labels, num_classes=60):
         Shape of gt_tubes: [num_tubes, chunks, 4+num_classes]
     """
 
-    chunks = len(boxes[0])
+    chunks = len(boxes[0]) # 0 means the first pid
 
     # background frame
     if chunks == 0:
@@ -136,35 +151,38 @@ def get_target_tubes(root, boxes, labels, num_classes=60):
     return gt
 
 
-def read_images(path, videoname, fid, num=36, fps=12):
+def read_images(path, videoname, fid, num=36, fps=12, input_type='rgb'):
     """
     Load images from disk for middel frame fid with given num and fps
 
     return:
         a list of array with shape (num, H,W,C)
     """
-
-
     images = []
-    
-    # left of middel frame
+    # fid_max is used to avoid out of control of data
+    list_folders=os.listdir(os.path.join(path, videoname))
+    list_folders.sort()
+    fid_max=int(list_folders[-1])-1
+    # left of middle frame
     num_left = int(num/2)
     i = 1
     while num_left > 0:
-        img_path = os.path.join(path, videoname+'/{:05d}/'.format(fid-i))
-        images.extend(_load_images(img_path, num=min(num_left, fps), fps=fps, direction='backward'))
+        img_path = os.path.join(path, videoname+'/{:05d}/'.format(max(0,fid-i)))
+        images.extend(_load_images(img_path, num=min(num_left, fps), fps=fps,
+                                    direction='backward', input_type=input_type))
 
         num_left -= fps
         i += 1
     # reverse list
     images = images[::-1]
 
-    # right of middel frame
+    # right of middle frame
     num_right = int(np.ceil(num/2))
     i = 0
     while num_right > 0:
-        img_path = os.path.join(path, videoname+'/{:05d}/'.format(fid+i))
-        images.extend(_load_images(img_path, num=min(num_right, fps), fps=fps, direction='forward'))
+        img_path = os.path.join(path, videoname+'/{:05d}/'.format(min(fid+i,fid_max)))
+        images.extend(_load_images(img_path, num=min(num_right, fps), fps=fps,
+                                    direction='forward', input_type=input_type))
 
         num_right -= fps
         i += 1
@@ -172,19 +190,24 @@ def read_images(path, videoname, fid, num=36, fps=12):
     return np.stack(images, axis=0)
 
 
-def _load_images(path, num, fps=12, direction='forward'):
+def _load_images(path, num, fps=12, direction='forward', input_type='rgb'):
     """
-    Load images in a folder wiht given num and fps, direction can be either 'forward' or 'backward'
+    Load images in a folder with given num and fps, direction can be either 'forward' or 'backward'
     """
-
-    img_names = glob.glob(os.path.join(path, '*.npy'))
+    # Get image list
+    img_names=[]
+    if input_type == 'rgb':
+        img_names = glob.glob(os.path.join(path, '*.jpg'))
+        if len(img_names) == 0:
+            img_names = glob.glob(os.path.join(path, '*.png'))
+    elif input_type == 'flow':
+        img_names = glob.glob(os.path.join(path, '*.flo'))
     
     if len(img_names) == 0:
         raise ValueError("Image path {} not Found".format(path))
-    
     img_names = sorted(img_names)
 
-    # resampling according to fps
+    # Resampling according to fps
     index = np.linspace(0, len(img_names), fps, endpoint=False, dtype=np.int)
     if direction == 'forward':
         index = index[:num]
@@ -197,7 +220,10 @@ def _load_images(path, num, fps=12, direction='forward'):
     for idx in index:
         img_name = img_names[idx]
         if os.path.isfile(img_name):
-            img = np.load(img_name)
+            if input_type=='rgb':
+                img = cv2.imread(img_name)
+            if input_type=='flow':
+                img = readFlow(img_name) # [-1,1]
             images.append(img)
         else:
             raise ValueError("Image not found!", img_name)
@@ -268,7 +294,7 @@ def sample_anchors(anchors, pos_num=1, neg_ratio=1, pos_thresh=0.75, neg_thresh=
     return new_anchors
 
 
-class AVADataset(data.Dataset):
+class CLASPDataset(data.Dataset):
     """AVA Action Detection Dataset
     to access input sequence, GT tubes and proposal tubes
     """
@@ -288,9 +314,7 @@ class AVADataset(data.Dataset):
             num_class: int, number of action classes, 60 | 80
             foreground_only: bool, whether include frames with no foreground actions (usually False for val and test)
         """
-
-
-        self.name = 'ava'
+        self.name = 'CLASP'
         self.root = root
         self.mode = mode
         self.input_type = input_type
@@ -301,17 +325,16 @@ class AVADataset(data.Dataset):
         self.stride = stride
         self.num_classes = num_classes
         self.foreground_only = foreground_only
-
-
-        self.imgpath = os.path.join(root, 'flows/')
+        self.imgpath_rgb = os.path.join(root, 'frames/')
+        self.imgpath_of = os.path.join(root, 'flows/')
         if self.mode == 'train':
-            self.label_path = os.path.join("/data/Dan/ava_v2_1/", 'label/train.pkl')
+            self.label_path = os.path.join(root, 'label/train.pkl')
         elif self.mode == 'val':
-            self.label_path = os.path.join("/data/Dan/ava_v2_1", 'label/val.pkl')
+            self.label_path = os.path.join(root, 'label/val.pkl')
         else:
             self.stride = 1
-            self.label_path = os.path.join("/data/Dan/ava_v2_1", 'label/val.pkl')
-            self.foreground_only = False
+            self.label_path = os.path.join(root, 'label/test.pkl')
+            # self.foreground_only = False
            
         data_list, videoname_list = make_list(self.label_path, self.chunks, self.stride, self.foreground_only)
         self.data = data_list
@@ -322,7 +345,8 @@ class AVADataset(data.Dataset):
     def __getitem__(self, index):
         """
         Return:
-            images: FloatTensor, shape [T, C, H, W]
+            images: FloatTensor, shape [T, C(3), H, W]
+            flows: FloatTensor, shape [T, C(2), H, W]
             target_tubes: FloatTensor, shape [num_selected, 4+num_classes]    (including labels)
             selected_anchors: FloatTensor, shape [num_selected, T, 4]
             info: dict ['vid', 'sf', 'label', 'num_selected']
@@ -336,22 +360,43 @@ class AVADataset(data.Dataset):
         gt_tubes = get_target_tubes(self.root, boxes, labels, self.num_classes)    # gt boxes scaled to [0, 1]
 
         # load data
-        if self.input_type == "flow":
-            images = read_images(self.imgpath, videoname, fid, num=TEM_REDUCE*self.T*self.chunks, fps=self.fps)    # for i3d backbone
+        if self.input_type == "2s":
+            images = read_images(self.imgpath_rgb, videoname, fid,
+                                num=TEM_REDUCE*self.T*self.chunks,
+                                fps=self.fps, input_type='rgb')    # for i3d backbone
+            
+            # width and height of Flows is not the same as images
+            flows_ori = read_images(self.imgpath_of, videoname, fid,
+                                num=TEM_REDUCE*self.T*self.chunks,
+                                fps=self.fps, input_type='flow')
+            flows = np.zeros((images.shape[0],images.shape[1],images.shape[2],2))
+            # Concatenate along channel, (T, W, H, C)
+            for t in range(images.shape[0]):
+                flows[t,] = np.array(PIL_Image.fromarray(np.uint8(flows_ori[t,]*255)).resize((images.shape[2],images.shape[1])))/255.
+
+            images = np.concatenate((images,flows), axis=3)
+        elif self.input_type == "rgb":
+            images = read_images(self.imgpath_rgb, videoname, fid, num=TEM_REDUCE*self.T*self.chunks,
+                                fps=self.fps, input_type='rgb')    # for i3d backbone
+        elif self.input_type == "flow":
+            images = read_images(self.imgpath_of, videoname, fid, num=TEM_REDUCE*self.T*self.chunks,
+                                fps=self.fps, input_type='flow')    # for i3d backbone
         else:
             images = None
 
-        if self.input_type != 'label':
-            # data augmentation
-            if self.transform is not None:
-                images, gt_tubes, _ = self.transform(images, gt_tubes, None)
+        # Data Augmentation
+        if self.transform is not None:
+            # Make sure that images and flows are using the same transform
+            images, gt_tubes, _ = self.transform(images, gt_tubes, None)
 
-            if self.input_type == 'rgb':
-                # BGR to RGB (for opencv)
-                images = images[:, :, :, (2,1,0)]
+        # BGR to RGB (for opencv)
+        if self.input_type == 'rgb':
+            images = images[:, :, :, (2,1,0)]
+        elif self.input_type == '2s':
+            images = images[:, :, :, (2,1,0,3,4)]
 
-            # swap dimensions to [T, C, W, H]
-            images = torch.from_numpy(images).permute(0,3,1,2)
+        # swap dimensions to [T, C, W, H]
+        images = torch.from_numpy(images).permute(0,3,1,2)
 
 
         # use (sampled) ground truths as anchor tubes

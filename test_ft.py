@@ -40,7 +40,8 @@ def main():
     # checkpoint_path = 'pretrained/ava_step.pth'
     # checkpoint_path = "/data/CLASP-DATA/pretrained/STEP/bestModel/RGB/side/checkpoint_best_rgb_v2.pth" #all side, no top
     # checkpoint_path = "/data/Dan/ava_v2_1/cache/STEP-topdown-part(600+)-max3-i3d-two_branch/checkpoint_best.pth" # part finetune
-    checkpoint_path = "/data/Dan/ava_v2_1/cache/STEP-kinetics400_KRImixed-no_context-1cls-T3i3-max3-i3d-two_branch/checkpoint_best.pth"
+    checkpoint_path = "/data/Dan/ava_v2_1/cache/20211213-STEP-kinetics400_KRImixed_PVDsd_3cls_clean-no_context-T1i3-fps10-Finetune-max3-i3d-two_branch/checkpoint_best.pth"
+    checkpoint_path = "/data/Dan/ava_v2_1/cache/STEP-kinetics400_KRImixed_PVDsd_3cls-no_context-T1i3-fps10-Finetune-max3-i3d-two_branch/checkpoint_9250.pth"
 
     if os.path.isfile(checkpoint_path):
         print ("Loading pretrain model from %s" % checkpoint_path)
@@ -49,21 +50,20 @@ def main():
         args = checkpoint['cfg']
     else:
         raise ValueError("Pretrain model not found!", checkpoint_path)
-      
-    args.data_root = "/data/CLASP-DATA/CLASP2-STEP/data"
-    args.save_root = f"test/kriMixed-1cls-test/1cls-conf07"
-    args.conf_thresh = 0.7
-    print('conf_thresh:', args.conf_thresh)
     
+    args.conf_thresh = 0.3
+    print(f'conf_thresh: {args.conf_thresh}')
+    args.data_root = "/data/CLASP-DATA/CLASP2-STEP/data"
+    args.save_root = f"test/20211213-KRI_PVDsd-3cls_polluted-test/conf{int(args.conf_thresh*10):02d}"
     if not os.path.isdir(args.save_root):
         os.makedirs(args.save_root)
 
     label_dict = {}
     if args.num_classes != 80:
         if args.num_classes == 60: # ava-60
-            label_map = os.path.join(args.data_root, 'label_1cls/ava_action_list_v2.1_for_activitynet_2018.pbtxt')
+            label_map = os.path.join(args.data_root, 'label/ava_action_list_v2.1_for_activitynet_2018.pbtxt')
         else: # CLASP
-            label_map = os.path.join(args.data_root, 'label_1cls/ava_finetune.pbtxt')
+            label_map = os.path.join(args.data_root, 'label/ava_finetune.pbtxt')
         categories, class_whitelist = read_labelmap(open(label_map, 'r'))
         classes = [(val['id'], val['name']) for val in categories]
         id2class = {c[0]: c[1] for c in classes}    # gt class id (1~3) --> class name
@@ -73,9 +73,14 @@ def main():
         for i in range(80):
             label_dict[i] = i+1
     args.label_dict = label_dict
-    # args.id2class = {1:'p2p', 2:'xfr', 3:'bkgd'}
-    # args.id2class = {1:'bkgd', 2:'xfr'}
-    args.id2class = {1:'xfr'}
+    
+    if '3cls' in checkpoint_path:
+        # args.id2class = {1:'p2p', 2:'xfr', 3:'bkgd'}
+        args.id2class = {1:'bkgd', 2:'xfr', 3:'tc_mv'}
+    elif '2cls' in checkpoint_path:
+        args.id2class = {1:'bkgd', 2:'xfr'}
+    elif '1cls' in checkpoint_path:
+        args.id2class = {1:'xfr'}
 
     ################ Define models #################
 
@@ -198,7 +203,7 @@ def main():
                     all_idx = []
                     for cl_ind in range(args.num_classes):
                         scores = cur_pred_prob[:, cl_ind].squeeze().reshape(-1)
-                        c_mask = scores.gt(args.conf_thresh) # greater than minmum threshold
+                        c_mask = scores.gt(args.conf_thresh) # greater than minimum threshold
                         scores = scores[c_mask]
                         idx = np.where(c_mask.numpy())[0]
                         if len(scores) == 0:
@@ -243,7 +248,7 @@ def main():
     for i in range(args.max_iter):
         fouts[i].close()
 
-        metrics = ava_evaluation(os.path.join(args.data_root, 'label_1cls/'), output_files[i], gt_file)
+        metrics = ava_evaluation(os.path.join(args.data_root, 'label/'), output_files[i], gt_file)
         all_metrics.append(metrics)
 
     # Logging

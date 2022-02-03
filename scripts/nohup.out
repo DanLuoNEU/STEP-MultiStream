@@ -3015,3 +3015,967 @@ Iter 3: MEANAP =>0.7298295953451874
 Validation TIME::: 145.325
 
 
+Loading Dataset...
+train set | Datalist len:  942
+val set | Datalist len:  118
+Training STEP on  ava
+Building I3D model...
+Building I3D head for global branch...
+Building I3D head for global branch...
+Building I3D head for global branch...
+Resuming trained model from /data/Dan/ava_v2_1/cache/STEP-kinetics400_KRImixed_2cls-no_context-T1i3-fps10-b1-max3-i3d-two_branch/checkpoint_best.pth
+ >>>>>> Finetuning from 2 to 3 <<<<<< 
+NUM_CHUNKS {1: 1, 2: 1, 3: 3, 4: 3}
+NUM_SAMPLE -1
+T 1
+anchor_mode 1
+base_lr 7.5e-05
+base_net i3d
+batch_size 1
+cls_thresh [0.2, 0.35, 0.5]
+conf_thresh 0.01
+cuda True
+cycle_decay 1.0
+data_root /data/CLASP-DATA/CLASP2-STEP/data
+dataset ava
+det_lr 0.00075
+det_lr0 0.00015
+det_net two_branch
+do_crop True
+do_erase True
+do_flip True
+do_photometric True
+do_proposal_augment False
+dropout 0.3
+evaluate_topk 300
+exp_name STEP-kinetics400_KRImixed_PVDsd_3cls_clean-no_context-T1i3-fps10-Finetune-max3-i3d-two_branch
+fc_dim 256
+fp16 False
+fps 10
+freeze_affine True
+freeze_stats True
+gamma 0.1
+id2class {1: 'bkgd', 2: 'xfr', 3: 'touch_move'}
+image_size (400, 400)
+input_type rgb
+iou_thresh 0.5
+iterative_mode temporal
+kinetics_pretrain None
+label_dict {0: 1, 1: 2, 2: 3}
+lambda_cls 0.1
+lambda_neighbor 1.0
+lambda_reg 5.0
+mGPUs True
+man_seed 123
+max_epochs 10
+max_iter 3
+max_pos_num 5
+means (0, 0, 0)
+milestones [9420]
+min_ratio 0.0
+model_ft True
+momentum 0.9
+name STEP-kinetics400_KRImixed_PVDsd_3cls_clean-no_context-T1i3-fps10-Finetune
+neg_ratio 2
+nms_thresh 0.4
+no_context True
+num_classes 3
+num_workers 4
+optimizer adam
+pool_mode align
+pool_size 7
+pretrain_path None
+print_step 20
+proposal_path_train None
+proposal_path_val None
+reg_thresh [0.2, 0.35, 0.5]
+resume_path /data/Dan/ava_v2_1/cache/STEP-kinetics400_KRImixed_2cls-no_context-T1i3-fps10-b1-max3-i3d-two_branch/checkpoint_best.pth
+sampling uniform
+save_root /data/Dan/ava_v2_1/cache/STEP-kinetics400_KRImixed_PVDsd_3cls_clean-no_context-T1i3-fps10-Finetune-max3-i3d-two_branch/
+save_step 250
+scale_norm 2
+scheduler cosine
+selection_nms False
+selection_sampling softmax
+selection_score score
+start_epochs 0
+start_iteration 1
+stds (1, 1, 1)
+temporal_mode predict
+topk 300
+warmup_iters 300
+weight_decay 1e-07
+Epoch 1/10(942) Iteration 000020 lr 1.18e-04 loss-1 0.800 loss-2 0.776 loss-3 0.761 loss_global_cls 0.694 loss_local_loc 0.013 loss_neighbor_loc 0.000 Timer 53.433(53.433) GPU usage: [0, 0, 0, 0, 0, 0, 2186, 1206]
+Epoch 1/10(942) Iteration 000040 lr 1.63e-04 loss-1 0.821 loss-2 0.794 loss-3 0.777 loss_global_cls 0.690 loss_local_loc 0.017 loss_neighbor_loc 0.000 Timer 12.893(33.163) GPU usage: [0, 0, 0, 0, 0, 0, 2190, 1468]
+Epoch 1/10(942) Iteration 000060 lr 2.08e-04 loss-1 0.814 loss-2 0.790 loss-3 0.778 loss_global_cls 0.685 loss_local_loc 0.019 loss_neighbor_loc 0.000 Timer 6.839(24.388) GPU usage: [0, 0, 0, 0, 0, 0, 2216, 1480]
+Epoch 1/10(942) Iteration 000080 lr 2.53e-04 loss-1 0.817 loss-2 0.803 loss-3 0.786 loss_global_cls 0.679 loss_local_loc 0.021 loss_neighbor_loc 0.000 Timer 6.665(19.958) GPU usage: [0, 0, 0, 0, 0, 0, 2196, 1470]
+Epoch 1/10(942) Iteration 000100 lr 2.98e-04 loss-1 0.808 loss-2 0.796 loss-3 0.778 loss_global_cls 0.672 loss_local_loc 0.021 loss_neighbor_loc 0.000 Timer 4.093(16.785) GPU usage: [0, 0, 0, 0, 0, 0, 2196, 1470]
+Epoch 1/10(942) Iteration 000120 lr 3.43e-04 loss-1 0.797 loss-2 0.781 loss-3 0.762 loss_global_cls 0.664 loss_local_loc 0.020 loss_neighbor_loc 0.000 Timer 7.122(15.174) GPU usage: [0, 0, 0, 0, 0, 0, 2196, 1468]
+Epoch 1/10(942) Iteration 000140 lr 3.88e-04 loss-1 0.793 loss-2 0.779 loss-3 0.758 loss_global_cls 0.656 loss_local_loc 0.021 loss_neighbor_loc 0.000 Timer 3.916(13.566) GPU usage: [0, 0, 0, 0, 0, 0, 2196, 1476]
+Epoch 1/10(942) Iteration 000160 lr 4.33e-04 loss-1 0.785 loss-2 0.769 loss-3 0.747 loss_global_cls 0.647 loss_local_loc 0.020 loss_neighbor_loc 0.000 Timer 4.338(12.412) GPU usage: [0, 0, 0, 0, 0, 0, 2196, 1476]
+Epoch 1/10(942) Iteration 000180 lr 4.78e-04 loss-1 0.771 loss-2 0.758 loss-3 0.736 loss_global_cls 0.639 loss_local_loc 0.019 loss_neighbor_loc 0.000 Timer 4.286(11.509) GPU usage: [0, 0, 0, 0, 0, 0, 2196, 1476]
+Epoch 1/10(942) Iteration 000200 lr 5.23e-04 loss-1 0.762 loss-2 0.751 loss-3 0.728 loss_global_cls 0.629 loss_local_loc 0.020 loss_neighbor_loc 0.030 Timer 6.702(11.029) GPU usage: [0, 0, 0, 0, 0, 0, 2196, 1444]
+Epoch 1/10(942) Iteration 000220 lr 5.68e-04 loss-1 0.748 loss-2 0.738 loss-3 0.711 loss_global_cls 0.608 loss_local_loc 0.020 loss_neighbor_loc 0.020 Timer 3.821(10.373) GPU usage: [0, 0, 0, 0, 0, 0, 2196, 1474]
+Epoch 1/10(942) Iteration 000240 lr 6.13e-04 loss-1 0.727 loss-2 0.728 loss-3 0.688 loss_global_cls 0.577 loss_local_loc 0.022 loss_neighbor_loc 0.020 Timer 4.403(9.876) GPU usage: [0, 0, 0, 0, 0, 0, 2198, 1478]
+Saving state, iter: 250
+Epoch 1/10(942) Iteration 000260 lr 6.58e-04 loss-1 0.712 loss-2 0.716 loss-3 0.666 loss_global_cls 0.540 loss_local_loc 0.025 loss_neighbor_loc 0.020 Timer 4.267(9.445) GPU usage: [0, 0, 0, 0, 0, 0, 2198, 1478]
+Epoch 1/10(942) Iteration 000280 lr 7.03e-04 loss-1 0.690 loss-2 0.701 loss-3 0.646 loss_global_cls 0.511 loss_local_loc 0.027 loss_neighbor_loc 0.230 Timer 4.329(9.079) GPU usage: [0, 0, 0, 0, 0, 0, 2198, 1478]
+Epoch 1/10(942) Iteration 000300 lr 7.48e-04 loss-1 0.669 loss-2 0.687 loss-3 0.628 loss_global_cls 0.481 loss_local_loc 0.030 loss_neighbor_loc 0.447 Timer 4.242(8.757) GPU usage: [0, 0, 0, 0, 0, 0, 2198, 1478]
+Epoch 1/10(942) Iteration 000320 lr 7.50e-04 loss-1 0.658 loss-2 0.676 loss-3 0.615 loss_global_cls 0.450 loss_local_loc 0.033 loss_neighbor_loc 0.447 Timer 4.366(8.482) GPU usage: [0, 0, 0, 0, 0, 0, 2198, 1478]
+Epoch 1/10(942) Iteration 000340 lr 7.50e-04 loss-1 0.639 loss-2 0.653 loss-3 0.595 loss_global_cls 0.419 loss_local_loc 0.035 loss_neighbor_loc 0.447 Timer 4.548(8.251) GPU usage: [0, 0, 0, 0, 0, 0, 2198, 1478]
+Epoch 1/10(942) Iteration 000360 lr 7.50e-04 loss-1 0.630 loss-2 0.643 loss-3 0.600 loss_global_cls 0.393 loss_local_loc 0.041 loss_neighbor_loc 0.447 Timer 4.647(8.051) GPU usage: [0, 0, 0, 0, 0, 0, 2198, 1478]
+Epoch 1/10(942) Iteration 000380 lr 7.50e-04 loss-1 0.620 loss-2 0.629 loss-3 0.582 loss_global_cls 0.367 loss_local_loc 0.043 loss_neighbor_loc 0.447 Timer 4.213(7.849) GPU usage: [0, 0, 0, 0, 0, 0, 2198, 1478]
+Epoch 1/10(942) Iteration 000400 lr 7.50e-04 loss-1 0.605 loss-2 0.610 loss-3 0.564 loss_global_cls 0.348 loss_local_loc 0.043 loss_neighbor_loc 0.447 Timer 4.432(7.678) GPU usage: [0, 0, 0, 0, 0, 0, 2198, 1478]
+Epoch 1/10(942) Iteration 000420 lr 7.50e-04 loss-1 0.591 loss-2 0.600 loss-3 0.555 loss_global_cls 0.331 loss_local_loc 0.045 loss_neighbor_loc 0.447 Timer 4.940(7.547) GPU usage: [0, 0, 0, 0, 0, 0, 2198, 1478]
+Epoch 1/10(942) Iteration 000440 lr 7.50e-04 loss-1 0.573 loss-2 0.576 loss-3 0.547 loss_global_cls 0.328 loss_local_loc 0.044 loss_neighbor_loc 0.447 Timer 4.626(7.415) GPU usage: [0, 0, 0, 0, 0, 0, 2198, 1478]
+Epoch 1/10(942) Iteration 000460 lr 7.49e-04 loss-1 0.557 loss-2 0.560 loss-3 0.536 loss_global_cls 0.332 loss_local_loc 0.041 loss_neighbor_loc 0.447 Timer 4.363(7.282) GPU usage: [0, 0, 0, 0, 0, 0, 2198, 1478]
+Epoch 1/10(942) Iteration 000480 lr 7.49e-04 loss-1 0.547 loss-2 0.538 loss-3 0.522 loss_global_cls 0.327 loss_local_loc 0.039 loss_neighbor_loc 0.447 Timer 4.292(7.157) GPU usage: [0, 0, 0, 0, 0, 0, 2198, 1478]
+Epoch 1/10(942) Iteration 000500 lr 7.49e-04 loss-1 0.544 loss-2 0.528 loss-3 0.515 loss_global_cls 0.328 loss_local_loc 0.037 loss_neighbor_loc 0.447 Timer 4.389(7.047) GPU usage: [0, 0, 0, 0, 0, 0, 2198, 1478]
+Saving state, iter: 500
+/data/Dan/ava_v2_1/cache/STEP-kinetics400_KRImixed_PVDsd_3cls_clean-no_context-T1i3-fps10-Finetune-max3-i3d-two_branch/checkpoint_250.pth  removed!
+Epoch 1/10(942) Iteration 000520 lr 7.49e-04 loss-1 0.531 loss-2 0.518 loss-3 0.507 loss_global_cls 0.327 loss_local_loc 0.036 loss_neighbor_loc 0.447 Timer 4.414(6.945) GPU usage: [0, 0, 0, 0, 0, 0, 2198, 1478]
+Epoch 1/10(942) Iteration 000540 lr 7.49e-04 loss-1 0.529 loss-2 0.519 loss-3 0.503 loss_global_cls 0.330 loss_local_loc 0.035 loss_neighbor_loc 0.447 Timer 4.307(6.848) GPU usage: [0, 0, 0, 0, 0, 0, 2198, 1478]
+Epoch 1/10(942) Iteration 000560 lr 7.49e-04 loss-1 0.516 loss-2 0.510 loss-3 0.483 loss_global_cls 0.333 loss_local_loc 0.030 loss_neighbor_loc 0.447 Timer 4.235(6.754) GPU usage: [0, 0, 0, 0, 0, 0, 2198, 1478]
+Epoch 1/10(942) Iteration 000580 lr 7.48e-04 loss-1 0.514 loss-2 0.512 loss-3 0.487 loss_global_cls 0.331 loss_local_loc 0.031 loss_neighbor_loc 0.447 Timer 4.484(6.676) GPU usage: [0, 0, 0, 0, 0, 0, 2198, 1478]
+Epoch 1/10(942) Iteration 000600 lr 7.48e-04 loss-1 0.508 loss-2 0.509 loss-3 0.482 loss_global_cls 0.328 loss_local_loc 0.031 loss_neighbor_loc 0.400 Timer 4.337(6.598) GPU usage: [0, 0, 0, 0, 0, 0, 2198, 1478]
+Epoch 1/10(942) Iteration 000620 lr 7.48e-04 loss-1 0.511 loss-2 0.504 loss-3 0.482 loss_global_cls 0.330 loss_local_loc 0.031 loss_neighbor_loc 0.355 Timer 4.630(6.535) GPU usage: [0, 0, 0, 0, 0, 0, 2198, 1478]
+Epoch 1/10(942) Iteration 000640 lr 7.47e-04 loss-1 0.522 loss-2 0.506 loss-3 0.478 loss_global_cls 0.324 loss_local_loc 0.031 loss_neighbor_loc 0.473 Timer 4.554(6.473) GPU usage: [0, 0, 0, 0, 0, 0, 2198, 1478]
+Epoch 1/10(942) Iteration 000660 lr 7.47e-04 loss-1 0.522 loss-2 0.497 loss-3 0.472 loss_global_cls 0.320 loss_local_loc 0.030 loss_neighbor_loc 0.473 Timer 4.950(6.427) GPU usage: [0, 0, 0, 0, 0, 0, 2198, 1478]
+Epoch 1/10(942) Iteration 000680 lr 7.47e-04 loss-1 0.516 loss-2 0.489 loss-3 0.465 loss_global_cls 0.319 loss_local_loc 0.029 loss_neighbor_loc 0.430 Timer 4.398(6.367) GPU usage: [0, 0, 0, 0, 0, 0, 2198, 1478]
+Epoch 1/10(942) Iteration 000700 lr 7.46e-04 loss-1 0.513 loss-2 0.484 loss-3 0.462 loss_global_cls 0.322 loss_local_loc 0.028 loss_neighbor_loc 0.430 Timer 4.601(6.316) GPU usage: [0, 0, 0, 0, 0, 0, 2198, 1478]
+Epoch 1/10(942) Iteration 000720 lr 7.46e-04 loss-1 0.508 loss-2 0.480 loss-3 0.464 loss_global_cls 0.324 loss_local_loc 0.028 loss_neighbor_loc 0.430 Timer 3.896(6.249) GPU usage: [0, 0, 0, 0, 0, 0, 2198, 1478]
+Epoch 1/10(942) Iteration 000740 lr 7.46e-04 loss-1 0.498 loss-2 0.466 loss-3 0.457 loss_global_cls 0.322 loss_local_loc 0.027 loss_neighbor_loc 0.430 Timer 4.578(6.204) GPU usage: [0, 0, 0, 0, 0, 0, 2198, 1478]
+Saving state, iter: 750
+/data/Dan/ava_v2_1/cache/STEP-kinetics400_KRImixed_PVDsd_3cls_clean-no_context-T1i3-fps10-Finetune-max3-i3d-two_branch/checkpoint_500.pth  removed!/home/dan/ws/STEP-MultiStream/data/augmentations.py:342: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray
+  mode = random.choice(self.sample_options)
+/home/dan/ws/STEP-MultiStream/data/augmentations.py:342: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray
+  mode = random.choice(self.sample_options)
+/home/dan/ws/STEP-MultiStream/data/augmentations.py:342: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray
+  mode = random.choice(self.sample_options)
+/home/dan/ws/STEP-MultiStream/data/augmentations.py:342: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray
+  mode = random.choice(self.sample_options)
+
+Epoch 1/10(942) Iteration 000760 lr 7.45e-04 loss-1 0.488 loss-2 0.457 loss-3 0.466 loss_global_cls 0.322 loss_local_loc 0.029 loss_neighbor_loc 0.430 Timer 4.823(6.168) GPU usage: [0, 0, 0, 0, 0, 0, 2198, 1478]
+Epoch 1/10(942) Iteration 000780 lr 7.45e-04 loss-1 0.476 loss-2 0.458 loss-3 0.493 loss_global_cls 0.336 loss_local_loc 0.031 loss_neighbor_loc 0.430 Timer 4.250(6.119) GPU usage: [0, 0, 0, 0, 0, 0, 2198, 1478]
+Epoch 1/10(942) Iteration 000800 lr 7.44e-04 loss-1 0.480 loss-2 0.463 loss-3 0.506 loss_global_cls 0.347 loss_local_loc 0.032 loss_neighbor_loc 0.430 Timer 4.028(6.066) GPU usage: [0, 0, 0, 0, 0, 0, 2198, 1478]
+Epoch 1/10(942) Iteration 000820 lr 7.44e-04 loss-1 0.471 loss-2 0.457 loss-3 0.501 loss_global_cls 0.346 loss_local_loc 0.031 loss_neighbor_loc 0.430 Timer 4.801(6.035) GPU usage: [0, 0, 0, 0, 0, 0, 2198, 1478]
+Epoch 1/10(942) Iteration 000840 lr 7.44e-04 loss-1 0.462 loss-2 0.450 loss-3 0.499 loss_global_cls 0.347 loss_local_loc 0.030 loss_neighbor_loc 0.430 Timer 4.180(5.991) GPU usage: [0, 0, 0, 0, 0, 0, 2198, 1478]
+Epoch 1/10(942) Iteration 000860 lr 7.43e-04 loss-1 0.459 loss-2 0.447 loss-3 0.500 loss_global_cls 0.348 loss_local_loc 0.030 loss_neighbor_loc 0.430 Timer 4.645(5.960) GPU usage: [0, 0, 0, 0, 0, 0, 2198, 1478]
+Epoch 1/10(942) Iteration 000880 lr 7.43e-04 loss-1 0.460 loss-2 0.452 loss-3 0.504 loss_global_cls 0.349 loss_local_loc 0.031 loss_neighbor_loc 0.430 Timer 4.109(5.918) GPU usage: [0, 0, 0, 0, 0, 0, 2198, 1478]
+Epoch 1/10(942) Iteration 000900 lr 7.42e-04 loss-1 0.454 loss-2 0.449 loss-3 0.501 loss_global_cls 0.341 loss_local_loc 0.032 loss_neighbor_loc 0.430 Timer 4.448(5.885) GPU usage: [0, 0, 0, 0, 0, 0, 2198, 1478]
+Epoch 1/10(942) Iteration 000920 lr 7.42e-04 loss-1 0.449 loss-2 0.441 loss-3 0.490 loss_global_cls 0.337 loss_local_loc 0.030 loss_neighbor_loc 0.430 Timer 4.812(5.862) GPU usage: [0, 0, 0, 0, 0, 0, 2198, 1478]
+Epoch 1/10(942) Iteration 000940 lr 7.41e-04 loss-1 0.446 loss-2 0.440 loss-3 0.483 loss_global_cls 0.335 loss_local_loc 0.030 loss_neighbor_loc 0.391 Timer 4.207(5.827) GPU usage: [0, 0, 0, 0, 0, 0, 2198, 1478]
+Validating at  942
+100 / 118
+<generator object ObjectDetectionEvaluator.__init__.<locals>.<genexpr> at 0x7f48f0e5dd00>
+{ 'PascalBoxes_PerformanceByCategory/AP@0.5IOU/bkgd': 0.23760936077090034,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/touch_move': 0.24802823087557785,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/xfr': 0.1648096772264166,
+  'PascalBoxes_Precision/mAP@0.5IOU': 0.21681575629096494}
+<generator object ObjectDetectionEvaluator.__init__.<locals>.<genexpr> at 0x7f48f0db02b0>
+{ 'PascalBoxes_PerformanceByCategory/AP@0.5IOU/bkgd': 0.4312148267821498,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/touch_move': 0.1595211146309173,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/xfr': 0.18941465692476192,
+  'PascalBoxes_Precision/mAP@0.5IOU': 0.26005019944594304}
+<generator object ObjectDetectionEvaluator.__init__.<locals>.<genexpr> at 0x7f48f0e5db48>
+{ 'PascalBoxes_PerformanceByCategory/AP@0.5IOU/bkgd': 0.4545620720560496,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/touch_move': 0.15756926199479682,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/xfr': 0.26853314927121863,
+  'PascalBoxes_Precision/mAP@0.5IOU': 0.2935548277740217}
+Iter 1: MEANAP =>0.21681575629096494
+Iter 2: MEANAP =>0.26005019944594304
+Iter 3: MEANAP =>0.2935548277740217
+
+
+Validation TIME::: 15.289
+
+
+Epoch 2/10(942) Iteration 000960 lr 7.40e-04 loss-1 0.450 loss-2 0.432 loss-3 0.458 loss_global_cls 0.327 loss_local_loc 0.026 loss_neighbor_loc 0.391 Timer 5.392(5.818) GPU usage: [0, 0, 0, 0, 0, 0, 2230, 1476]
+Epoch 2/10(942) Iteration 000980 lr 7.40e-04 loss-1 0.452 loss-2 0.431 loss-3 0.436 loss_global_cls 0.321 loss_local_loc 0.023 loss_neighbor_loc 0.391 Timer 4.555(5.792) GPU usage: [0, 0, 0, 0, 0, 0, 2230, 1480]
+Epoch 2/10(942) Iteration 001000 lr 7.39e-04 loss-1 0.446 loss-2 0.422 loss-3 0.423 loss_global_cls 0.306 loss_local_loc 0.023 loss_neighbor_loc 0.391 Timer 4.813(5.772) GPU usage: [0, 0, 0, 0, 0, 0, 2230, 1484]
+Saving state, iter: 1000
+/data/Dan/ava_v2_1/cache/STEP-kinetics400_KRImixed_PVDsd_3cls_clean-no_context-T1i3-fps10-Finetune-max3-i3d-two_branch/checkpoint_750.pth  removed!
+Epoch 2/10(942) Iteration 001020 lr 7.39e-04 loss-1 0.441 loss-2 0.415 loss-3 0.414 loss_global_cls 0.300 loss_local_loc 0.023 loss_neighbor_loc 0.391 Timer 4.456(5.746) GPU usage: [0, 0, 0, 0, 0, 0, 2230, 1484]
+Epoch 2/10(942) Iteration 001040 lr 7.38e-04 loss-1 0.441 loss-2 0.412 loss-3 0.416 loss_global_cls 0.299 loss_local_loc 0.023 loss_neighbor_loc 0.361 Timer 4.717(5.727) GPU usage: [0, 0, 0, 0, 0, 0, 2230, 1484]
+Epoch 2/10(942) Iteration 001060 lr 7.37e-04 loss-1 0.444 loss-2 0.430 loss-3 0.435 loss_global_cls 0.301 loss_local_loc 0.027 loss_neighbor_loc 0.361 Timer 4.430(5.702) GPU usage: [0, 0, 0, 0, 0, 0, 2230, 1484]
+Epoch 2/10(942) Iteration 001080 lr 7.37e-04 loss-1 0.442 loss-2 0.438 loss-3 0.432 loss_global_cls 0.301 loss_local_loc 0.026 loss_neighbor_loc 0.453 Timer 4.665(5.683) GPU usage: [0, 0, 0, 0, 0, 0, 2230, 1484]
+Epoch 2/10(942) Iteration 001100 lr 7.36e-04 loss-1 0.445 loss-2 0.436 loss-3 0.433 loss_global_cls 0.304 loss_local_loc 0.026 loss_neighbor_loc 0.453 Timer 4.517(5.662) GPU usage: [0, 0, 0, 0, 0, 0, 2230, 1484]
+Epoch 2/10(942) Iteration 001120 lr 7.35e-04 loss-1 0.446 loss-2 0.439 loss-3 0.434 loss_global_cls 0.303 loss_local_loc 0.026 loss_neighbor_loc 0.453 Timer 4.567(5.642) GPU usage: [0, 0, 0, 0, 0, 0, 2230, 1484]
+Epoch 2/10(942) Iteration 001140 lr 7.34e-04 loss-1 0.448 loss-2 0.442 loss-3 0.435 loss_global_cls 0.304 loss_local_loc 0.026 loss_neighbor_loc 0.453 Timer 4.513(5.622) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 2/10(942) Iteration 001160 lr 7.34e-04 loss-1 0.447 loss-2 0.447 loss-3 0.441 loss_global_cls 0.308 loss_local_loc 0.027 loss_neighbor_loc 0.453 Timer 4.911(5.610) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 2/10(942) Iteration 001180 lr 7.33e-04 loss-1 0.441 loss-2 0.426 loss-3 0.418 loss_global_cls 0.296 loss_local_loc 0.024 loss_neighbor_loc 0.425 Timer 4.631(5.594) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 2/10(942) Iteration 001200 lr 7.32e-04 loss-1 0.441 loss-2 0.425 loss-3 0.418 loss_global_cls 0.301 loss_local_loc 0.024 loss_neighbor_loc 0.425 Timer 4.550(5.576) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 2/10(942) Iteration 001220 lr 7.31e-04 loss-1 0.442 loss-2 0.431 loss-3 0.421 loss_global_cls 0.303 loss_local_loc 0.024 loss_neighbor_loc 0.425 Timer 4.638(5.561) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 2/10(942) Iteration 001240 lr 7.31e-04 loss-1 0.436 loss-2 0.427 loss-3 0.413 loss_global_cls 0.300 loss_local_loc 0.023 loss_neighbor_loc 0.425 Timer 4.658(5.546) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Saving state, iter: 1250
+/data/Dan/ava_v2_1/cache/STEP-kinetics400_KRImixed_PVDsd_3cls_clean-no_context-T1i3-fps10-Finetune-max3-i3d-two_branch/checkpoint_1000.pth  removed!
+Epoch 2/10(942) Iteration 001260 lr 7.30e-04 loss-1 0.428 loss-2 0.410 loss-3 0.392 loss_global_cls 0.297 loss_local_loc 0.019 loss_neighbor_loc 0.425 Timer 4.656(5.532) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 2/10(942) Iteration 001280 lr 7.29e-04 loss-1 0.434 loss-2 0.397 loss-3 0.388 loss_global_cls 0.295 loss_local_loc 0.019 loss_neighbor_loc 0.425 Timer 4.431(5.515) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 2/10(942) Iteration 001300 lr 7.28e-04 loss-1 0.428 loss-2 0.393 loss-3 0.383 loss_global_cls 0.292 loss_local_loc 0.018 loss_neighbor_loc 0.425 Timer 4.687(5.502) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 2/10(942) Iteration 001320 lr 7.27e-04 loss-1 0.425 loss-2 0.388 loss-3 0.383 loss_global_cls 0.295 loss_local_loc 0.018 loss_neighbor_loc 0.425 Timer 4.885(5.493) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 2/10(942) Iteration 001340 lr 7.26e-04 loss-1 0.422 loss-2 0.402 loss-3 0.385 loss_global_cls 0.293 loss_local_loc 0.018 loss_neighbor_loc 0.397 Timer 4.415(5.477) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 2/10(942) Iteration 001360 lr 7.25e-04 loss-1 0.422 loss-2 0.403 loss-3 0.385 loss_global_cls 0.292 loss_local_loc 0.019 loss_neighbor_loc 0.397 Timer 4.933(5.469) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 2/10(942) Iteration 001380 lr 7.24e-04 loss-1 0.432 loss-2 0.416 loss-3 0.396 loss_global_cls 0.297 loss_local_loc 0.020 loss_neighbor_loc 0.373 Timer 4.765(5.459) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 2/10(942) Iteration 001400 lr 7.23e-04 loss-1 0.431 loss-2 0.415 loss-3 0.397 loss_global_cls 0.297 loss_local_loc 0.020 loss_neighbor_loc 0.373 Timer 4.829(5.450) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 2/10(942) Iteration 001420 lr 7.22e-04 loss-1 0.430 loss-2 0.414 loss-3 0.398 loss_global_cls 0.301 loss_local_loc 0.019 loss_neighbor_loc 0.373 Timer 4.642(5.438) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 2/10(942) Iteration 001440 lr 7.22e-04 loss-1 0.430 loss-2 0.414 loss-3 0.404 loss_global_cls 0.306 loss_local_loc 0.020 loss_neighbor_loc 0.373 Timer 4.396(5.424) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 2/10(942) Iteration 001460 lr 7.21e-04 loss-1 0.434 loss-2 0.437 loss-3 0.436 loss_global_cls 0.309 loss_local_loc 0.025 loss_neighbor_loc 0.373 Timer 4.590(5.412) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 2/10(942) Iteration 001480 lr 7.19e-04 loss-1 0.420 loss-2 0.433 loss-3 0.436 loss_global_cls 0.307 loss_local_loc 0.026 loss_neighbor_loc 0.373 Timer 5.079(5.408) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 2/10(942) Iteration 001500 lr 7.18e-04 loss-1 0.424 loss-2 0.437 loss-3 0.447 loss_global_cls 0.311 loss_local_loc 0.027 loss_neighbor_loc 0.373 Timer 4.473(5.395) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Saving state, iter: 1500
+/data/Dan/ava_v2_1/cache/STEP-kinetics400_KRImixed_PVDsd_3cls_clean-no_context-T1i3-fps10-Finetune-max3-i3d-two_branch/checkpoint_1250.pth  removed!
+Epoch 2/10(942) Iteration 001520 lr 7.17e-04 loss-1 0.424 loss-2 0.444 loss-3 0.456 loss_global_cls 0.311 loss_local_loc 0.029 loss_neighbor_loc 0.348 Timer 4.781(5.387) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 2/10(942) Iteration 001540 lr 7.16e-04 loss-1 0.428 loss-2 0.434 loss-3 0.458 loss_global_cls 0.315 loss_local_loc 0.029 loss_neighbor_loc 0.348 Timer 4.648(5.378) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 2/10(942) Iteration 001560 lr 7.15e-04 loss-1 0.429 loss-2 0.435 loss-3 0.462 loss_global_cls 0.313 loss_local_loc 0.030 loss_neighbor_loc 0.348 Timer 4.368(5.365) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 2/10(942) Iteration 001580 lr 7.14e-04 loss-1 0.419 loss-2 0.432 loss-3 0.464 loss_global_cls 0.315 loss_local_loc 0.030 loss_neighbor_loc 0.348 Timer 5.073(5.361) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 2/10(942) Iteration 001600 lr 7.13e-04 loss-1 0.416 loss-2 0.426 loss-3 0.460 loss_global_cls 0.313 loss_local_loc 0.029 loss_neighbor_loc 0.348 Timer 4.403(5.349) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 2/10(942) Iteration 001620 lr 7.12e-04 loss-1 0.413 loss-2 0.422 loss-3 0.457 loss_global_cls 0.311 loss_local_loc 0.029 loss_neighbor_loc 0.348 Timer 4.450(5.338) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 2/10(942) Iteration 001640 lr 7.11e-04 loss-1 0.409 loss-2 0.421 loss-3 0.455 loss_global_cls 0.311 loss_local_loc 0.029 loss_neighbor_loc 0.348 Timer 4.470(5.327) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 2/10(942) Iteration 001660 lr 7.10e-04 loss-1 0.405 loss-2 0.399 loss-3 0.427 loss_global_cls 0.305 loss_local_loc 0.024 loss_neighbor_loc 0.348 Timer 4.608(5.319) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 2/10(942) Iteration 001680 lr 7.08e-04 loss-1 0.411 loss-2 0.399 loss-3 0.424 loss_global_cls 0.307 loss_local_loc 0.023 loss_neighbor_loc 0.348 Timer 4.515(5.309) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]/home/dan/ws/STEP-MultiStream/data/augmentations.py:342: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray
+  mode = random.choice(self.sample_options)
+/home/dan/ws/STEP-MultiStream/data/augmentations.py:342: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray
+  mode = random.choice(self.sample_options)
+/home/dan/ws/STEP-MultiStream/data/augmentations.py:342: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray
+  mode = random.choice(self.sample_options)
+/home/dan/ws/STEP-MultiStream/data/augmentations.py:342: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray
+  mode = random.choice(self.sample_options)
+
+Epoch 2/10(942) Iteration 001700 lr 7.07e-04 loss-1 0.400 loss-2 0.385 loss-3 0.407 loss_global_cls 0.299 loss_local_loc 0.022 loss_neighbor_loc 0.348 Timer 4.546(5.300) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 2/10(942) Iteration 001720 lr 7.06e-04 loss-1 0.407 loss-2 0.385 loss-3 0.402 loss_global_cls 0.301 loss_local_loc 0.020 loss_neighbor_loc 0.348 Timer 4.608(5.292) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 2/10(942) Iteration 001740 lr 7.05e-04 loss-1 0.398 loss-2 0.376 loss-3 0.398 loss_global_cls 0.299 loss_local_loc 0.020 loss_neighbor_loc 0.348 Timer 4.295(5.281) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Saving state, iter: 1750
+/data/Dan/ava_v2_1/cache/STEP-kinetics400_KRImixed_PVDsd_3cls_clean-no_context-T1i3-fps10-Finetune-max3-i3d-two_branch/checkpoint_1500.pth  removed!
+Epoch 2/10(942) Iteration 001760 lr 7.04e-04 loss-1 0.393 loss-2 0.365 loss-3 0.385 loss_global_cls 0.293 loss_local_loc 0.018 loss_neighbor_loc 0.348 Timer 4.845(5.276) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 2/10(942) Iteration 001780 lr 7.02e-04 loss-1 0.390 loss-2 0.351 loss-3 0.371 loss_global_cls 0.287 loss_local_loc 0.017 loss_neighbor_loc 0.348 Timer 4.603(5.268) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 2/10(942) Iteration 001800 lr 7.01e-04 loss-1 0.388 loss-2 0.354 loss-3 0.365 loss_global_cls 0.283 loss_local_loc 0.016 loss_neighbor_loc 0.321 Timer 4.334(5.258) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 2/10(942) Iteration 001820 lr 7.00e-04 loss-1 0.391 loss-2 0.355 loss-3 0.364 loss_global_cls 0.281 loss_local_loc 0.017 loss_neighbor_loc 0.321 Timer 4.631(5.251) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 2/10(942) Iteration 001840 lr 6.99e-04 loss-1 0.401 loss-2 0.377 loss-3 0.371 loss_global_cls 0.284 loss_local_loc 0.017 loss_neighbor_loc 0.321 Timer 4.740(5.245) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 2/10(942) Iteration 001860 lr 6.97e-04 loss-1 0.403 loss-2 0.375 loss-3 0.365 loss_global_cls 0.282 loss_local_loc 0.017 loss_neighbor_loc 0.321 Timer 4.637(5.239) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 2/10(942) Iteration 001880 lr 6.96e-04 loss-1 0.402 loss-2 0.376 loss-3 0.365 loss_global_cls 0.284 loss_local_loc 0.016 loss_neighbor_loc 0.305 Timer 4.277(5.229) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Validating at  1884
+100 / 118
+<generator object ObjectDetectionEvaluator.__init__.<locals>.<genexpr> at 0x7f48df6ccdb0>
+{ 'PascalBoxes_PerformanceByCategory/AP@0.5IOU/bkgd': 0.14651243704816103,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/touch_move': 0.03459292904032585,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/xfr': 0.06418452986717295,
+  'PascalBoxes_Precision/mAP@0.5IOU': 0.0817632986518866}
+<generator object ObjectDetectionEvaluator.__init__.<locals>.<genexpr> at 0x7f48f0dda678>
+{ 'PascalBoxes_PerformanceByCategory/AP@0.5IOU/bkgd': 0.46817789933234516,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/touch_move': 0.03466859347181848,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/xfr': 0.17886058125533263,
+  'PascalBoxes_Precision/mAP@0.5IOU': 0.22723569135316543}
+<generator object ObjectDetectionEvaluator.__init__.<locals>.<genexpr> at 0x7f48df6cce60>
+{ 'PascalBoxes_PerformanceByCategory/AP@0.5IOU/bkgd': 0.37817132998054837,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/touch_move': 0.037095172612259954,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/xfr': 0.3299396066220113,
+  'PascalBoxes_Precision/mAP@0.5IOU': 0.24840203640493988}
+Iter 1: MEANAP =>0.0817632986518866
+Iter 2: MEANAP =>0.22723569135316543
+Iter 3: MEANAP =>0.24840203640493988
+
+
+Validation TIME::: 14.137
+
+
+Epoch 3/10(942) Iteration 001900 lr 6.95e-04 loss-1 0.406 loss-2 0.387 loss-3 0.372 loss_global_cls 0.289 loss_local_loc 0.017 loss_neighbor_loc 0.305 Timer 4.868(5.225) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 3/10(942) Iteration 001920 lr 6.93e-04 loss-1 0.403 loss-2 0.380 loss-3 0.368 loss_global_cls 0.284 loss_local_loc 0.017 loss_neighbor_loc 0.305 Timer 4.548(5.218) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 3/10(942) Iteration 001940 lr 6.92e-04 loss-1 0.406 loss-2 0.381 loss-3 0.366 loss_global_cls 0.286 loss_local_loc 0.016 loss_neighbor_loc 0.305 Timer 4.997(5.215) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 3/10(942) Iteration 001960 lr 6.90e-04 loss-1 0.403 loss-2 0.387 loss-3 0.368 loss_global_cls 0.288 loss_local_loc 0.016 loss_neighbor_loc 0.305 Timer 5.064(5.214) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 3/10(942) Iteration 001980 lr 6.89e-04 loss-1 0.406 loss-2 0.393 loss-3 0.372 loss_global_cls 0.292 loss_local_loc 0.016 loss_neighbor_loc 0.317 Timer 4.383(5.205) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 3/10(942) Iteration 002000 lr 6.88e-04 loss-1 0.410 loss-2 0.395 loss-3 0.379 loss_global_cls 0.297 loss_local_loc 0.016 loss_neighbor_loc 0.317 Timer 4.400(5.197) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Saving state, iter: 2000
+/data/Dan/ava_v2_1/cache/STEP-kinetics400_KRImixed_PVDsd_3cls_clean-no_context-T1i3-fps10-Finetune-max3-i3d-two_branch/checkpoint_1750.pth  removed!
+Epoch 3/10(942) Iteration 002020 lr 6.86e-04 loss-1 0.406 loss-2 0.391 loss-3 0.376 loss_global_cls 0.297 loss_local_loc 0.016 loss_neighbor_loc 0.317 Timer 4.473(5.190) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 3/10(942) Iteration 002040 lr 6.85e-04 loss-1 0.400 loss-2 0.369 loss-3 0.362 loss_global_cls 0.288 loss_local_loc 0.015 loss_neighbor_loc 0.317 Timer 4.911(5.188) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 3/10(942) Iteration 002060 lr 6.83e-04 loss-1 0.398 loss-2 0.364 loss-3 0.360 loss_global_cls 0.283 loss_local_loc 0.015 loss_neighbor_loc 0.317 Timer 4.410(5.180) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 3/10(942) Iteration 002080 lr 6.82e-04 loss-1 0.401 loss-2 0.371 loss-3 0.368 loss_global_cls 0.288 loss_local_loc 0.016 loss_neighbor_loc 0.307 Timer 4.494(5.173) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 3/10(942) Iteration 002100 lr 6.80e-04 loss-1 0.396 loss-2 0.367 loss-3 0.365 loss_global_cls 0.286 loss_local_loc 0.016 loss_neighbor_loc 0.300 Timer 4.723(5.169) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 3/10(942) Iteration 002120 lr 6.79e-04 loss-1 0.396 loss-2 0.369 loss-3 0.367 loss_global_cls 0.291 loss_local_loc 0.015 loss_neighbor_loc 0.300 Timer 4.896(5.167) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 3/10(942) Iteration 002140 lr 6.77e-04 loss-1 0.396 loss-2 0.364 loss-3 0.366 loss_global_cls 0.285 loss_local_loc 0.016 loss_neighbor_loc 0.289 Timer 4.411(5.159) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 3/10(942) Iteration 002160 lr 6.76e-04 loss-1 0.400 loss-2 0.360 loss-3 0.366 loss_global_cls 0.284 loss_local_loc 0.016 loss_neighbor_loc 0.289 Timer 4.205(5.151) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 3/10(942) Iteration 002180 lr 6.74e-04 loss-1 0.396 loss-2 0.358 loss-3 0.367 loss_global_cls 0.284 loss_local_loc 0.017 loss_neighbor_loc 0.289 Timer 4.639(5.146) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 3/10(942) Iteration 002200 lr 6.73e-04 loss-1 0.395 loss-2 0.358 loss-3 0.368 loss_global_cls 0.285 loss_local_loc 0.017 loss_neighbor_loc 0.289 Timer 4.643(5.141) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 3/10(942) Iteration 002220 lr 6.71e-04 loss-1 0.392 loss-2 0.354 loss-3 0.363 loss_global_cls 0.278 loss_local_loc 0.017 loss_neighbor_loc 0.289 Timer 4.506(5.136) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 3/10(942) Iteration 002240 lr 6.69e-04 loss-1 0.400 loss-2 0.365 loss-3 0.377 loss_global_cls 0.289 loss_local_loc 0.018 loss_neighbor_loc 0.289 Timer 4.602(5.131) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Saving state, iter: 2250
+/data/Dan/ava_v2_1/cache/STEP-kinetics400_KRImixed_PVDsd_3cls_clean-no_context-T1i3-fps10-Finetune-max3-i3d-two_branch/checkpoint_2000.pth  removed!
+Epoch 3/10(942) Iteration 002260 lr 6.68e-04 loss-1 0.394 loss-2 0.360 loss-3 0.373 loss_global_cls 0.290 loss_local_loc 0.017 loss_neighbor_loc 0.289 Timer 4.891(5.129) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 3/10(942) Iteration 002280 lr 6.66e-04 loss-1 0.390 loss-2 0.351 loss-3 0.363 loss_global_cls 0.280 loss_local_loc 0.016 loss_neighbor_loc 0.289 Timer 4.523(5.123) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 3/10(942) Iteration 002300 lr 6.65e-04 loss-1 0.395 loss-2 0.347 loss-3 0.359 loss_global_cls 0.276 loss_local_loc 0.017 loss_neighbor_loc 0.289 Timer 4.663(5.119) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 3/10(942) Iteration 002320 lr 6.63e-04 loss-1 0.393 loss-2 0.345 loss-3 0.355 loss_global_cls 0.271 loss_local_loc 0.017 loss_neighbor_loc 0.289 Timer 4.640(5.115) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 3/10(942) Iteration 002340 lr 6.61e-04 loss-1 0.392 loss-2 0.366 loss-3 0.369 loss_global_cls 0.272 loss_local_loc 0.019 loss_neighbor_loc 0.280 Timer 4.615(5.111) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 3/10(942) Iteration 002360 lr 6.60e-04 loss-1 0.390 loss-2 0.369 loss-3 0.372 loss_global_cls 0.272 loss_local_loc 0.020 loss_neighbor_loc 0.280 Timer 4.704(5.108) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 3/10(942) Iteration 002380 lr 6.58e-04 loss-1 0.387 loss-2 0.370 loss-3 0.368 loss_global_cls 0.265 loss_local_loc 0.021 loss_neighbor_loc 0.280 Timer 4.401(5.102) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 3/10(942) Iteration 002400 lr 6.56e-04 loss-1 0.393 loss-2 0.384 loss-3 0.382 loss_global_cls 0.266 loss_local_loc 0.023 loss_neighbor_loc 0.280 Timer 4.489(5.097) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 3/10(942) Iteration 002420 lr 6.54e-04 loss-1 0.400 loss-2 0.398 loss-3 0.392 loss_global_cls 0.271 loss_local_loc 0.024 loss_neighbor_loc 0.280 Timer 4.724(5.093) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 3/10(942) Iteration 002440 lr 6.53e-04 loss-1 0.390 loss-2 0.393 loss-3 0.387 loss_global_cls 0.262 loss_local_loc 0.025 loss_neighbor_loc 0.280 Timer 4.568(5.089) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 3/10(942) Iteration 002460 lr 6.51e-04 loss-1 0.393 loss-2 0.401 loss-3 0.395 loss_global_cls 0.268 loss_local_loc 0.025 loss_neighbor_loc 0.280 Timer 4.615(5.085) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 3/10(942) Iteration 002480 lr 6.49e-04 loss-1 0.394 loss-2 0.403 loss-3 0.399 loss_global_cls 0.272 loss_local_loc 0.025 loss_neighbor_loc 0.280 Timer 4.371(5.080) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 3/10(942) Iteration 002500 lr 6.47e-04 loss-1 0.397 loss-2 0.412 loss-3 0.404 loss_global_cls 0.277 loss_local_loc 0.025 loss_neighbor_loc 0.280 Timer 5.008(5.079) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Saving state, iter: 2500
+/data/Dan/ava_v2_1/cache/STEP-kinetics400_KRImixed_PVDsd_3cls_clean-no_context-T1i3-fps10-Finetune-max3-i3d-two_branch/checkpoint_2250.pth  removed!
+Epoch 3/10(942) Iteration 002520 lr 6.46e-04 loss-1 0.401 loss-2 0.420 loss-3 0.414 loss_global_cls 0.284 loss_local_loc 0.026 loss_neighbor_loc 0.280 Timer 4.437(5.074) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 3/10(942) Iteration 002540 lr 6.44e-04 loss-1 0.398 loss-2 0.405 loss-3 0.403 loss_global_cls 0.288 loss_local_loc 0.023 loss_neighbor_loc 0.280 Timer 4.819(5.072) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 3/10(942) Iteration 002560 lr 6.42e-04 loss-1 0.396 loss-2 0.408 loss-3 0.403 loss_global_cls 0.293 loss_local_loc 0.022 loss_neighbor_loc 0.280 Timer 4.643(5.068) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 3/10(942) Iteration 002580 lr 6.40e-04 loss-1 0.399 loss-2 0.406 loss-3 0.402 loss_global_cls 0.295 loss_local_loc 0.022 loss_neighbor_loc 0.280 Timer 4.830(5.067) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 3/10(942) Iteration 002600 lr 6.38e-04 loss-1 0.388 loss-2 0.389 loss-3 0.386 loss_global_cls 0.290 loss_local_loc 0.019 loss_neighbor_loc 0.280 Timer 4.961(5.066) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 3/10(942) Iteration 002620 lr 6.37e-04 loss-1 0.381 loss-2 0.384 loss-3 0.385 loss_global_cls 0.291 loss_local_loc 0.019 loss_neighbor_loc 0.280 Timer 4.319(5.060) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]/home/dan/ws/STEP-MultiStream/data/augmentations.py:342: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray
+  mode = random.choice(self.sample_options)
+/home/dan/ws/STEP-MultiStream/data/augmentations.py:342: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray
+  mode = random.choice(self.sample_options)
+/home/dan/ws/STEP-MultiStream/data/augmentations.py:342: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray
+  mode = random.choice(self.sample_options)
+/home/dan/ws/STEP-MultiStream/data/augmentations.py:342: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray
+  mode = random.choice(self.sample_options)
+
+Epoch 3/10(942) Iteration 002640 lr 6.35e-04 loss-1 0.378 loss-2 0.377 loss-3 0.377 loss_global_cls 0.289 loss_local_loc 0.018 loss_neighbor_loc 0.280 Timer 4.503(5.056) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 3/10(942) Iteration 002660 lr 6.33e-04 loss-1 0.378 loss-2 0.377 loss-3 0.372 loss_global_cls 0.279 loss_local_loc 0.019 loss_neighbor_loc 0.290 Timer 4.160(5.049) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 3/10(942) Iteration 002680 lr 6.31e-04 loss-1 0.381 loss-2 0.385 loss-3 0.377 loss_global_cls 0.280 loss_local_loc 0.019 loss_neighbor_loc 0.290 Timer 4.679(5.046) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 3/10(942) Iteration 002700 lr 6.29e-04 loss-1 0.372 loss-2 0.383 loss-3 0.381 loss_global_cls 0.279 loss_local_loc 0.020 loss_neighbor_loc 0.290 Timer 4.520(5.043) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 3/10(942) Iteration 002720 lr 6.27e-04 loss-1 0.361 loss-2 0.374 loss-3 0.373 loss_global_cls 0.272 loss_local_loc 0.020 loss_neighbor_loc 0.290 Timer 4.337(5.037) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 3/10(942) Iteration 002740 lr 6.25e-04 loss-1 0.361 loss-2 0.369 loss-3 0.370 loss_global_cls 0.265 loss_local_loc 0.021 loss_neighbor_loc 0.290 Timer 4.592(5.034) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Saving state, iter: 2750
+/data/Dan/ava_v2_1/cache/STEP-kinetics400_KRImixed_PVDsd_3cls_clean-no_context-T1i3-fps10-Finetune-max3-i3d-two_branch/checkpoint_2500.pth  removed!
+Epoch 3/10(942) Iteration 002760 lr 6.23e-04 loss-1 0.361 loss-2 0.365 loss-3 0.370 loss_global_cls 0.262 loss_local_loc 0.022 loss_neighbor_loc 0.280 Timer 4.420(5.030) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 3/10(942) Iteration 002780 lr 6.21e-04 loss-1 0.361 loss-2 0.362 loss-3 0.370 loss_global_cls 0.259 loss_local_loc 0.022 loss_neighbor_loc 0.280 Timer 4.243(5.024) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 3/10(942) Iteration 002800 lr 6.19e-04 loss-1 0.366 loss-2 0.363 loss-3 0.370 loss_global_cls 0.263 loss_local_loc 0.021 loss_neighbor_loc 0.280 Timer 4.532(5.020) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 3/10(942) Iteration 002820 lr 6.17e-04 loss-1 0.366 loss-2 0.356 loss-3 0.363 loss_global_cls 0.259 loss_local_loc 0.021 loss_neighbor_loc 0.265 Timer 4.674(5.018) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Validating at  2826
+100 / 118
+<generator object ObjectDetectionEvaluator.__init__.<locals>.<genexpr> at 0x7f48f0dda9e8>
+{ 'PascalBoxes_PerformanceByCategory/AP@0.5IOU/bkgd': 0.29124635692859974,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/touch_move': 0.16466902647891868,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/xfr': 0.22083942384061772,
+  'PascalBoxes_Precision/mAP@0.5IOU': 0.22558493574937868}
+<generator object ObjectDetectionEvaluator.__init__.<locals>.<genexpr> at 0x7f48f0e6ad58>
+{ 'PascalBoxes_PerformanceByCategory/AP@0.5IOU/bkgd': 0.5461173337522298,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/touch_move': 0.13114021382127503,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/xfr': 0.5081078547806293,
+  'PascalBoxes_Precision/mAP@0.5IOU': 0.3951218007847113}
+<generator object ObjectDetectionEvaluator.__init__.<locals>.<genexpr> at 0x7f48f0dda3b8>
+{ 'PascalBoxes_PerformanceByCategory/AP@0.5IOU/bkgd': 0.40999947857725827,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/touch_move': 0.08953563699403962,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/xfr': 0.3555854671134131,
+  'PascalBoxes_Precision/mAP@0.5IOU': 0.285040194228237}
+Iter 1: MEANAP =>0.22558493574937868
+Iter 2: MEANAP =>0.3951218007847113
+Iter 3: MEANAP =>0.285040194228237
+
+
+Validation TIME::: 14.446
+
+
+Epoch 4/10(942) Iteration 002840 lr 6.15e-04 loss-1 0.364 loss-2 0.352 loss-3 0.363 loss_global_cls 0.258 loss_local_loc 0.021 loss_neighbor_loc 0.265 Timer 4.960(5.018) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 4/10(942) Iteration 002860 lr 6.13e-04 loss-1 0.367 loss-2 0.349 loss-3 0.365 loss_global_cls 0.265 loss_local_loc 0.020 loss_neighbor_loc 0.265 Timer 5.191(5.019) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 4/10(942) Iteration 002880 lr 6.11e-04 loss-1 0.350 loss-2 0.329 loss-3 0.348 loss_global_cls 0.253 loss_local_loc 0.019 loss_neighbor_loc 0.265 Timer 4.800(5.017) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 4/10(942) Iteration 002900 lr 6.09e-04 loss-1 0.347 loss-2 0.322 loss-3 0.339 loss_global_cls 0.251 loss_local_loc 0.018 loss_neighbor_loc 0.265 Timer 4.771(5.016) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 4/10(942) Iteration 002920 lr 6.07e-04 loss-1 0.349 loss-2 0.322 loss-3 0.339 loss_global_cls 0.248 loss_local_loc 0.018 loss_neighbor_loc 0.257 Timer 4.869(5.015) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 4/10(942) Iteration 002940 lr 6.05e-04 loss-1 0.344 loss-2 0.315 loss-3 0.334 loss_global_cls 0.249 loss_local_loc 0.017 loss_neighbor_loc 0.257 Timer 4.568(5.012) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 4/10(942) Iteration 002960 lr 6.03e-04 loss-1 0.343 loss-2 0.307 loss-3 0.328 loss_global_cls 0.243 loss_local_loc 0.017 loss_neighbor_loc 0.257 Timer 4.517(5.008) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 4/10(942) Iteration 002980 lr 6.01e-04 loss-1 0.339 loss-2 0.310 loss-3 0.332 loss_global_cls 0.247 loss_local_loc 0.017 loss_neighbor_loc 0.259 Timer 4.639(5.006) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 4/10(942) Iteration 003000 lr 5.99e-04 loss-1 0.332 loss-2 0.305 loss-3 0.329 loss_global_cls 0.243 loss_local_loc 0.017 loss_neighbor_loc 0.259 Timer 4.454(5.002) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Saving state, iter: 3000
+/data/Dan/ava_v2_1/cache/STEP-kinetics400_KRImixed_PVDsd_3cls_clean-no_context-T1i3-fps10-Finetune-max3-i3d-two_branch/checkpoint_2750.pth  removed!
+Epoch 4/10(942) Iteration 003020 lr 5.97e-04 loss-1 0.336 loss-2 0.310 loss-3 0.334 loss_global_cls 0.250 loss_local_loc 0.017 loss_neighbor_loc 0.259 Timer 4.599(4.999) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 4/10(942) Iteration 003040 lr 5.95e-04 loss-1 0.329 loss-2 0.307 loss-3 0.333 loss_global_cls 0.247 loss_local_loc 0.017 loss_neighbor_loc 0.259 Timer 4.689(4.997) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 4/10(942) Iteration 003060 lr 5.93e-04 loss-1 0.326 loss-2 0.305 loss-3 0.338 loss_global_cls 0.255 loss_local_loc 0.017 loss_neighbor_loc 0.251 Timer 4.673(4.995) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 4/10(942) Iteration 003080 lr 5.91e-04 loss-1 0.327 loss-2 0.303 loss-3 0.338 loss_global_cls 0.256 loss_local_loc 0.016 loss_neighbor_loc 0.246 Timer 4.466(4.992) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 4/10(942) Iteration 003100 lr 5.89e-04 loss-1 0.333 loss-2 0.307 loss-3 0.339 loss_global_cls 0.256 loss_local_loc 0.017 loss_neighbor_loc 0.246 Timer 4.671(4.990) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 4/10(942) Iteration 003120 lr 5.87e-04 loss-1 0.336 loss-2 0.311 loss-3 0.338 loss_global_cls 0.258 loss_local_loc 0.016 loss_neighbor_loc 0.270 Timer 4.663(4.988) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 4/10(942) Iteration 003140 lr 5.85e-04 loss-1 0.355 loss-2 0.332 loss-3 0.347 loss_global_cls 0.265 loss_local_loc 0.016 loss_neighbor_loc 0.297 Timer 4.485(4.984) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 4/10(942) Iteration 003160 lr 5.82e-04 loss-1 0.364 loss-2 0.353 loss-3 0.362 loss_global_cls 0.274 loss_local_loc 0.018 loss_neighbor_loc 0.297 Timer 4.746(4.983) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 4/10(942) Iteration 003180 lr 5.80e-04 loss-1 0.373 loss-2 0.353 loss-3 0.364 loss_global_cls 0.277 loss_local_loc 0.017 loss_neighbor_loc 0.297 Timer 4.767(4.982) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 4/10(942) Iteration 003200 lr 5.78e-04 loss-1 0.378 loss-2 0.355 loss-3 0.363 loss_global_cls 0.277 loss_local_loc 0.017 loss_neighbor_loc 0.297 Timer 5.052(4.982) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 4/10(942) Iteration 003220 lr 5.76e-04 loss-1 0.376 loss-2 0.355 loss-3 0.361 loss_global_cls 0.273 loss_local_loc 0.018 loss_neighbor_loc 0.290 Timer 4.362(4.978) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 4/10(942) Iteration 003240 lr 5.74e-04 loss-1 0.386 loss-2 0.360 loss-3 0.362 loss_global_cls 0.276 loss_local_loc 0.017 loss_neighbor_loc 0.290 Timer 4.704(4.976) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Saving state, iter: 3250
+/data/Dan/ava_v2_1/cache/STEP-kinetics400_KRImixed_PVDsd_3cls_clean-no_context-T1i3-fps10-Finetune-max3-i3d-two_branch/checkpoint_3000.pth  removed!
+Epoch 4/10(942) Iteration 003260 lr 5.71e-04 loss-1 0.388 loss-2 0.362 loss-3 0.356 loss_global_cls 0.268 loss_local_loc 0.018 loss_neighbor_loc 0.290 Timer 4.675(4.975) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 4/10(942) Iteration 003280 lr 5.69e-04 loss-1 0.393 loss-2 0.372 loss-3 0.364 loss_global_cls 0.274 loss_local_loc 0.018 loss_neighbor_loc 0.283 Timer 4.949(4.974) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 4/10(942) Iteration 003300 lr 5.67e-04 loss-1 0.392 loss-2 0.369 loss-3 0.363 loss_global_cls 0.273 loss_local_loc 0.018 loss_neighbor_loc 0.283 Timer 4.788(4.973) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 4/10(942) Iteration 003320 lr 5.65e-04 loss-1 0.389 loss-2 0.369 loss-3 0.376 loss_global_cls 0.275 loss_local_loc 0.020 loss_neighbor_loc 0.278 Timer 4.620(4.971) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 4/10(942) Iteration 003340 lr 5.63e-04 loss-1 0.366 loss-2 0.348 loss-3 0.365 loss_global_cls 0.264 loss_local_loc 0.020 loss_neighbor_loc 0.278 Timer 4.917(4.971) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 4/10(942) Iteration 003360 lr 5.60e-04 loss-1 0.355 loss-2 0.329 loss-3 0.348 loss_global_cls 0.256 loss_local_loc 0.018 loss_neighbor_loc 0.278 Timer 4.462(4.968) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 4/10(942) Iteration 003380 lr 5.58e-04 loss-1 0.350 loss-2 0.326 loss-3 0.339 loss_global_cls 0.249 loss_local_loc 0.018 loss_neighbor_loc 0.278 Timer 4.423(4.965) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 4/10(942) Iteration 003400 lr 5.56e-04 loss-1 0.343 loss-2 0.320 loss-3 0.333 loss_global_cls 0.243 loss_local_loc 0.018 loss_neighbor_loc 0.278 Timer 5.057(4.965) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 4/10(942) Iteration 003420 lr 5.54e-04 loss-1 0.342 loss-2 0.322 loss-3 0.336 loss_global_cls 0.246 loss_local_loc 0.018 loss_neighbor_loc 0.278 Timer 4.724(4.964) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 4/10(942) Iteration 003440 lr 5.51e-04 loss-1 0.340 loss-2 0.328 loss-3 0.342 loss_global_cls 0.253 loss_local_loc 0.018 loss_neighbor_loc 0.278 Timer 4.411(4.961) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 4/10(942) Iteration 003460 lr 5.49e-04 loss-1 0.335 loss-2 0.334 loss-3 0.341 loss_global_cls 0.251 loss_local_loc 0.018 loss_neighbor_loc 0.310 Timer 4.317(4.957) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 4/10(942) Iteration 003480 lr 5.47e-04 loss-1 0.336 loss-2 0.334 loss-3 0.342 loss_global_cls 0.252 loss_local_loc 0.018 loss_neighbor_loc 0.310 Timer 4.647(4.955) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 4/10(942) Iteration 003500 lr 5.44e-04 loss-1 0.336 loss-2 0.331 loss-3 0.340 loss_global_cls 0.252 loss_local_loc 0.018 loss_neighbor_loc 0.310 Timer 4.547(4.953) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Saving state, iter: 3500
+/data/Dan/ava_v2_1/cache/STEP-kinetics400_KRImixed_PVDsd_3cls_clean-no_context-T1i3-fps10-Finetune-max3-i3d-two_branch/checkpoint_3250.pth  removed!
+Epoch 4/10(942) Iteration 003520 lr 5.42e-04 loss-1 0.327 loss-2 0.317 loss-3 0.320 loss_global_cls 0.245 loss_local_loc 0.015 loss_neighbor_loc 0.310 Timer 4.581(4.951) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 4/10(942) Iteration 003540 lr 5.40e-04 loss-1 0.332 loss-2 0.321 loss-3 0.323 loss_global_cls 0.250 loss_local_loc 0.015 loss_neighbor_loc 0.310 Timer 4.462(4.948) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 4/10(942) Iteration 003560 lr 5.37e-04 loss-1 0.330 loss-2 0.325 loss-3 0.326 loss_global_cls 0.255 loss_local_loc 0.014 loss_neighbor_loc 0.310 Timer 4.574(4.946) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]/home/dan/ws/STEP-MultiStream/data/augmentations.py:342: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray
+  mode = random.choice(self.sample_options)
+/home/dan/ws/STEP-MultiStream/data/augmentations.py:342: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray
+  mode = random.choice(self.sample_options)
+/home/dan/ws/STEP-MultiStream/data/augmentations.py:342: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray
+  mode = random.choice(self.sample_options)
+/home/dan/ws/STEP-MultiStream/data/augmentations.py:342: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray
+  mode = random.choice(self.sample_options)
+
+Epoch 4/10(942) Iteration 003580 lr 5.35e-04 loss-1 0.331 loss-2 0.331 loss-3 0.337 loss_global_cls 0.265 loss_local_loc 0.014 loss_neighbor_loc 0.310 Timer 4.281(4.942) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 4/10(942) Iteration 003600 lr 5.33e-04 loss-1 0.330 loss-2 0.332 loss-3 0.339 loss_global_cls 0.267 loss_local_loc 0.014 loss_neighbor_loc 0.310 Timer 4.884(4.942) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 4/10(942) Iteration 003620 lr 5.30e-04 loss-1 0.324 loss-2 0.323 loss-3 0.331 loss_global_cls 0.263 loss_local_loc 0.014 loss_neighbor_loc 0.310 Timer 4.846(4.941) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 4/10(942) Iteration 003640 lr 5.28e-04 loss-1 0.325 loss-2 0.321 loss-3 0.328 loss_global_cls 0.260 loss_local_loc 0.014 loss_neighbor_loc 0.310 Timer 4.485(4.939) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 4/10(942) Iteration 003660 lr 5.26e-04 loss-1 0.328 loss-2 0.315 loss-3 0.327 loss_global_cls 0.260 loss_local_loc 0.013 loss_neighbor_loc 0.310 Timer 4.545(4.936) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 4/10(942) Iteration 003680 lr 5.23e-04 loss-1 0.326 loss-2 0.313 loss-3 0.322 loss_global_cls 0.257 loss_local_loc 0.013 loss_neighbor_loc 0.310 Timer 4.524(4.934) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 4/10(942) Iteration 003700 lr 5.21e-04 loss-1 0.320 loss-2 0.312 loss-3 0.321 loss_global_cls 0.256 loss_local_loc 0.013 loss_neighbor_loc 0.310 Timer 4.323(4.931) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 4/10(942) Iteration 003720 lr 5.19e-04 loss-1 0.332 loss-2 0.339 loss-3 0.341 loss_global_cls 0.263 loss_local_loc 0.016 loss_neighbor_loc 0.310 Timer 4.453(4.928) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 4/10(942) Iteration 003740 lr 5.16e-04 loss-1 0.334 loss-2 0.340 loss-3 0.339 loss_global_cls 0.259 loss_local_loc 0.016 loss_neighbor_loc 0.310 Timer 4.538(4.926) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Saving state, iter: 3750
+/data/Dan/ava_v2_1/cache/STEP-kinetics400_KRImixed_PVDsd_3cls_clean-no_context-T1i3-fps10-Finetune-max3-i3d-two_branch/checkpoint_3500.pth  removed!
+Epoch 4/10(942) Iteration 003760 lr 5.14e-04 loss-1 0.337 loss-2 0.338 loss-3 0.338 loss_global_cls 0.257 loss_local_loc 0.016 loss_neighbor_loc 0.310 Timer 4.886(4.926) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Validating at  3768
+100 / 118
+<generator object ObjectDetectionEvaluator.__init__.<locals>.<genexpr> at 0x7f48f0df4a40>
+{ 'PascalBoxes_PerformanceByCategory/AP@0.5IOU/bkgd': 0.5417022686605718,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/touch_move': 0.20210296833650984,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/xfr': 0.2243642410236647,
+  'PascalBoxes_Precision/mAP@0.5IOU': 0.3227231593402488}
+<generator object ObjectDetectionEvaluator.__init__.<locals>.<genexpr> at 0x7f48df6b6d58>
+{ 'PascalBoxes_PerformanceByCategory/AP@0.5IOU/bkgd': 0.6178687802919027,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/touch_move': 0.2315066024431433,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/xfr': 0.3585687296264197,
+  'PascalBoxes_Precision/mAP@0.5IOU': 0.40264803745382194}
+<generator object ObjectDetectionEvaluator.__init__.<locals>.<genexpr> at 0x7f48f0deaf10>
+{ 'PascalBoxes_PerformanceByCategory/AP@0.5IOU/bkgd': 0.5678564151265814,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/touch_move': 0.20670140838494416,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/xfr': 0.3849385694922124,
+  'PascalBoxes_Precision/mAP@0.5IOU': 0.3864987976679126}
+Iter 1: MEANAP =>0.3227231593402488
+Iter 2: MEANAP =>0.40264803745382194
+Iter 3: MEANAP =>0.3864987976679126
+
+
+Validation TIME::: 14.574
+
+
+Epoch 5/10(942) Iteration 003780 lr 5.11e-04 loss-1 0.336 loss-2 0.335 loss-3 0.328 loss_global_cls 0.249 loss_local_loc 0.016 loss_neighbor_loc 0.310 Timer 3.903(4.921) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 5/10(942) Iteration 003800 lr 5.09e-04 loss-1 0.334 loss-2 0.331 loss-3 0.328 loss_global_cls 0.248 loss_local_loc 0.016 loss_neighbor_loc 0.305 Timer 4.739(4.920) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 5/10(942) Iteration 003820 lr 5.07e-04 loss-1 0.332 loss-2 0.330 loss-3 0.327 loss_global_cls 0.245 loss_local_loc 0.016 loss_neighbor_loc 0.305 Timer 5.219(4.921) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 5/10(942) Iteration 003840 lr 5.04e-04 loss-1 0.324 loss-2 0.324 loss-3 0.319 loss_global_cls 0.238 loss_local_loc 0.016 loss_neighbor_loc 0.305 Timer 4.278(4.918) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 5/10(942) Iteration 003860 lr 5.02e-04 loss-1 0.323 loss-2 0.325 loss-3 0.321 loss_global_cls 0.240 loss_local_loc 0.016 loss_neighbor_loc 0.298 Timer 4.746(4.917) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 5/10(942) Iteration 003880 lr 4.99e-04 loss-1 0.326 loss-2 0.330 loss-3 0.328 loss_global_cls 0.245 loss_local_loc 0.017 loss_neighbor_loc 0.298 Timer 4.611(4.915) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 5/10(942) Iteration 003900 lr 4.97e-04 loss-1 0.326 loss-2 0.337 loss-3 0.333 loss_global_cls 0.251 loss_local_loc 0.016 loss_neighbor_loc 0.298 Timer 4.566(4.914) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 5/10(942) Iteration 003920 lr 4.94e-04 loss-1 0.318 loss-2 0.315 loss-3 0.313 loss_global_cls 0.243 loss_local_loc 0.014 loss_neighbor_loc 0.298 Timer 4.493(4.912) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 5/10(942) Iteration 003940 lr 4.92e-04 loss-1 0.320 loss-2 0.317 loss-3 0.322 loss_global_cls 0.252 loss_local_loc 0.014 loss_neighbor_loc 0.298 Timer 4.693(4.910) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 5/10(942) Iteration 003960 lr 4.90e-04 loss-1 0.323 loss-2 0.321 loss-3 0.330 loss_global_cls 0.260 loss_local_loc 0.014 loss_neighbor_loc 0.298 Timer 4.669(4.909) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 5/10(942) Iteration 003980 lr 4.87e-04 loss-1 0.321 loss-2 0.324 loss-3 0.334 loss_global_cls 0.263 loss_local_loc 0.014 loss_neighbor_loc 0.298 Timer 4.642(4.908) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 5/10(942) Iteration 004000 lr 4.85e-04 loss-1 0.330 loss-2 0.329 loss-3 0.337 loss_global_cls 0.266 loss_local_loc 0.014 loss_neighbor_loc 0.298 Timer 4.551(4.906) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Saving state, iter: 4000
+/data/Dan/ava_v2_1/cache/STEP-kinetics400_KRImixed_PVDsd_3cls_clean-no_context-T1i3-fps10-Finetune-max3-i3d-two_branch/checkpoint_3750.pth  removed!
+Epoch 5/10(942) Iteration 004020 lr 4.82e-04 loss-1 0.329 loss-2 0.324 loss-3 0.336 loss_global_cls 0.267 loss_local_loc 0.014 loss_neighbor_loc 0.292 Timer 4.510(4.661) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 5/10(942) Iteration 004040 lr 4.80e-04 loss-1 0.335 loss-2 0.324 loss-3 0.340 loss_global_cls 0.272 loss_local_loc 0.014 loss_neighbor_loc 0.292 Timer 4.993(4.622) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 5/10(942) Iteration 004060 lr 4.77e-04 loss-1 0.327 loss-2 0.320 loss-3 0.338 loss_global_cls 0.270 loss_local_loc 0.014 loss_neighbor_loc 0.292 Timer 4.486(4.610) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 5/10(942) Iteration 004080 lr 4.75e-04 loss-1 0.326 loss-2 0.313 loss-3 0.329 loss_global_cls 0.263 loss_local_loc 0.013 loss_neighbor_loc 0.292 Timer 4.659(4.600) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 5/10(942) Iteration 004100 lr 4.72e-04 loss-1 0.325 loss-2 0.306 loss-3 0.325 loss_global_cls 0.257 loss_local_loc 0.013 loss_neighbor_loc 0.292 Timer 4.697(4.603) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 5/10(942) Iteration 004120 lr 4.70e-04 loss-1 0.330 loss-2 0.311 loss-3 0.327 loss_global_cls 0.260 loss_local_loc 0.013 loss_neighbor_loc 0.292 Timer 4.344(4.589) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 5/10(942) Iteration 004140 lr 4.67e-04 loss-1 0.327 loss-2 0.307 loss-3 0.319 loss_global_cls 0.253 loss_local_loc 0.013 loss_neighbor_loc 0.292 Timer 4.460(4.592) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 5/10(942) Iteration 004160 lr 4.65e-04 loss-1 0.325 loss-2 0.306 loss-3 0.316 loss_global_cls 0.249 loss_local_loc 0.013 loss_neighbor_loc 0.292 Timer 4.654(4.594) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 5/10(942) Iteration 004180 lr 4.62e-04 loss-1 0.323 loss-2 0.305 loss-3 0.315 loss_global_cls 0.248 loss_local_loc 0.013 loss_neighbor_loc 0.292 Timer 4.561(4.595) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 5/10(942) Iteration 004200 lr 4.60e-04 loss-1 0.315 loss-2 0.306 loss-3 0.311 loss_global_cls 0.246 loss_local_loc 0.013 loss_neighbor_loc 0.314 Timer 4.459(4.584) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 5/10(942) Iteration 004220 lr 4.57e-04 loss-1 0.318 loss-2 0.311 loss-3 0.312 loss_global_cls 0.245 loss_local_loc 0.013 loss_neighbor_loc 0.314 Timer 4.418(4.587) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 5/10(942) Iteration 004240 lr 4.55e-04 loss-1 0.314 loss-2 0.311 loss-3 0.308 loss_global_cls 0.241 loss_local_loc 0.013 loss_neighbor_loc 0.314 Timer 4.430(4.587) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Saving state, iter: 4250
+/data/Dan/ava_v2_1/cache/STEP-kinetics400_KRImixed_PVDsd_3cls_clean-no_context-T1i3-fps10-Finetune-max3-i3d-two_branch/checkpoint_4000.pth  removed!
+Epoch 5/10(942) Iteration 004260 lr 4.52e-04 loss-1 0.310 loss-2 0.308 loss-3 0.305 loss_global_cls 0.237 loss_local_loc 0.014 loss_neighbor_loc 0.314 Timer 4.657(4.589) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 5/10(942) Iteration 004280 lr 4.50e-04 loss-1 0.313 loss-2 0.314 loss-3 0.317 loss_global_cls 0.239 loss_local_loc 0.016 loss_neighbor_loc 0.314 Timer 4.134(4.588) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 5/10(942) Iteration 004300 lr 4.47e-04 loss-1 0.320 loss-2 0.325 loss-3 0.328 loss_global_cls 0.243 loss_local_loc 0.017 loss_neighbor_loc 0.319 Timer 4.675(4.590) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 5/10(942) Iteration 004320 lr 4.44e-04 loss-1 0.322 loss-2 0.322 loss-3 0.332 loss_global_cls 0.247 loss_local_loc 0.017 loss_neighbor_loc 0.314 Timer 4.726(4.592) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 5/10(942) Iteration 004340 lr 4.42e-04 loss-1 0.319 loss-2 0.326 loss-3 0.337 loss_global_cls 0.251 loss_local_loc 0.017 loss_neighbor_loc 0.314 Timer 4.748(4.593) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 5/10(942) Iteration 004360 lr 4.39e-04 loss-1 0.319 loss-2 0.325 loss-3 0.335 loss_global_cls 0.250 loss_local_loc 0.017 loss_neighbor_loc 0.314 Timer 4.364(4.591) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 5/10(942) Iteration 004380 lr 4.37e-04 loss-1 0.326 loss-2 0.326 loss-3 0.332 loss_global_cls 0.246 loss_local_loc 0.017 loss_neighbor_loc 0.314 Timer 4.608(4.593) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 5/10(942) Iteration 004400 lr 4.34e-04 loss-1 0.331 loss-2 0.323 loss-3 0.336 loss_global_cls 0.249 loss_local_loc 0.017 loss_neighbor_loc 0.308 Timer 4.451(4.593) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 5/10(942) Iteration 004420 lr 4.32e-04 loss-1 0.333 loss-2 0.324 loss-3 0.338 loss_global_cls 0.248 loss_local_loc 0.018 loss_neighbor_loc 0.308 Timer 4.505(4.591) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 5/10(942) Iteration 004440 lr 4.29e-04 loss-1 0.335 loss-2 0.322 loss-3 0.338 loss_global_cls 0.245 loss_local_loc 0.019 loss_neighbor_loc 0.302 Timer 4.845(4.592) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 5/10(942) Iteration 004460 lr 4.27e-04 loss-1 0.347 loss-2 0.332 loss-3 0.347 loss_global_cls 0.254 loss_local_loc 0.019 loss_neighbor_loc 0.302 Timer 4.407(4.593) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 5/10(942) Iteration 004480 lr 4.24e-04 loss-1 0.340 loss-2 0.324 loss-3 0.340 loss_global_cls 0.258 loss_local_loc 0.017 loss_neighbor_loc 0.302 Timer 4.497(4.594) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 5/10(942) Iteration 004500 lr 4.22e-04 loss-1 0.337 loss-2 0.323 loss-3 0.338 loss_global_cls 0.259 loss_local_loc 0.016 loss_neighbor_loc 0.302 Timer 4.587(4.595) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Saving state, iter:/home/dan/ws/STEP-MultiStream/data/augmentations.py:342: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray
+  mode = random.choice(self.sample_options)
+/home/dan/ws/STEP-MultiStream/data/augmentations.py:342: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray
+  mode = random.choice(self.sample_options)
+/home/dan/ws/STEP-MultiStream/data/augmentations.py:342: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray
+  mode = random.choice(self.sample_options)
+/home/dan/ws/STEP-MultiStream/data/augmentations.py:342: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray
+  mode = random.choice(self.sample_options)
+ 4500
+/data/Dan/ava_v2_1/cache/STEP-kinetics400_KRImixed_PVDsd_3cls_clean-no_context-T1i3-fps10-Finetune-max3-i3d-two_branch/checkpoint_4250.pth  removed!
+Epoch 5/10(942) Iteration 004520 lr 4.19e-04 loss-1 0.338 loss-2 0.327 loss-3 0.342 loss_global_cls 0.261 loss_local_loc 0.016 loss_neighbor_loc 0.302 Timer 4.304(4.594) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 5/10(942) Iteration 004540 lr 4.16e-04 loss-1 0.340 loss-2 0.328 loss-3 0.345 loss_global_cls 0.262 loss_local_loc 0.017 loss_neighbor_loc 0.302 Timer 4.545(4.595) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 5/10(942) Iteration 004560 lr 4.14e-04 loss-1 0.344 loss-2 0.336 loss-3 0.350 loss_global_cls 0.265 loss_local_loc 0.017 loss_neighbor_loc 0.302 Timer 4.528(4.597) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 5/10(942) Iteration 004580 lr 4.11e-04 loss-1 0.344 loss-2 0.342 loss-3 0.359 loss_global_cls 0.275 loss_local_loc 0.017 loss_neighbor_loc 0.296 Timer 4.716(4.598) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 5/10(942) Iteration 004600 lr 4.09e-04 loss-1 0.347 loss-2 0.352 loss-3 0.365 loss_global_cls 0.277 loss_local_loc 0.018 loss_neighbor_loc 0.296 Timer 4.289(4.598) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 5/10(942) Iteration 004620 lr 4.06e-04 loss-1 0.348 loss-2 0.355 loss-3 0.365 loss_global_cls 0.280 loss_local_loc 0.017 loss_neighbor_loc 0.296 Timer 4.726(4.598) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 5/10(942) Iteration 004640 lr 4.04e-04 loss-1 0.350 loss-2 0.356 loss-3 0.369 loss_global_cls 0.285 loss_local_loc 0.017 loss_neighbor_loc 0.296 Timer 4.559(4.598) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 5/10(942) Iteration 004660 lr 4.01e-04 loss-1 0.349 loss-2 0.355 loss-3 0.365 loss_global_cls 0.280 loss_local_loc 0.017 loss_neighbor_loc 0.291 Timer 4.630(4.597) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 5/10(942) Iteration 004680 lr 3.98e-04 loss-1 0.349 loss-2 0.353 loss-3 0.360 loss_global_cls 0.276 loss_local_loc 0.017 loss_neighbor_loc 0.291 Timer 4.542(4.597) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 5/10(942) Iteration 004700 lr 3.96e-04 loss-1 0.346 loss-2 0.343 loss-3 0.350 loss_global_cls 0.272 loss_local_loc 0.016 loss_neighbor_loc 0.291 Timer 4.475(4.597) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Validating at  4710
+100 / 118
+<generator object ObjectDetectionEvaluator.__init__.<locals>.<genexpr> at 0x7f48e7d6b830>
+{ 'PascalBoxes_PerformanceByCategory/AP@0.5IOU/bkgd': 0.4071443290339381,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/touch_move': 0.1377650592575354,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/xfr': 0.26485162816910635,
+  'PascalBoxes_Precision/mAP@0.5IOU': 0.26992033882019334}
+<generator object ObjectDetectionEvaluator.__init__.<locals>.<genexpr> at 0x7f48f0dfc888>
+{ 'PascalBoxes_PerformanceByCategory/AP@0.5IOU/bkgd': 0.6054477373686674,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/touch_move': 0.16880583110014225,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/xfr': 0.3787737959867438,
+  'PascalBoxes_Precision/mAP@0.5IOU': 0.38434245481851786}
+<generator object ObjectDetectionEvaluator.__init__.<locals>.<genexpr> at 0x7f48e7d6b410>
+{ 'PascalBoxes_PerformanceByCategory/AP@0.5IOU/bkgd': 0.5152197544970024,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/touch_move': 0.17297867057370014,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/xfr': 0.2776443208382675,
+  'PascalBoxes_Precision/mAP@0.5IOU': 0.32194758196965667}
+Iter 1: MEANAP =>0.26992033882019334
+Iter 2: MEANAP =>0.38434245481851786
+Iter 3: MEANAP =>0.32194758196965667
+
+
+Validation TIME::: 14.343
+
+
+Epoch 6/10(942) Iteration 004720 lr 3.93e-04 loss-1 0.336 loss-2 0.333 loss-3 0.339 loss_global_cls 0.260 loss_local_loc 0.016 loss_neighbor_loc 0.291 Timer 3.722(4.596) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 6/10(942) Iteration 004740 lr 3.91e-04 loss-1 0.332 loss-2 0.325 loss-3 0.325 loss_global_cls 0.248 loss_local_loc 0.015 loss_neighbor_loc 0.291 Timer 4.755(4.597) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Saving state, iter: 4750
+/data/Dan/ava_v2_1/cache/STEP-kinetics400_KRImixed_PVDsd_3cls_clean-no_context-T1i3-fps10-Finetune-max3-i3d-two_branch/checkpoint_4500.pth  removed!
+Epoch 6/10(942) Iteration 004760 lr 3.88e-04 loss-1 0.327 loss-2 0.316 loss-3 0.320 loss_global_cls 0.244 loss_local_loc 0.015 loss_neighbor_loc 0.291 Timer 4.869(4.597) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 6/10(942) Iteration 004780 lr 3.85e-04 loss-1 0.326 loss-2 0.305 loss-3 0.308 loss_global_cls 0.232 loss_local_loc 0.015 loss_neighbor_loc 0.291 Timer 4.708(4.599) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 6/10(942) Iteration 004800 lr 3.83e-04 loss-1 0.317 loss-2 0.293 loss-3 0.296 loss_global_cls 0.226 loss_local_loc 0.014 loss_neighbor_loc 0.291 Timer 4.685(4.602) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 6/10(942) Iteration 004820 lr 3.80e-04 loss-1 0.313 loss-2 0.290 loss-3 0.292 loss_global_cls 0.222 loss_local_loc 0.014 loss_neighbor_loc 0.291 Timer 4.573(4.601) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 6/10(942) Iteration 004840 lr 3.78e-04 loss-1 0.310 loss-2 0.295 loss-3 0.290 loss_global_cls 0.224 loss_local_loc 0.013 loss_neighbor_loc 0.291 Timer 4.794(4.604) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 6/10(942) Iteration 004860 lr 3.75e-04 loss-1 0.305 loss-2 0.292 loss-3 0.287 loss_global_cls 0.222 loss_local_loc 0.013 loss_neighbor_loc 0.291 Timer 4.291(4.603) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 6/10(942) Iteration 004880 lr 3.73e-04 loss-1 0.308 loss-2 0.298 loss-3 0.291 loss_global_cls 0.225 loss_local_loc 0.013 loss_neighbor_loc 0.287 Timer 4.318(4.604) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 6/10(942) Iteration 004900 lr 3.70e-04 loss-1 0.312 loss-2 0.301 loss-3 0.289 loss_global_cls 0.222 loss_local_loc 0.013 loss_neighbor_loc 0.288 Timer 4.718(4.605) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 6/10(942) Iteration 004920 lr 3.67e-04 loss-1 0.312 loss-2 0.299 loss-3 0.290 loss_global_cls 0.228 loss_local_loc 0.013 loss_neighbor_loc 0.288 Timer 4.387(4.603) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 6/10(942) Iteration 004940 lr 3.65e-04 loss-1 0.308 loss-2 0.292 loss-3 0.290 loss_global_cls 0.230 loss_local_loc 0.012 loss_neighbor_loc 0.288 Timer 4.828(4.606) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 6/10(942) Iteration 004960 lr 3.62e-04 loss-1 0.298 loss-2 0.281 loss-3 0.282 loss_global_cls 0.223 loss_local_loc 0.012 loss_neighbor_loc 0.288 Timer 4.757(4.603) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 6/10(942) Iteration 004980 lr 3.60e-04 loss-1 0.300 loss-2 0.282 loss-3 0.285 loss_global_cls 0.227 loss_local_loc 0.012 loss_neighbor_loc 0.288 Timer 4.947(4.605) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 6/10(942) Iteration 005000 lr 3.57e-04 loss-1 0.295 loss-2 0.280 loss-3 0.285 loss_global_cls 0.225 loss_local_loc 0.012 loss_neighbor_loc 0.288 Timer 4.579(4.604) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Saving state, iter: 5000
+/data/Dan/ava_v2_1/cache/STEP-kinetics400_KRImixed_PVDsd_3cls_clean-no_context-T1i3-fps10-Finetune-max3-i3d-two_branch/checkpoint_4750.pth  removed!
+Epoch 6/10(942) Iteration 005020 lr 3.54e-04 loss-1 0.296 loss-2 0.297 loss-3 0.332 loss_global_cls 0.231 loss_local_loc 0.020 loss_neighbor_loc 0.285 Timer 4.487(4.604) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 6/10(942) Iteration 005040 lr 3.52e-04 loss-1 0.292 loss-2 0.283 loss-3 0.328 loss_global_cls 0.226 loss_local_loc 0.020 loss_neighbor_loc 0.285 Timer 4.473(4.603) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 6/10(942) Iteration 005060 lr 3.49e-04 loss-1 0.295 loss-2 0.281 loss-3 0.331 loss_global_cls 0.228 loss_local_loc 0.021 loss_neighbor_loc 0.285 Timer 4.638(4.604) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 6/10(942) Iteration 005080 lr 3.47e-04 loss-1 0.302 loss-2 0.294 loss-3 0.356 loss_global_cls 0.238 loss_local_loc 0.024 loss_neighbor_loc 0.285 Timer 4.463(4.603) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 6/10(942) Iteration 005100 lr 3.44e-04 loss-1 0.296 loss-2 0.292 loss-3 0.353 loss_global_cls 0.236 loss_local_loc 0.023 loss_neighbor_loc 0.285 Timer 4.926(4.605) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 6/10(942) Iteration 005120 lr 3.42e-04 loss-1 0.308 loss-2 0.308 loss-3 0.367 loss_global_cls 0.248 loss_local_loc 0.024 loss_neighbor_loc 0.285 Timer 4.312(4.603) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 6/10(942) Iteration 005140 lr 3.39e-04 loss-1 0.319 loss-2 0.317 loss-3 0.374 loss_global_cls 0.251 loss_local_loc 0.025 loss_neighbor_loc 0.280 Timer 4.442(4.603) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 6/10(942) Iteration 005160 lr 3.36e-04 loss-1 0.328 loss-2 0.329 loss-3 0.382 loss_global_cls 0.255 loss_local_loc 0.025 loss_neighbor_loc 0.280 Timer 4.276(4.600) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 6/10(942) Iteration 005180 lr 3.34e-04 loss-1 0.319 loss-2 0.322 loss-3 0.375 loss_global_cls 0.249 loss_local_loc 0.025 loss_neighbor_loc 0.280 Timer 4.770(4.600) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 6/10(942) Iteration 005200 lr 3.31e-04 loss-1 0.329 loss-2 0.331 loss-3 0.379 loss_global_cls 0.252 loss_local_loc 0.026 loss_neighbor_loc 0.280 Timer 4.701(4.601) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 6/10(942) Iteration 005220 lr 3.29e-04 loss-1 0.329 loss-2 0.311 loss-3 0.335 loss_global_cls 0.249 loss_local_loc 0.017 loss_neighbor_loc 0.280 Timer 4.585(4.601) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 6/10(942) Iteration 005240 lr 3.26e-04 loss-1 0.333 loss-2 0.319 loss-3 0.337 loss_global_cls 0.252 loss_local_loc 0.017 loss_neighbor_loc 0.280 Timer 4.397(4.600) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Saving state, iter: 5250
+/data/Dan/ava_v2_1/cache/STEP-kinetics400_KRImixed_PVDsd_3cls_clean-no_context-T1i3-fps10-Finetune-max3-i3d-two_branch/checkpoint_5000.pth  removed!
+Epoch 6/10(942) Iteration 005260 lr 3.24e-04 loss-1 0.331 loss-2 0.325 loss-3 0.337 loss_global_cls 0.251 loss_local_loc 0.017 loss_neighbor_loc 0.275 Timer 4.722(4.600) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 6/10(942) Iteration 005280 lr 3.21e-04 loss-1 0.322 loss-2 0.303 loss-3 0.307 loss_global_cls 0.237 loss_local_loc 0.014 loss_neighbor_loc 0.275 Timer 5.067(4.603) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 6/10(942) Iteration 005300 lr 3.19e-04 loss-1 0.325 loss-2 0.300 loss-3 0.305 loss_global_cls 0.236 loss_local_loc 0.014 loss_neighbor_loc 0.267 Timer 4.502(4.602) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 6/10(942) Iteration 005320 lr 3.16e-04 loss-1 0.320 loss-2 0.288 loss-3 0.293 loss_global_cls 0.227 loss_local_loc 0.013 loss_neighbor_loc 0.267 Timer 4.753(4.602) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 6/10(942) Iteration 005340 lr 3.13e-04 loss-1 0.315 loss-2 0.289 loss-3 0.292 loss_global_cls 0.227 loss_local_loc 0.013 loss_neighbor_loc 0.267 Timer 4.564(4.602) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 6/10(942) Iteration 005360 lr 3.11e-04 loss-1 0.321 loss-2 0.289 loss-3 0.297 loss_global_cls 0.234 loss_local_loc 0.013 loss_neighbor_loc 0.267 Timer 4.905(4.602) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 6/10(942) Iteration 005380 lr 3.08e-04 loss-1 0.318 loss-2 0.297 loss-3 0.301 loss_global_cls 0.239 loss_local_loc 0.012 loss_neighbor_loc 0.272 Timer 4.756(4.602) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 6/10(942) Iteration 005400 lr 3.06e-04 loss-1 0.311 loss-2 0.292 loss-3 0.298 loss_global_cls 0.235 loss_local_loc 0.013 loss_neighbor_loc 0.278 Timer 4.505(4.601) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 6/10(942) Iteration 005420 lr 3.03e-04 loss-1 0.310 loss-2 0.290 loss-3 0.297 loss_global_cls 0.233 loss_local_loc 0.013 loss_neighbor_loc 0.278 Timer 4.782(4.601) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 6/10(942) Iteration 005440 lr 3.01e-04 loss-1 0.323 loss-2 0.315 loss-3 0.337 loss_global_cls 0.245 loss_local_loc 0.018 loss_neighbor_loc 0.278 Timer 4.660(4.603) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]/home/dan/ws/STEP-MultiStream/data/augmentations.py:342: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray
+  mode = random.choice(self.sample_options)
+/home/dan/ws/STEP-MultiStream/data/augmentations.py:342: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray
+  mode = random.choice(self.sample_options)
+/home/dan/ws/STEP-MultiStream/data/augmentations.py:342: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray
+  mode = random.choice(self.sample_options)
+/home/dan/ws/STEP-MultiStream/data/augmentations.py:342: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray
+  mode = random.choice(self.sample_options)
+
+Epoch 6/10(942) Iteration 005460 lr 2.98e-04 loss-1 0.318 loss-2 0.309 loss-3 0.339 loss_global_cls 0.248 loss_local_loc 0.018 loss_neighbor_loc 0.278 Timer 4.382(4.602) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 6/10(942) Iteration 005480 lr 2.96e-04 loss-1 0.317 loss-2 0.314 loss-3 0.344 loss_global_cls 0.254 loss_local_loc 0.018 loss_neighbor_loc 0.278 Timer 4.441(4.598) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 6/10(942) Iteration 005500 lr 2.93e-04 loss-1 0.314 loss-2 0.319 loss-3 0.351 loss_global_cls 0.260 loss_local_loc 0.018 loss_neighbor_loc 0.278 Timer 4.567(4.599) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Saving state, iter: 5500
+/data/Dan/ava_v2_1/cache/STEP-kinetics400_KRImixed_PVDsd_3cls_clean-no_context-T1i3-fps10-Finetune-max3-i3d-two_branch/checkpoint_5250.pth  removed!
+Epoch 6/10(942) Iteration 005520 lr 2.91e-04 loss-1 0.314 loss-2 0.320 loss-3 0.355 loss_global_cls 0.261 loss_local_loc 0.019 loss_neighbor_loc 0.278 Timer 4.627(4.598) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 6/10(942) Iteration 005540 lr 2.88e-04 loss-1 0.310 loss-2 0.316 loss-3 0.354 loss_global_cls 0.261 loss_local_loc 0.019 loss_neighbor_loc 0.278 Timer 4.720(4.598) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 6/10(942) Iteration 005560 lr 2.86e-04 loss-1 0.302 loss-2 0.314 loss-3 0.347 loss_global_cls 0.256 loss_local_loc 0.018 loss_neighbor_loc 0.274 Timer 4.996(4.602) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 6/10(942) Iteration 005580 lr 2.83e-04 loss-1 0.300 loss-2 0.307 loss-3 0.343 loss_global_cls 0.252 loss_local_loc 0.018 loss_neighbor_loc 0.274 Timer 4.726(4.600) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 6/10(942) Iteration 005600 lr 2.81e-04 loss-1 0.301 loss-2 0.304 loss-3 0.341 loss_global_cls 0.251 loss_local_loc 0.018 loss_neighbor_loc 0.274 Timer 4.635(4.601) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 6/10(942) Iteration 005620 lr 2.78e-04 loss-1 0.306 loss-2 0.311 loss-3 0.349 loss_global_cls 0.258 loss_local_loc 0.018 loss_neighbor_loc 0.274 Timer 4.682(4.602) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 6/10(942) Iteration 005640 lr 2.76e-04 loss-1 0.293 loss-2 0.287 loss-3 0.311 loss_global_cls 0.247 loss_local_loc 0.013 loss_neighbor_loc 0.274 Timer 4.757(4.604) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Validating at  5652
+100 / 118
+<generator object ObjectDetectionEvaluator.__init__.<locals>.<genexpr> at 0x7f48f0db0f68>
+{ 'PascalBoxes_PerformanceByCategory/AP@0.5IOU/bkgd': 0.5256667978601365,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/touch_move': 0.20513119131734656,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/xfr': 0.3090397651640688,
+  'PascalBoxes_Precision/mAP@0.5IOU': 0.34661258478051726}
+<generator object ObjectDetectionEvaluator.__init__.<locals>.<genexpr> at 0x7f48f0e6be08>
+{ 'PascalBoxes_PerformanceByCategory/AP@0.5IOU/bkgd': 0.6514750917819785,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/touch_move': 0.33092842915465814,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/xfr': 0.5225838597746156,
+  'PascalBoxes_Precision/mAP@0.5IOU': 0.501662460237084}
+<generator object ObjectDetectionEvaluator.__init__.<locals>.<genexpr> at 0x7f48f0db0258>
+{ 'PascalBoxes_PerformanceByCategory/AP@0.5IOU/bkgd': 0.5912093996212104,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/touch_move': 0.29868051370503756,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/xfr': 0.4346239044191599,
+  'PascalBoxes_Precision/mAP@0.5IOU': 0.44150460591513596}
+Iter 1: MEANAP =>0.34661258478051726
+Iter 2: MEANAP =>0.501662460237084
+Iter 3: MEANAP =>0.44150460591513596
+
+
+Validation TIME::: 14.328
+
+
+Epoch 7/10(942) Iteration 005660 lr 2.73e-04 loss-1 0.296 loss-2 0.286 loss-3 0.305 loss_global_cls 0.241 loss_local_loc 0.013 loss_neighbor_loc 0.274 Timer 3.129(4.596) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 7/10(942) Iteration 005680 lr 2.71e-04 loss-1 0.295 loss-2 0.286 loss-3 0.298 loss_global_cls 0.234 loss_local_loc 0.013 loss_neighbor_loc 0.278 Timer 4.686(4.597) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 7/10(942) Iteration 005700 lr 2.68e-04 loss-1 0.298 loss-2 0.288 loss-3 0.298 loss_global_cls 0.236 loss_local_loc 0.012 loss_neighbor_loc 0.278 Timer 4.988(4.599) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 7/10(942) Iteration 005720 lr 2.66e-04 loss-1 0.296 loss-2 0.281 loss-3 0.293 loss_global_cls 0.232 loss_local_loc 0.012 loss_neighbor_loc 0.278 Timer 4.873(4.601) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 7/10(942) Iteration 005740 lr 2.63e-04 loss-1 0.303 loss-2 0.289 loss-3 0.296 loss_global_cls 0.234 loss_local_loc 0.012 loss_neighbor_loc 0.278 Timer 4.935(4.604) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Saving state, iter: 5750
+/data/Dan/ava_v2_1/cache/STEP-kinetics400_KRImixed_PVDsd_3cls_clean-no_context-T1i3-fps10-Finetune-max3-i3d-two_branch/checkpoint_5500.pth  removed!
+Epoch 7/10(942) Iteration 005760 lr 2.61e-04 loss-1 0.312 loss-2 0.297 loss-3 0.302 loss_global_cls 0.240 loss_local_loc 0.012 loss_neighbor_loc 0.278 Timer 4.747(4.603) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 7/10(942) Iteration 005780 lr 2.58e-04 loss-1 0.317 loss-2 0.307 loss-3 0.311 loss_global_cls 0.250 loss_local_loc 0.012 loss_neighbor_loc 0.278 Timer 4.638(4.603) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 7/10(942) Iteration 005800 lr 2.56e-04 loss-1 0.323 loss-2 0.316 loss-3 0.317 loss_global_cls 0.257 loss_local_loc 0.012 loss_neighbor_loc 0.278 Timer 4.592(4.605) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 7/10(942) Iteration 005820 lr 2.53e-04 loss-1 0.322 loss-2 0.312 loss-3 0.313 loss_global_cls 0.250 loss_local_loc 0.013 loss_neighbor_loc 0.278 Timer 5.255(4.608) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 7/10(942) Iteration 005840 lr 2.51e-04 loss-1 0.321 loss-2 0.316 loss-3 0.314 loss_global_cls 0.252 loss_local_loc 0.012 loss_neighbor_loc 0.278 Timer 4.487(4.607) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 7/10(942) Iteration 005860 lr 2.48e-04 loss-1 0.325 loss-2 0.316 loss-3 0.315 loss_global_cls 0.252 loss_local_loc 0.013 loss_neighbor_loc 0.278 Timer 4.368(4.605) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 7/10(942) Iteration 005880 lr 2.46e-04 loss-1 0.325 loss-2 0.313 loss-3 0.317 loss_global_cls 0.253 loss_local_loc 0.013 loss_neighbor_loc 0.278 Timer 4.213(4.605) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 7/10(942) Iteration 005900 lr 2.44e-04 loss-1 0.323 loss-2 0.308 loss-3 0.312 loss_global_cls 0.245 loss_local_loc 0.013 loss_neighbor_loc 0.278 Timer 4.449(4.603) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 7/10(942) Iteration 005920 lr 2.41e-04 loss-1 0.323 loss-2 0.312 loss-3 0.309 loss_global_cls 0.243 loss_local_loc 0.013 loss_neighbor_loc 0.278 Timer 4.514(4.603) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 7/10(942) Iteration 005940 lr 2.39e-04 loss-1 0.317 loss-2 0.310 loss-3 0.307 loss_global_cls 0.242 loss_local_loc 0.013 loss_neighbor_loc 0.278 Timer 4.311(4.599) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 7/10(942) Iteration 005960 lr 2.36e-04 loss-1 0.303 loss-2 0.291 loss-3 0.291 loss_global_cls 0.228 loss_local_loc 0.013 loss_neighbor_loc 0.278 Timer 4.869(4.598) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 7/10(942) Iteration 005980 lr 2.34e-04 loss-1 0.297 loss-2 0.281 loss-3 0.281 loss_global_cls 0.218 loss_local_loc 0.013 loss_neighbor_loc 0.270 Timer 4.359(4.598) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 7/10(942) Iteration 006000 lr 2.32e-04 loss-1 0.288 loss-2 0.270 loss-3 0.271 loss_global_cls 0.210 loss_local_loc 0.012 loss_neighbor_loc 0.270 Timer 4.785(4.600) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Saving state, iter: 6000
+/data/Dan/ava_v2_1/cache/STEP-kinetics400_KRImixed_PVDsd_3cls_clean-no_context-T1i3-fps10-Finetune-max3-i3d-two_branch/checkpoint_5750.pth  removed!
+Epoch 7/10(942) Iteration 006020 lr 2.29e-04 loss-1 0.281 loss-2 0.268 loss-3 0.264 loss_global_cls 0.207 loss_local_loc 0.011 loss_neighbor_loc 0.270 Timer 4.526(4.600) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 7/10(942) Iteration 006040 lr 2.27e-04 loss-1 0.286 loss-2 0.272 loss-3 0.267 loss_global_cls 0.209 loss_local_loc 0.012 loss_neighbor_loc 0.268 Timer 4.448(4.598) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 7/10(942) Iteration 006060 lr 2.24e-04 loss-1 0.279 loss-2 0.264 loss-3 0.257 loss_global_cls 0.202 loss_local_loc 0.011 loss_neighbor_loc 0.268 Timer 4.866(4.600) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 7/10(942) Iteration 006080 lr 2.22e-04 loss-1 0.280 loss-2 0.265 loss-3 0.255 loss_global_cls 0.201 loss_local_loc 0.011 loss_neighbor_loc 0.268 Timer 4.490(4.600) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 7/10(942) Iteration 006100 lr 2.20e-04 loss-1 0.272 loss-2 0.262 loss-3 0.251 loss_global_cls 0.199 loss_local_loc 0.010 loss_neighbor_loc 0.268 Timer 4.851(4.601) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 7/10(942) Iteration 006120 lr 2.17e-04 loss-1 0.268 loss-2 0.257 loss-3 0.249 loss_global_cls 0.197 loss_local_loc 0.010 loss_neighbor_loc 0.268 Timer 4.623(4.600) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 7/10(942) Iteration 006140 lr 2.15e-04 loss-1 0.263 loss-2 0.249 loss-3 0.241 loss_global_cls 0.188 loss_local_loc 0.011 loss_neighbor_loc 0.268 Timer 4.695(4.601) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 7/10(942) Iteration 006160 lr 2.13e-04 loss-1 0.269 loss-2 0.256 loss-3 0.246 loss_global_cls 0.189 loss_local_loc 0.011 loss_neighbor_loc 0.268 Timer 4.416(4.602) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 7/10(942) Iteration 006180 lr 2.10e-04 loss-1 0.271 loss-2 0.253 loss-3 0.246 loss_global_cls 0.188 loss_local_loc 0.011 loss_neighbor_loc 0.268 Timer 4.428(4.601) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 7/10(942) Iteration 006200 lr 2.08e-04 loss-1 0.271 loss-2 0.257 loss-3 0.250 loss_global_cls 0.191 loss_local_loc 0.012 loss_neighbor_loc 0.268 Timer 4.128(4.598) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 7/10(942) Iteration 006220 lr 2.06e-04 loss-1 0.275 loss-2 0.259 loss-3 0.255 loss_global_cls 0.198 loss_local_loc 0.011 loss_neighbor_loc 0.268 Timer 4.727(4.599) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 7/10(942) Iteration 006240 lr 2.03e-04 loss-1 0.266 loss-2 0.243 loss-3 0.245 loss_global_cls 0.188 loss_local_loc 0.011 loss_neighbor_loc 0.264 Timer 4.354(4.598) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Saving state, iter: 6250
+/data/Dan/ava_v2_1/cache/STEP-kinetics400_KRImixed_PVDsd_3cls_clean-no_context-T1i3-fps10-Finetune-max3-i3d-two_branch/checkpoint_6000.pth  removed!
+Epoch 7/10(942) Iteration 006260 lr 2.01e-04 loss-1 0.270 loss-2 0.250 loss-3 0.251 loss_global_cls 0.193 loss_local_loc 0.012 loss_neighbor_loc 0.264 Timer 4.660(4.597) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 7/10(942) Iteration 006280 lr 1.99e-04 loss-1 0.271 loss-2 0.250 loss-3 0.254 loss_global_cls 0.194 loss_local_loc 0.012 loss_neighbor_loc 0.264 Timer 4.716(4.598) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 7/10(942) Iteration 006300 lr 1.97e-04 loss-1 0.282 loss-2 0.265 loss-3 0.267 loss_global_cls 0.206 loss_local_loc 0.012 loss_neighbor_loc 0.267 Timer 4.541(4.597) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 7/10(942) Iteration 006320 lr 1.94e-04 loss-1 0.279 loss-2 0.265 loss-3 0.270 loss_global_cls 0.210 loss_local_loc 0.012 loss_neighbor_loc 0.267 Timer 4.417(4.596) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 7/10(942) Iteration 006340 lr 1.92e-04 loss-1 0.285 loss-2 0.267 loss-3 0.273 loss_global_cls 0.213 loss_local_loc 0.012 loss_neighbor_loc 0.264 Timer 4.564(4.596) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 7/10(942) Iteration 006360 lr 1.90e-04 loss-1 0.292 loss-2 0.273 loss-3 0.280 loss_global_cls 0.224 loss_local_loc 0.011 loss_neighbor_loc 0.264 Timer 4.702(4.596) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 7/10(942) Iteration 006380 lr 1.88e-04 loss-1 0.292 loss-2 0.274 loss-3 0.283 loss_global_cls 0.225 loss_local_loc 0.012 loss_neighbor_loc 0.264 Timer 4.897(4.599) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]/home/dan/ws/STEP-MultiStream/data/augmentations.py:342: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray
+  mode = random.choice(self.sample_options)
+/home/dan/ws/STEP-MultiStream/data/augmentations.py:342: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray
+  mode = random.choice(self.sample_options)
+/home/dan/ws/STEP-MultiStream/data/augmentations.py:342: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray
+  mode = random.choice(self.sample_options)
+/home/dan/ws/STEP-MultiStream/data/augmentations.py:342: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray
+  mode = random.choice(self.sample_options)
+
+Epoch 7/10(942) Iteration 006400 lr 1.85e-04 loss-1 0.299 loss-2 0.277 loss-3 0.286 loss_global_cls 0.230 loss_local_loc 0.011 loss_neighbor_loc 0.264 Timer 4.496(4.599) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 7/10(942) Iteration 006420 lr 1.83e-04 loss-1 0.304 loss-2 0.280 loss-3 0.297 loss_global_cls 0.238 loss_local_loc 0.012 loss_neighbor_loc 0.264 Timer 4.008(4.595) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 7/10(942) Iteration 006440 lr 1.81e-04 loss-1 0.310 loss-2 0.286 loss-3 0.300 loss_global_cls 0.242 loss_local_loc 0.012 loss_neighbor_loc 0.264 Timer 4.429(4.594) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 7/10(942) Iteration 006460 lr 1.79e-04 loss-1 0.309 loss-2 0.286 loss-3 0.305 loss_global_cls 0.247 loss_local_loc 0.011 loss_neighbor_loc 0.264 Timer 4.682(4.595) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 7/10(942) Iteration 006480 lr 1.77e-04 loss-1 0.309 loss-2 0.284 loss-3 0.301 loss_global_cls 0.246 loss_local_loc 0.011 loss_neighbor_loc 0.264 Timer 4.306(4.594) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 7/10(942) Iteration 006500 lr 1.74e-04 loss-1 0.307 loss-2 0.279 loss-3 0.295 loss_global_cls 0.239 loss_local_loc 0.011 loss_neighbor_loc 0.278 Timer 4.161(4.590) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Saving state, iter: 6500
+/data/Dan/ava_v2_1/cache/STEP-kinetics400_KRImixed_PVDsd_3cls_clean-no_context-T1i3-fps10-Finetune-max3-i3d-two_branch/checkpoint_6250.pth  removed!
+Epoch 7/10(942) Iteration 006520 lr 1.72e-04 loss-1 0.313 loss-2 0.287 loss-3 0.296 loss_global_cls 0.241 loss_local_loc 0.011 loss_neighbor_loc 0.278 Timer 4.562(4.591) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 7/10(942) Iteration 006540 lr 1.70e-04 loss-1 0.312 loss-2 0.293 loss-3 0.306 loss_global_cls 0.250 loss_local_loc 0.011 loss_neighbor_loc 0.278 Timer 4.701(4.590) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 7/10(942) Iteration 006560 lr 1.68e-04 loss-1 0.303 loss-2 0.289 loss-3 0.300 loss_global_cls 0.245 loss_local_loc 0.011 loss_neighbor_loc 0.278 Timer 4.613(4.590) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 7/10(942) Iteration 006580 lr 1.66e-04 loss-1 0.301 loss-2 0.291 loss-3 0.302 loss_global_cls 0.247 loss_local_loc 0.011 loss_neighbor_loc 0.276 Timer 4.352(4.588) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Validating at  6594
+100 / 118
+<generator object ObjectDetectionEvaluator.__init__.<locals>.<genexpr> at 0x7f48f0e5d7d8>
+{ 'PascalBoxes_PerformanceByCategory/AP@0.5IOU/bkgd': 0.4734542122537888,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/touch_move': 0.235484681695907,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/xfr': 0.307435319711192,
+  'PascalBoxes_Precision/mAP@0.5IOU': 0.33879140455362927}
+<generator object ObjectDetectionEvaluator.__init__.<locals>.<genexpr> at 0x7f48f0db0678>
+{ 'PascalBoxes_PerformanceByCategory/AP@0.5IOU/bkgd': 0.6446779299739887,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/touch_move': 0.3190456311864925,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/xfr': 0.5541832425956504,
+  'PascalBoxes_Precision/mAP@0.5IOU': 0.5059689345853772}
+<generator object ObjectDetectionEvaluator.__init__.<locals>.<genexpr> at 0x7f48f0e5d938>
+{ 'PascalBoxes_PerformanceByCategory/AP@0.5IOU/bkgd': 0.5724355942975,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/touch_move': 0.3348892823853651,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/xfr': 0.43324078695591733,
+  'PascalBoxes_Precision/mAP@0.5IOU': 0.4468552212129275}
+Iter 1: MEANAP =>0.33879140455362927
+Iter 2: MEANAP =>0.5059689345853772
+Iter 3: MEANAP =>0.4468552212129275
+
+
+Validation TIME::: 14.178
+
+
+Epoch 8/10(942) Iteration 006600 lr 1.64e-04 loss-1 0.299 loss-2 0.285 loss-3 0.296 loss_global_cls 0.241 loss_local_loc 0.011 loss_neighbor_loc 0.276 Timer 2.925(4.577) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 8/10(942) Iteration 006620 lr 1.61e-04 loss-1 0.296 loss-2 0.284 loss-3 0.289 loss_global_cls 0.231 loss_local_loc 0.012 loss_neighbor_loc 0.276 Timer 4.577(4.579) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 8/10(942) Iteration 006640 lr 1.59e-04 loss-1 0.293 loss-2 0.279 loss-3 0.285 loss_global_cls 0.228 loss_local_loc 0.011 loss_neighbor_loc 0.276 Timer 4.700(4.580) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 8/10(942) Iteration 006660 lr 1.57e-04 loss-1 0.292 loss-2 0.284 loss-3 0.284 loss_global_cls 0.225 loss_local_loc 0.012 loss_neighbor_loc 0.276 Timer 4.292(4.580) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 8/10(942) Iteration 006680 lr 1.55e-04 loss-1 0.294 loss-2 0.287 loss-3 0.291 loss_global_cls 0.228 loss_local_loc 0.013 loss_neighbor_loc 0.276 Timer 4.954(4.582) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 8/10(942) Iteration 006700 lr 1.53e-04 loss-1 0.284 loss-2 0.278 loss-3 0.286 loss_global_cls 0.223 loss_local_loc 0.013 loss_neighbor_loc 0.276 Timer 4.384(4.581) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 8/10(942) Iteration 006720 lr 1.51e-04 loss-1 0.282 loss-2 0.277 loss-3 0.287 loss_global_cls 0.222 loss_local_loc 0.013 loss_neighbor_loc 0.276 Timer 4.658(4.583) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 8/10(942) Iteration 006740 lr 1.49e-04 loss-1 0.280 loss-2 0.272 loss-3 0.281 loss_global_cls 0.216 loss_local_loc 0.013 loss_neighbor_loc 0.276 Timer 4.743(4.583) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Saving state, iter: 6750
+/data/Dan/ava_v2_1/cache/STEP-kinetics400_KRImixed_PVDsd_3cls_clean-no_context-T1i3-fps10-Finetune-max3-i3d-two_branch/checkpoint_6500.pth  removed!
+Epoch 8/10(942) Iteration 006760 lr 1.47e-04 loss-1 0.275 loss-2 0.268 loss-3 0.278 loss_global_cls 0.214 loss_local_loc 0.013 loss_neighbor_loc 0.276 Timer 4.314(4.583) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 8/10(942) Iteration 006780 lr 1.45e-04 loss-1 0.283 loss-2 0.273 loss-3 0.279 loss_global_cls 0.216 loss_local_loc 0.013 loss_neighbor_loc 0.276 Timer 4.578(4.585) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 8/10(942) Iteration 006800 lr 1.43e-04 loss-1 0.279 loss-2 0.277 loss-3 0.282 loss_global_cls 0.218 loss_local_loc 0.013 loss_neighbor_loc 0.276 Timer 4.866(4.586) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 8/10(942) Iteration 006820 lr 1.41e-04 loss-1 0.275 loss-2 0.269 loss-3 0.272 loss_global_cls 0.213 loss_local_loc 0.012 loss_neighbor_loc 0.276 Timer 4.479(4.585) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 8/10(942) Iteration 006840 lr 1.39e-04 loss-1 0.273 loss-2 0.271 loss-3 0.276 loss_global_cls 0.215 loss_local_loc 0.012 loss_neighbor_loc 0.274 Timer 4.617(4.584) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 8/10(942) Iteration 006860 lr 1.37e-04 loss-1 0.273 loss-2 0.267 loss-3 0.275 loss_global_cls 0.215 loss_local_loc 0.012 loss_neighbor_loc 0.274 Timer 4.715(4.581) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 8/10(942) Iteration 006880 lr 1.35e-04 loss-1 0.272 loss-2 0.268 loss-3 0.273 loss_global_cls 0.215 loss_local_loc 0.012 loss_neighbor_loc 0.274 Timer 4.446(4.579) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 8/10(942) Iteration 006900 lr 1.33e-04 loss-1 0.279 loss-2 0.269 loss-3 0.274 loss_global_cls 0.217 loss_local_loc 0.011 loss_neighbor_loc 0.271 Timer 4.319(4.577) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 8/10(942) Iteration 006920 lr 1.31e-04 loss-1 0.275 loss-2 0.263 loss-3 0.269 loss_global_cls 0.213 loss_local_loc 0.011 loss_neighbor_loc 0.271 Timer 4.707(4.576) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 8/10(942) Iteration 006940 lr 1.29e-04 loss-1 0.280 loss-2 0.265 loss-3 0.272 loss_global_cls 0.218 loss_local_loc 0.011 loss_neighbor_loc 0.271 Timer 4.787(4.577) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 8/10(942) Iteration 006960 lr 1.27e-04 loss-1 0.287 loss-2 0.268 loss-3 0.275 loss_global_cls 0.220 loss_local_loc 0.011 loss_neighbor_loc 0.271 Timer 4.597(4.578) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 8/10(942) Iteration 006980 lr 1.25e-04 loss-1 0.282 loss-2 0.262 loss-3 0.272 loss_global_cls 0.218 loss_local_loc 0.011 loss_neighbor_loc 0.271 Timer 5.090(4.580) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 8/10(942) Iteration 007000 lr 1.23e-04 loss-1 0.281 loss-2 0.261 loss-3 0.275 loss_global_cls 0.221 loss_local_loc 0.011 loss_neighbor_loc 0.271 Timer 4.209(4.579) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Saving state, iter: 7000
+/data/Dan/ava_v2_1/cache/STEP-kinetics400_KRImixed_PVDsd_3cls_clean-no_context-T1i3-fps10-Finetune-max3-i3d-two_branch/checkpoint_6750.pth  removed!
+Epoch 8/10(942) Iteration 007020 lr 1.21e-04 loss-1 0.278 loss-2 0.268 loss-3 0.280 loss_global_cls 0.225 loss_local_loc 0.011 loss_neighbor_loc 0.271 Timer 4.415(4.578) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 8/10(942) Iteration 007040 lr 1.19e-04 loss-1 0.277 loss-2 0.269 loss-3 0.280 loss_global_cls 0.224 loss_local_loc 0.011 loss_neighbor_loc 0.271 Timer 4.646(4.578) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 8/10(942) Iteration 007060 lr 1.17e-04 loss-1 0.275 loss-2 0.268 loss-3 0.274 loss_global_cls 0.222 loss_local_loc 0.011 loss_neighbor_loc 0.271 Timer 4.530(4.577) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 8/10(942) Iteration 007080 lr 1.15e-04 loss-1 0.269 loss-2 0.262 loss-3 0.267 loss_global_cls 0.216 loss_local_loc 0.010 loss_neighbor_loc 0.271 Timer 4.765(4.578) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 8/10(942) Iteration 007100 lr 1.14e-04 loss-1 0.269 loss-2 0.263 loss-3 0.266 loss_global_cls 0.216 loss_local_loc 0.010 loss_neighbor_loc 0.271 Timer 4.990(4.580) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 8/10(942) Iteration 007120 lr 1.12e-04 loss-1 0.268 loss-2 0.265 loss-3 0.260 loss_global_cls 0.209 loss_local_loc 0.010 loss_neighbor_loc 0.286 Timer 5.078(4.582) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 8/10(942) Iteration 007140 lr 1.10e-04 loss-1 0.260 loss-2 0.265 loss-3 0.256 loss_global_cls 0.206 loss_local_loc 0.010 loss_neighbor_loc 0.295 Timer 4.734(4.583) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 8/10(942) Iteration 007160 lr 1.08e-04 loss-1 0.260 loss-2 0.273 loss-3 0.261 loss_global_cls 0.207 loss_local_loc 0.011 loss_neighbor_loc 0.295 Timer 4.451(4.582) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 8/10(942) Iteration 007180 lr 1.06e-04 loss-1 0.262 loss-2 0.272 loss-3 0.261 loss_global_cls 0.206 loss_local_loc 0.011 loss_neighbor_loc 0.295 Timer 4.650(4.581) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 8/10(942) Iteration 007200 lr 1.05e-04 loss-1 0.265 loss-2 0.276 loss-3 0.264 loss_global_cls 0.210 loss_local_loc 0.011 loss_neighbor_loc 0.295 Timer 4.404(4.578) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 8/10(942) Iteration 007220 lr 1.03e-04 loss-1 0.269 loss-2 0.280 loss-3 0.267 loss_global_cls 0.214 loss_local_loc 0.011 loss_neighbor_loc 0.291 Timer 4.313(4.578) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 8/10(942) Iteration 007240 lr 1.01e-04 loss-1 0.275 loss-2 0.287 loss-3 0.275 loss_global_cls 0.221 loss_local_loc 0.011 loss_neighbor_loc 0.291 Timer 4.540(4.577) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Saving state, iter: 7250
+/data/Dan/ava_v2_1/cache/STEP-kinetics400_KRImixed_PVDsd_3cls_clean-no_context-T1i3-fps10-Finetune-max3-i3d-two_branch/checkpoint_7000.pth  removed!
+Epoch 8/10(942) Iteration 007260 lr 9.92e-05 loss-1 0.271 loss-2 0.282 loss-3 0.271 loss_global_cls 0.217 loss_local_loc 0.011 loss_neighbor_loc 0.291 Timer 4.713(4.577) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 8/10(942) Iteration 007280 lr 9.74e-05 loss-1 0.274 loss-2 0.282 loss-3 0.273 loss_global_cls 0.218 loss_local_loc 0.011 loss_neighbor_loc 0.291 Timer 4.470(4.575) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 8/10(942) Iteration 007300 lr 9.57e-05 loss-1 0.271 loss-2 0.279 loss-3 0.275 loss_global_cls 0.219 loss_local_loc 0.011 loss_neighbor_loc 0.291 Timer 4.536(4.574) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 8/10(942) Iteration 007320 lr 9.40e-05 loss-1 0.271 loss-2 0.281 loss-3 0.284 loss_global_cls 0.229 loss_local_loc 0.011 loss_neighbor_loc 0.291 Timer 4.825(4.575) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]/home/dan/ws/STEP-MultiStream/data/augmentations.py:342: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray
+  mode = random.choice(self.sample_options)
+/home/dan/ws/STEP-MultiStream/data/augmentations.py:342: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray
+  mode = random.choice(self.sample_options)
+/home/dan/ws/STEP-MultiStream/data/augmentations.py:342: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray
+  mode = random.choice(self.sample_options)
+/home/dan/ws/STEP-MultiStream/data/augmentations.py:342: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray
+  mode = random.choice(self.sample_options)
+
+Epoch 8/10(942) Iteration 007340 lr 9.23e-05 loss-1 0.273 loss-2 0.273 loss-3 0.280 loss_global_cls 0.224 loss_local_loc 0.011 loss_neighbor_loc 0.291 Timer 4.862(4.574) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 8/10(942) Iteration 007360 lr 9.06e-05 loss-1 0.273 loss-2 0.267 loss-3 0.275 loss_global_cls 0.222 loss_local_loc 0.011 loss_neighbor_loc 0.291 Timer 4.149(4.573) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 8/10(942) Iteration 007380 lr 8.89e-05 loss-1 0.281 loss-2 0.272 loss-3 0.276 loss_global_cls 0.225 loss_local_loc 0.010 loss_neighbor_loc 0.291 Timer 4.357(4.572) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 8/10(942) Iteration 007400 lr 8.73e-05 loss-1 0.281 loss-2 0.269 loss-3 0.275 loss_global_cls 0.223 loss_local_loc 0.010 loss_neighbor_loc 0.291 Timer 4.782(4.571) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 8/10(942) Iteration 007420 lr 8.56e-05 loss-1 0.283 loss-2 0.267 loss-3 0.273 loss_global_cls 0.219 loss_local_loc 0.011 loss_neighbor_loc 0.287 Timer 4.161(4.568) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 8/10(942) Iteration 007440 lr 8.40e-05 loss-1 0.276 loss-2 0.260 loss-3 0.265 loss_global_cls 0.214 loss_local_loc 0.010 loss_neighbor_loc 0.284 Timer 4.945(4.571) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 8/10(942) Iteration 007460 lr 8.24e-05 loss-1 0.278 loss-2 0.264 loss-3 0.270 loss_global_cls 0.218 loss_local_loc 0.010 loss_neighbor_loc 0.284 Timer 4.840(4.574) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 8/10(942) Iteration 007480 lr 8.07e-05 loss-1 0.281 loss-2 0.269 loss-3 0.277 loss_global_cls 0.226 loss_local_loc 0.010 loss_neighbor_loc 0.280 Timer 4.551(4.573) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 8/10(942) Iteration 007500 lr 7.92e-05 loss-1 0.276 loss-2 0.266 loss-3 0.272 loss_global_cls 0.221 loss_local_loc 0.010 loss_neighbor_loc 0.280 Timer 4.601(4.573) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Saving state, iter: 7500
+/data/Dan/ava_v2_1/cache/STEP-kinetics400_KRImixed_PVDsd_3cls_clean-no_context-T1i3-fps10-Finetune-max3-i3d-two_branch/checkpoint_7250.pth  removed!
+Epoch 8/10(942) Iteration 007520 lr 7.76e-05 loss-1 0.284 loss-2 0.271 loss-3 0.278 loss_global_cls 0.229 loss_local_loc 0.010 loss_neighbor_loc 0.280 Timer 4.686(4.574) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Validating at  7536
+100 / 118
+<generator object ObjectDetectionEvaluator.__init__.<locals>.<genexpr> at 0x7f4912d6efc0>
+{ 'PascalBoxes_PerformanceByCategory/AP@0.5IOU/bkgd': 0.5584317144697291,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/touch_move': 0.23598398384369912,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/xfr': 0.30814833576212297,
+  'PascalBoxes_Precision/mAP@0.5IOU': 0.3675213446918504}
+<generator object ObjectDetectionEvaluator.__init__.<locals>.<genexpr> at 0x7f48f0dfc830>
+{ 'PascalBoxes_PerformanceByCategory/AP@0.5IOU/bkgd': 0.6842478112614285,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/touch_move': 0.29737829037635777,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/xfr': 0.5304024104476439,
+  'PascalBoxes_Precision/mAP@0.5IOU': 0.5040095040284768}
+<generator object ObjectDetectionEvaluator.__init__.<locals>.<genexpr> at 0x7f48f0daedb0>
+{ 'PascalBoxes_PerformanceByCategory/AP@0.5IOU/bkgd': 0.6006582990375398,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/touch_move': 0.29398899347723007,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/xfr': 0.4344038004884539,
+  'PascalBoxes_Precision/mAP@0.5IOU': 0.44301703100107453}
+Iter 1: MEANAP =>0.3675213446918504
+Iter 2: MEANAP =>0.5040095040284768
+Iter 3: MEANAP =>0.44301703100107453
+
+
+Validation TIME::: 14.240
+
+
+Epoch 9/10(942) Iteration 007540 lr 7.60e-05 loss-1 0.287 loss-2 0.272 loss-3 0.280 loss_global_cls 0.231 loss_local_loc 0.010 loss_neighbor_loc 0.280 Timer 1.967(4.561) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 9/10(942) Iteration 007560 lr 7.45e-05 loss-1 0.279 loss-2 0.267 loss-3 0.272 loss_global_cls 0.224 loss_local_loc 0.010 loss_neighbor_loc 0.278 Timer 5.222(4.565) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 9/10(942) Iteration 007580 lr 7.29e-05 loss-1 0.268 loss-2 0.262 loss-3 0.273 loss_global_cls 0.225 loss_local_loc 0.010 loss_neighbor_loc 0.276 Timer 4.261(4.564) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 9/10(942) Iteration 007600 lr 7.14e-05 loss-1 0.259 loss-2 0.253 loss-3 0.262 loss_global_cls 0.214 loss_local_loc 0.009 loss_neighbor_loc 0.276 Timer 4.754(4.564) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 9/10(942) Iteration 007620 lr 6.99e-05 loss-1 0.259 loss-2 0.251 loss-3 0.265 loss_global_cls 0.217 loss_local_loc 0.010 loss_neighbor_loc 0.276 Timer 4.669(4.563) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 9/10(942) Iteration 007640 lr 6.84e-05 loss-1 0.263 loss-2 0.253 loss-3 0.266 loss_global_cls 0.217 loss_local_loc 0.010 loss_neighbor_loc 0.276 Timer 4.371(4.562) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 9/10(942) Iteration 007660 lr 6.69e-05 loss-1 0.267 loss-2 0.255 loss-3 0.269 loss_global_cls 0.219 loss_local_loc 0.010 loss_neighbor_loc 0.276 Timer 4.291(4.561) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 9/10(942) Iteration 007680 lr 6.54e-05 loss-1 0.266 loss-2 0.248 loss-3 0.265 loss_global_cls 0.211 loss_local_loc 0.011 loss_neighbor_loc 0.276 Timer 5.145(4.564) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 9/10(942) Iteration 007700 lr 6.40e-05 loss-1 0.269 loss-2 0.255 loss-3 0.269 loss_global_cls 0.216 loss_local_loc 0.011 loss_neighbor_loc 0.276 Timer 4.841(4.567) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 9/10(942) Iteration 007720 lr 6.26e-05 loss-1 0.260 loss-2 0.241 loss-3 0.255 loss_global_cls 0.201 loss_local_loc 0.011 loss_neighbor_loc 0.276 Timer 4.413(4.567) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 9/10(942) Iteration 007740 lr 6.11e-05 loss-1 0.258 loss-2 0.243 loss-3 0.254 loss_global_cls 0.202 loss_local_loc 0.010 loss_neighbor_loc 0.280 Timer 4.646(4.567) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Saving state, iter: 7750
+/data/Dan/ava_v2_1/cache/STEP-kinetics400_KRImixed_PVDsd_3cls_clean-no_context-T1i3-fps10-Finetune-max3-i3d-two_branch/checkpoint_7500.pth  removed!
+Epoch 9/10(942) Iteration 007760 lr 5.97e-05 loss-1 0.264 loss-2 0.244 loss-3 0.259 loss_global_cls 0.205 loss_local_loc 0.011 loss_neighbor_loc 0.280 Timer 4.995(4.568) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 9/10(942) Iteration 007780 lr 5.83e-05 loss-1 0.262 loss-2 0.244 loss-3 0.255 loss_global_cls 0.202 loss_local_loc 0.011 loss_neighbor_loc 0.280 Timer 4.279(4.570) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 9/10(942) Iteration 007800 lr 5.70e-05 loss-1 0.276 loss-2 0.265 loss-3 0.268 loss_global_cls 0.215 loss_local_loc 0.011 loss_neighbor_loc 0.286 Timer 4.399(4.568) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 9/10(942) Iteration 007820 lr 5.56e-05 loss-1 0.275 loss-2 0.262 loss-3 0.258 loss_global_cls 0.206 loss_local_loc 0.010 loss_neighbor_loc 0.286 Timer 4.686(4.565) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 9/10(942) Iteration 007840 lr 5.43e-05 loss-1 0.272 loss-2 0.260 loss-3 0.251 loss_global_cls 0.200 loss_local_loc 0.010 loss_neighbor_loc 0.292 Timer 4.686(4.567) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 9/10(942) Iteration 007860 lr 5.29e-05 loss-1 0.271 loss-2 0.256 loss-3 0.248 loss_global_cls 0.199 loss_local_loc 0.010 loss_neighbor_loc 0.292 Timer 4.496(4.566) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 9/10(942) Iteration 007880 lr 5.16e-05 loss-1 0.270 loss-2 0.262 loss-3 0.253 loss_global_cls 0.209 loss_local_loc 0.009 loss_neighbor_loc 0.292 Timer 4.529(4.566) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 9/10(942) Iteration 007900 lr 5.03e-05 loss-1 0.274 loss-2 0.261 loss-3 0.254 loss_global_cls 0.210 loss_local_loc 0.009 loss_neighbor_loc 0.289 Timer 4.789(4.567) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 9/10(942) Iteration 007920 lr 4.90e-05 loss-1 0.278 loss-2 0.279 loss-3 0.265 loss_global_cls 0.216 loss_local_loc 0.010 loss_neighbor_loc 0.289 Timer 4.756(4.568) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 9/10(942) Iteration 007940 lr 4.78e-05 loss-1 0.281 loss-2 0.278 loss-3 0.268 loss_global_cls 0.218 loss_local_loc 0.010 loss_neighbor_loc 0.289 Timer 4.660(4.568) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 9/10(942) Iteration 007960 lr 4.65e-05 loss-1 0.285 loss-2 0.281 loss-3 0.268 loss_global_cls 0.219 loss_local_loc 0.010 loss_neighbor_loc 0.289 Timer 4.312(4.566) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 9/10(942) Iteration 007980 lr 4.53e-05 loss-1 0.293 loss-2 0.287 loss-3 0.274 loss_global_cls 0.223 loss_local_loc 0.010 loss_neighbor_loc 0.289 Timer 4.888(4.567) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 9/10(942) Iteration 008000 lr 4.40e-05 loss-1 0.281 loss-2 0.270 loss-3 0.264 loss_global_cls 0.213 loss_local_loc 0.010 loss_neighbor_loc 0.289 Timer 4.829(4.569) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Saving state, iter: 8000
+/data/Dan/ava_v2_1/cache/STEP-kinetics400_KRImixed_PVDsd_3cls_clean-no_context-T1i3-fps10-Finetune-max3-i3d-two_branch/checkpoint_7750.pth  removed!
+Epoch 9/10(942) Iteration 008020 lr 4.28e-05 loss-1 0.282 loss-2 0.270 loss-3 0.269 loss_global_cls 0.218 loss_local_loc 0.010 loss_neighbor_loc 0.289 Timer 4.521(4.569) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 9/10(942) Iteration 008040 lr 4.16e-05 loss-1 0.284 loss-2 0.269 loss-3 0.273 loss_global_cls 0.221 loss_local_loc 0.010 loss_neighbor_loc 0.289 Timer 4.786(4.568) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 9/10(942) Iteration 008060 lr 4.05e-05 loss-1 0.284 loss-2 0.274 loss-3 0.278 loss_global_cls 0.226 loss_local_loc 0.010 loss_neighbor_loc 0.289 Timer 4.486(4.568) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 9/10(942) Iteration 008080 lr 3.93e-05 loss-1 0.284 loss-2 0.265 loss-3 0.265 loss_global_cls 0.211 loss_local_loc 0.011 loss_neighbor_loc 0.286 Timer 4.797(4.568) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 9/10(942) Iteration 008100 lr 3.82e-05 loss-1 0.281 loss-2 0.264 loss-3 0.265 loss_global_cls 0.213 loss_local_loc 0.011 loss_neighbor_loc 0.286 Timer 4.640(4.568) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 9/10(942) Iteration 008120 lr 3.70e-05 loss-1 0.284 loss-2 0.254 loss-3 0.261 loss_global_cls 0.210 loss_local_loc 0.010 loss_neighbor_loc 0.286 Timer 4.405(4.568) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 9/10(942) Iteration 008140 lr 3.59e-05 loss-1 0.277 loss-2 0.253 loss-3 0.259 loss_global_cls 0.209 loss_local_loc 0.010 loss_neighbor_loc 0.286 Timer 4.831(4.570) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 9/10(942) Iteration 008160 lr 3.48e-05 loss-1 0.273 loss-2 0.248 loss-3 0.257 loss_global_cls 0.207 loss_local_loc 0.010 loss_neighbor_loc 0.286 Timer 4.670(4.570) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 9/10(942) Iteration 008180 lr 3.37e-05 loss-1 0.263 loss-2 0.237 loss-3 0.248 loss_global_cls 0.199 loss_local_loc 0.010 loss_neighbor_loc 0.286 Timer 4.385(4.569) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 9/10(942) Iteration 008200 lr 3.27e-05 loss-1 0.264 loss-2 0.234 loss-3 0.246 loss_global_cls 0.197 loss_local_loc 0.010 loss_neighbor_loc 0.286 Timer 4.715(4.571) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 9/10(942) Iteration 008220 lr 3.16e-05 loss-1 0.260 loss-2 0.236 loss-3 0.245 loss_global_cls 0.198 loss_local_loc 0.010 loss_neighbor_loc 0.286 Timer 4.484(4.571) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 9/10(942) Iteration 008240 lr 3.06e-05 loss-1 0.256 loss-2 0.235 loss-3 0.245 loss_global_cls 0.198 loss_local_loc 0.009 loss_neighbor_loc 0.286 Timer 4.269(4.570) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Saving state, iter: 8250
+/data/Dan/ava_v2_1/cache/STEP-kinetics400_KRImixed_PVDsd_3cls_clean-no_context-T1i3-fps10-Finetune-max3-i3d-two_branch/checkpoint_8000.pth  removed!
+Epoch 9/10(942) Iteration 008260 lr 2.96e-05 loss-1 0.252 loss-2 0.230 loss-3 0.237 loss_global_cls 0.191 loss_local_loc 0.009 loss_neighbor_loc 0.283 Timer 4.918(4.572) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]/home/dan/ws/STEP-MultiStream/data/augmentations.py:342: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray
+  mode = random.choice(self.sample_options)
+/home/dan/ws/STEP-MultiStream/data/augmentations.py:342: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray
+  mode = random.choice(self.sample_options)
+/home/dan/ws/STEP-MultiStream/data/augmentations.py:342: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray
+  mode = random.choice(self.sample_options)
+/home/dan/ws/STEP-MultiStream/data/augmentations.py:342: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray
+  mode = random.choice(self.sample_options)
+
+Epoch 9/10(942) Iteration 008280 lr 2.86e-05 loss-1 0.253 loss-2 0.238 loss-3 0.243 loss_global_cls 0.197 loss_local_loc 0.009 loss_neighbor_loc 0.283 Timer 4.718(4.575) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 9/10(942) Iteration 008300 lr 2.76e-05 loss-1 0.243 loss-2 0.231 loss-3 0.234 loss_global_cls 0.186 loss_local_loc 0.010 loss_neighbor_loc 0.283 Timer 4.733(4.575) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 9/10(942) Iteration 008320 lr 2.66e-05 loss-1 0.242 loss-2 0.226 loss-3 0.233 loss_global_cls 0.186 loss_local_loc 0.009 loss_neighbor_loc 0.283 Timer 4.755(4.575) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 9/10(942) Iteration 008340 lr 2.57e-05 loss-1 0.244 loss-2 0.227 loss-3 0.232 loss_global_cls 0.186 loss_local_loc 0.009 loss_neighbor_loc 0.283 Timer 4.578(4.574) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 9/10(942) Iteration 008360 lr 2.48e-05 loss-1 0.241 loss-2 0.227 loss-3 0.229 loss_global_cls 0.186 loss_local_loc 0.009 loss_neighbor_loc 0.283 Timer 4.504(4.575) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 9/10(942) Iteration 008380 lr 2.39e-05 loss-1 0.249 loss-2 0.234 loss-3 0.237 loss_global_cls 0.193 loss_local_loc 0.009 loss_neighbor_loc 0.283 Timer 4.623(4.575) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 9/10(942) Iteration 008400 lr 2.30e-05 loss-1 0.245 loss-2 0.232 loss-3 0.233 loss_global_cls 0.189 loss_local_loc 0.009 loss_neighbor_loc 0.283 Timer 5.045(4.578) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 9/10(942) Iteration 008420 lr 2.21e-05 loss-1 0.247 loss-2 0.230 loss-3 0.231 loss_global_cls 0.186 loss_local_loc 0.009 loss_neighbor_loc 0.283 Timer 4.474(4.578) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 9/10(942) Iteration 008440 lr 2.12e-05 loss-1 0.244 loss-2 0.228 loss-3 0.227 loss_global_cls 0.183 loss_local_loc 0.009 loss_neighbor_loc 0.283 Timer 4.492(4.576) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 9/10(942) Iteration 008460 lr 2.04e-05 loss-1 0.250 loss-2 0.233 loss-3 0.239 loss_global_cls 0.190 loss_local_loc 0.010 loss_neighbor_loc 0.283 Timer 4.474(4.576) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Validating at  8478
+100 / 118
+<generator object ObjectDetectionEvaluator.__init__.<locals>.<genexpr> at 0x7f48f0e7c990>
+{ 'PascalBoxes_PerformanceByCategory/AP@0.5IOU/bkgd': 0.6129557475616632,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/touch_move': 0.20772082053319899,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/xfr': 0.282195021256137,
+  'PascalBoxes_Precision/mAP@0.5IOU': 0.36762386311699974}
+<generator object ObjectDetectionEvaluator.__init__.<locals>.<genexpr> at 0x7f48df6bf888>
+{ 'PascalBoxes_PerformanceByCategory/AP@0.5IOU/bkgd': 0.6878369424376636,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/touch_move': 0.29546843824722613,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/xfr': 0.5035199340528186,
+  'PascalBoxes_Precision/mAP@0.5IOU': 0.4956084382459028}
+<generator object ObjectDetectionEvaluator.__init__.<locals>.<genexpr> at 0x7f48f0e7c048>
+{ 'PascalBoxes_PerformanceByCategory/AP@0.5IOU/bkgd': 0.59296967569839,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/touch_move': 0.32459031406363825,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/xfr': 0.36773178219729474,
+  'PascalBoxes_Precision/mAP@0.5IOU': 0.4284305906531077}
+Iter 1: MEANAP =>0.36762386311699974
+Iter 2: MEANAP =>0.4956084382459028
+Iter 3: MEANAP =>0.4284305906531077
+
+
+Validation TIME::: 13.983
+
+
+Epoch 10/10(942) Iteration 008480 lr 1.95e-05 loss-1 0.250 loss-2 0.232 loss-3 0.244 loss_global_cls 0.195 loss_local_loc 0.010 loss_neighbor_loc 0.283 Timer 1.804(4.563) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 10/10(942) Iteration 008500 lr 1.87e-05 loss-1 0.258 loss-2 0.242 loss-3 0.252 loss_global_cls 0.204 loss_local_loc 0.010 loss_neighbor_loc 0.283 Timer 4.578(4.563) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Saving state, iter: 8500
+/data/Dan/ava_v2_1/cache/STEP-kinetics400_KRImixed_PVDsd_3cls_clean-no_context-T1i3-fps10-Finetune-max3-i3d-two_branch/checkpoint_8250.pth  removed!
+Epoch 10/10(942) Iteration 008520 lr 1.79e-05 loss-1 0.261 loss-2 0.251 loss-3 0.257 loss_global_cls 0.207 loss_local_loc 0.010 loss_neighbor_loc 0.283 Timer 4.848(4.565) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 10/10(942) Iteration 008540 lr 1.71e-05 loss-1 0.260 loss-2 0.251 loss-3 0.257 loss_global_cls 0.208 loss_local_loc 0.010 loss_neighbor_loc 0.283 Timer 4.626(4.566) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 10/10(942) Iteration 008560 lr 1.64e-05 loss-1 0.265 loss-2 0.255 loss-3 0.262 loss_global_cls 0.209 loss_local_loc 0.011 loss_neighbor_loc 0.283 Timer 4.405(4.565) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 10/10(942) Iteration 008580 lr 1.56e-05 loss-1 0.257 loss-2 0.245 loss-3 0.253 loss_global_cls 0.200 loss_local_loc 0.011 loss_neighbor_loc 0.283 Timer 4.377(4.564) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 10/10(942) Iteration 008600 lr 1.49e-05 loss-1 0.268 loss-2 0.258 loss-3 0.266 loss_global_cls 0.213 loss_local_loc 0.011 loss_neighbor_loc 0.283 Timer 4.645(4.565) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 10/10(942) Iteration 008620 lr 1.42e-05 loss-1 0.264 loss-2 0.254 loss-3 0.264 loss_global_cls 0.212 loss_local_loc 0.010 loss_neighbor_loc 0.283 Timer 4.656(4.565) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 10/10(942) Iteration 008640 lr 1.35e-05 loss-1 0.264 loss-2 0.252 loss-3 0.262 loss_global_cls 0.211 loss_local_loc 0.010 loss_neighbor_loc 0.283 Timer 4.589(4.565) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 10/10(942) Iteration 008660 lr 1.28e-05 loss-1 0.259 loss-2 0.245 loss-3 0.252 loss_global_cls 0.204 loss_local_loc 0.010 loss_neighbor_loc 0.283 Timer 4.741(4.566) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 10/10(942) Iteration 008680 lr 1.22e-05 loss-1 0.261 loss-2 0.246 loss-3 0.249 loss_global_cls 0.203 loss_local_loc 0.009 loss_neighbor_loc 0.283 Timer 4.472(4.565) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 10/10(942) Iteration 008700 lr 1.15e-05 loss-1 0.264 loss-2 0.247 loss-3 0.254 loss_global_cls 0.208 loss_local_loc 0.009 loss_neighbor_loc 0.283 Timer 5.068(4.568) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 10/10(942) Iteration 008720 lr 1.09e-05 loss-1 0.255 loss-2 0.235 loss-3 0.246 loss_global_cls 0.203 loss_local_loc 0.009 loss_neighbor_loc 0.283 Timer 4.272(4.571) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 10/10(942) Iteration 008740 lr 1.03e-05 loss-1 0.262 loss-2 0.239 loss-3 0.249 loss_global_cls 0.205 loss_local_loc 0.009 loss_neighbor_loc 0.280 Timer 4.169(4.568) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Saving state, iter: 8750
+/data/Dan/ava_v2_1/cache/STEP-kinetics400_KRImixed_PVDsd_3cls_clean-no_context-T1i3-fps10-Finetune-max3-i3d-two_branch/checkpoint_8500.pth  removed!
+Epoch 10/10(942) Iteration 008760 lr 9.68e-06 loss-1 0.258 loss-2 0.237 loss-3 0.247 loss_global_cls 0.206 loss_local_loc 0.008 loss_neighbor_loc 0.280 Timer 4.843(4.568) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 10/10(942) Iteration 008780 lr 9.10e-06 loss-1 0.261 loss-2 0.247 loss-3 0.257 loss_global_cls 0.216 loss_local_loc 0.008 loss_neighbor_loc 0.278 Timer 4.445(4.567) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 10/10(942) Iteration 008800 lr 8.55e-06 loss-1 0.256 loss-2 0.241 loss-3 0.250 loss_global_cls 0.210 loss_local_loc 0.008 loss_neighbor_loc 0.278 Timer 4.747(4.567) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 10/10(942) Iteration 008820 lr 8.01e-06 loss-1 0.257 loss-2 0.243 loss-3 0.250 loss_global_cls 0.209 loss_local_loc 0.008 loss_neighbor_loc 0.278 Timer 4.578(4.567) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 10/10(942) Iteration 008840 lr 7.49e-06 loss-1 0.261 loss-2 0.250 loss-3 0.261 loss_global_cls 0.219 loss_local_loc 0.008 loss_neighbor_loc 0.275 Timer 4.313(4.565) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 10/10(942) Iteration 008860 lr 6.98e-06 loss-1 0.266 loss-2 0.262 loss-3 0.272 loss_global_cls 0.226 loss_local_loc 0.009 loss_neighbor_loc 0.275 Timer 4.734(4.567) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 10/10(942) Iteration 008880 lr 6.49e-06 loss-1 0.265 loss-2 0.262 loss-3 0.274 loss_global_cls 0.229 loss_local_loc 0.009 loss_neighbor_loc 0.275 Timer 4.423(4.567) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 10/10(942) Iteration 008900 lr 6.02e-06 loss-1 0.265 loss-2 0.261 loss-3 0.270 loss_global_cls 0.224 loss_local_loc 0.009 loss_neighbor_loc 0.275 Timer 4.548(4.566) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 10/10(942) Iteration 008920 lr 5.57e-06 loss-1 0.275 loss-2 0.268 loss-3 0.276 loss_global_cls 0.229 loss_local_loc 0.009 loss_neighbor_loc 0.275 Timer 4.034(4.565) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 10/10(942) Iteration 008940 lr 5.14e-06 loss-1 0.272 loss-2 0.263 loss-3 0.273 loss_global_cls 0.227 loss_local_loc 0.009 loss_neighbor_loc 0.271 Timer 4.849(4.565) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 10/10(942) Iteration 008960 lr 4.72e-06 loss-1 0.279 loss-2 0.274 loss-3 0.284 loss_global_cls 0.236 loss_local_loc 0.009 loss_neighbor_loc 0.271 Timer 4.709(4.565) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 10/10(942) Iteration 008980 lr 4.32e-06 loss-1 0.277 loss-2 0.266 loss-3 0.277 loss_global_cls 0.231 loss_local_loc 0.009 loss_neighbor_loc 0.271 Timer 4.669(4.563) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 10/10(942) Iteration 009000 lr 3.94e-06 loss-1 0.278 loss-2 0.267 loss-3 0.279 loss_global_cls 0.233 loss_local_loc 0.009 loss_neighbor_loc 0.271 Timer 4.033(4.560) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Saving state, iter: 9000
+/data/Dan/ava_v2_1/cache/STEP-kinetics400_KRImixed_PVDsd_3cls_clean-no_context-T1i3-fps10-Finetune-max3-i3d-two_branch/checkpoint_8750.pth  removed!
+Epoch 10/10(942) Iteration 009020 lr 3.57e-06 loss-1 0.281 loss-2 0.271 loss-3 0.281 loss_global_cls 0.236 loss_local_loc 0.009 loss_neighbor_loc 0.271 Timer 4.745(4.562) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 10/10(942) Iteration 009040 lr 3.23e-06 loss-1 0.280 loss-2 0.267 loss-3 0.274 loss_global_cls 0.228 loss_local_loc 0.009 loss_neighbor_loc 0.271 Timer 4.615(4.562) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 10/10(942) Iteration 009060 lr 2.90e-06 loss-1 0.281 loss-2 0.268 loss-3 0.274 loss_global_cls 0.228 loss_local_loc 0.009 loss_neighbor_loc 0.271 Timer 4.766(4.563) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 10/10(942) Iteration 009080 lr 2.58e-06 loss-1 0.276 loss-2 0.259 loss-3 0.262 loss_global_cls 0.216 loss_local_loc 0.009 loss_neighbor_loc 0.271 Timer 4.841(4.565) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 10/10(942) Iteration 009100 lr 2.29e-06 loss-1 0.273 loss-2 0.258 loss-3 0.262 loss_global_cls 0.216 loss_local_loc 0.009 loss_neighbor_loc 0.269 Timer 4.210(4.561) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 10/10(942) Iteration 009120 lr 2.01e-06 loss-1 0.267 loss-2 0.252 loss-3 0.254 loss_global_cls 0.209 loss_local_loc 0.009 loss_neighbor_loc 0.269 Timer 4.320(4.561) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 10/10(942) Iteration 009140 lr 1.76e-06 loss-1 0.264 loss-2 0.249 loss-3 0.250 loss_global_cls 0.204 loss_local_loc 0.009 loss_neighbor_loc 0.269 Timer 4.752(4.563) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 10/10(942) Iteration 009160 lr 1.51e-06 loss-1 0.257 loss-2 0.243 loss-3 0.242 loss_global_cls 0.197 loss_local_loc 0.009 loss_neighbor_loc 0.278 Timer 4.383(4.564) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 10/10(942) Iteration 009180 lr 1.29e-06 loss-1 0.256 loss-2 0.244 loss-3 0.244 loss_global_cls 0.197 loss_local_loc 0.009 loss_neighbor_loc 0.278 Timer 4.734(4.563) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 10/10(942) Iteration 009200 lr 1.09e-06 loss-1 0.258 loss-2 0.244 loss-3 0.241 loss_global_cls 0.193 loss_local_loc 0.010 loss_neighbor_loc 0.278 Timer 4.448(4.562) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]/home/dan/ws/STEP-MultiStream/data/augmentations.py:342: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray
+  mode = random.choice(self.sample_options)
+/home/dan/ws/STEP-MultiStream/data/augmentations.py:342: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray
+  mode = random.choice(self.sample_options)
+/home/dan/ws/STEP-MultiStream/data/augmentations.py:342: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray
+  mode = random.choice(self.sample_options)
+/home/dan/ws/STEP-MultiStream/data/augmentations.py:342: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray
+  mode = random.choice(self.sample_options)
+
+Epoch 10/10(942) Iteration 009220 lr 8.99e-07 loss-1 0.256 loss-2 0.242 loss-3 0.243 loss_global_cls 0.195 loss_local_loc 0.010 loss_neighbor_loc 0.278 Timer 4.896(4.564) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 10/10(942) Iteration 009240 lr 7.29e-07 loss-1 0.258 loss-2 0.248 loss-3 0.244 loss_global_cls 0.193 loss_local_loc 0.010 loss_neighbor_loc 0.285 Timer 4.515(4.564) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Saving state, iter: 9250
+/data/Dan/ava_v2_1/cache/STEP-kinetics400_KRImixed_PVDsd_3cls_clean-no_context-T1i3-fps10-Finetune-max3-i3d-two_branch/checkpoint_9000.pth  removed!
+Epoch 10/10(942) Iteration 009260 lr 5.77e-07 loss-1 0.259 loss-2 0.243 loss-3 0.239 loss_global_cls 0.192 loss_local_loc 0.009 loss_neighbor_loc 0.285 Timer 4.372(4.562) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 10/10(942) Iteration 009280 lr 4.42e-07 loss-1 0.259 loss-2 0.253 loss-3 0.249 loss_global_cls 0.198 loss_local_loc 0.010 loss_neighbor_loc 0.285 Timer 4.441(4.559) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 10/10(942) Iteration 009300 lr 3.26e-07 loss-1 0.257 loss-2 0.246 loss-3 0.243 loss_global_cls 0.192 loss_local_loc 0.010 loss_neighbor_loc 0.285 Timer 4.957(4.562) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 10/10(942) Iteration 009320 lr 2.27e-07 loss-1 0.260 loss-2 0.256 loss-3 0.249 loss_global_cls 0.196 loss_local_loc 0.011 loss_neighbor_loc 0.285 Timer 4.360(4.560) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 10/10(942) Iteration 009340 lr 1.46e-07 loss-1 0.260 loss-2 0.256 loss-3 0.248 loss_global_cls 0.195 loss_local_loc 0.011 loss_neighbor_loc 0.285 Timer 4.555(4.560) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 10/10(942) Iteration 009360 lr 8.28e-08 loss-1 0.263 loss-2 0.254 loss-3 0.253 loss_global_cls 0.198 loss_local_loc 0.011 loss_neighbor_loc 0.283 Timer 4.874(4.559) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 10/10(942) Iteration 009380 lr 3.74e-08 loss-1 0.269 loss-2 0.261 loss-3 0.256 loss_global_cls 0.199 loss_local_loc 0.011 loss_neighbor_loc 0.283 Timer 4.543(4.558) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 10/10(942) Iteration 009400 lr 9.81e-09 loss-1 0.270 loss-2 0.262 loss-3 0.260 loss_global_cls 0.203 loss_local_loc 0.011 loss_neighbor_loc 0.283 Timer 4.054(4.556) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Epoch 10/10(942) Iteration 009420 lr 2.22e-11 loss-1 0.277 loss-2 0.267 loss-3 0.264 loss_global_cls 0.206 loss_local_loc 0.012 loss_neighbor_loc 0.283 Timer 4.451(4.554) GPU usage: [0, 0, 0, 0, 0, 0, 2232, 1484]
+Validating at  9420
+100 / 118
+<generator object ObjectDetectionEvaluator.__init__.<locals>.<genexpr> at 0x7f48e7daf9e8>
+{ 'PascalBoxes_PerformanceByCategory/AP@0.5IOU/bkgd': 0.6397512447734596,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/touch_move': 0.21448731763426693,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/xfr': 0.28608259443068496,
+  'PascalBoxes_Precision/mAP@0.5IOU': 0.3801070522794705}
+<generator object ObjectDetectionEvaluator.__init__.<locals>.<genexpr> at 0x7f48e7d55570>
+{ 'PascalBoxes_PerformanceByCategory/AP@0.5IOU/bkgd': 0.6957376118939768,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/touch_move': 0.3068167636549837,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/xfr': 0.532951077506311,
+  'PascalBoxes_Precision/mAP@0.5IOU': 0.5118351510184238}
+<generator object ObjectDetectionEvaluator.__init__.<locals>.<genexpr> at 0x7f48e7daf468>
+{ 'PascalBoxes_PerformanceByCategory/AP@0.5IOU/bkgd': 0.6059081110877436,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/touch_move': 0.3359529376237227,
+  'PascalBoxes_PerformanceByCategory/AP@0.5IOU/xfr': 0.40848558084994935,
+  'PascalBoxes_Precision/mAP@0.5IOU': 0.4501155431871386}
+Iter 1: MEANAP =>0.3801070522794705
+Iter 2: MEANAP =>0.5118351510184238
+Iter 3: MEANAP =>0.4501155431871386
+
+
+Validation TIME::: 14.003
+
+

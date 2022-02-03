@@ -116,7 +116,7 @@ def get_target_tubes(root, boxes, labels, num_classes=60):
     # label_map = os.path.join(root, 'label/ava_action_list_v2.1_for_activitynet_2018.pbtxt')
     # categories, class_whitelist = read_labelmap(open(label_map, 'r'))
     # classes = np.array(list(class_whitelist)) - 1
-    label_map = os.path.join(root, '20211007-label_3cls/ava_finetune.pbtxt')
+    label_map = os.path.join(root, 'label/ava_finetune.pbtxt')
     categories, class_whitelist = read_labelmap(open(label_map, 'r'))
     classes = np.array(list(class_whitelist))
 
@@ -309,12 +309,12 @@ class AVADataset(data.Dataset):
 
         self.imgpath_rgb = os.path.join(root, 'frames/')
         if self.mode == 'train':
-            self.label_path = os.path.join(root, '20211007-label_3cls/train.pkl')
+            self.label_path = os.path.join(root, 'label/train.pkl')
         elif self.mode == 'val':
-            self.label_path = os.path.join(root, '20211007-label_3cls/val.pkl')
+            self.label_path = os.path.join(root, 'label/val.pkl')
         else:
             self.stride = 1
-            self.label_path = os.path.join(root, '20211007-label_3cls/val.pkl')
+            self.label_path = os.path.join(root, 'label/val.pkl')
             self.foreground_only = False
            
         data_list, videoname_list = make_list(self.label_path, self.chunks, self.stride, self.foreground_only)

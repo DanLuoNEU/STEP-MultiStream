@@ -47,7 +47,7 @@ if args.num_classes != 80:
     if args.num_classes == 60: # ava-60
         label_map = os.path.join(args.data_root, 'label/ava_action_list_v2.1_for_activitynet_2018.pbtxt')
     else: # CLASP
-        label_map = os.path.join(args.data_root, '20211007-label_3cls/ava_finetune.pbtxt')
+        label_map = os.path.join(args.data_root, 'label/ava_finetune.pbtxt')
     categories, class_whitelist = read_labelmap(open(label_map, 'r'))
     classes = [(val['id'], val['name']) for val in categories]
     id2class = {c[0]: c[1] for c in classes}    # gt class id (1~3) --> class name
@@ -196,12 +196,31 @@ def main():
         if model_path is not None:
             print ("Resuming trained model from %s" % model_path)
             checkpoint = torch.load(model_path, map_location='cuda:0')
+            best_mAP = checkpoint['val_mAP']
 
             nets['base_net'].load_state_dict(checkpoint['base_net'])
             if not args.no_context and 'context_net' in checkpoint:
                 nets['context_net'].load_state_dict(checkpoint['context_net'])
+            ic_t = nets['det_net0'].global_cls.in_channels
             for i in range(args.max_iter):
+                oc_checkpoint=len(checkpoint['det_net%d' % i]['global_cls.bias'])
+                if args.num_classes != oc_checkpoint:
+                    nets['det_net%d' % i].global_cls = nn.Conv3d(ic_t, oc_checkpoint, (1,1,1), bias=True)
                 nets['det_net%d' % i].load_state_dict(checkpoint['det_net%d' % i])
+
+            # Finetune 'ava_cls.pth' provided by STEP
+            if args.num_classes != len(checkpoint['det_net0']['global_cls.bias']):
+                print(f" >>>>>> Finetuning from {len(checkpoint['det_net%d' % i]['global_cls.bias'])} to {args.num_classes} <<<<<< ")
+                # for p in nets['base_net'].parameters(): p.requires_grad = False
+                if not args.no_context:
+                    for p in nets['context_net'].parameters(): p.requires_grad = False
+                for i in range(args.max_iter):
+                    # for p in nets['det_net%d' % i].parameters(): p.requires_grad = False 
+                    nets['det_net%d' % i].global_cls = nn.Conv3d(ic_t, args.num_classes, (1,1,1), bias=True)
+                    nets['det_net%d' % i].to('cuda:%d' % ((i+1)%gpu_count))
+                    nets['det_net%d' % i].set_device('cuda:%d' % ((i+1)%gpu_count))
+
+                best_mAP = 0
 
             if 'optimizer' in checkpoint:
                 optimizer.load_state_dict(checkpoint['optimizer'])
@@ -213,7 +232,7 @@ def main():
                 args.start_epochs = checkpoint['epochs']
             else:
                 args.start_epochs = checkpoint['epochs'] - 1
-            best_mAP = checkpoint['val_mAP']
+            
 
             del checkpoint
             torch.cuda.empty_cache()
@@ -593,7 +612,7 @@ def validate(args, val_dataloader, nets, iteration=0, iou_thresh=0.5):
     for i in range(args.max_iter):
         fouts[i].close()
 
-        metrics = ava_evaluation(os.path.join(args.data_root, '20211007-label_3cls/'), output_files[i], gt_file)
+        metrics = ava_evaluation(os.path.join(args.data_root, 'label/'), output_files[i], gt_file)
         all_metrics.append(metrics)
     
     return all_metrics
