@@ -75,19 +75,14 @@ class ConvertFromInts(object):
         return self._name
 
     def __call__(self, images, tubes=None, proposals=None):
-        # Default flow files value ranges from 0 to 255
-        images = images.astype(np.float32)
-        if self.input_type != 'flow':
-            imgs = images.copy()[:, :, :, 0:3]
-            # images[:,:,0:2] would always be BGR images
-            if self.scale == 0: # scale [0,255]
-                imgs = imgs.astype(np.float32)
-            elif self.scale == 1:# scale [0,255] to [0,1]
-                imgs = imgs.astype(np.float32) / 255.
-            elif self.scale == 2:# scale [0,255] to [-1,1]
-                imgs = np.clip(imgs, 0, 255)
-                imgs = imgs.astype(np.float32)*2/255. - 1.
-            images[:, :, :, 0:3] = imgs.astype(np.float32)
+        # Default RGB and flow files value ranges from 0 to 255
+        if self.scale == 0: # scale [0,255]
+            images = images.astype(np.float32)
+        elif self.scale == 1:# scale [0,255] to [0,1]
+            images = images.astype(np.float32) / 255.
+        elif self.scale == 2:# scale [0,255] to [-1,1]
+            images = np.clip(images, 0, 255)
+            images = images.astype(np.float32)*2/255. - 1.
         return images.astype(np.float32), tubes, proposals
 
 
@@ -586,7 +581,7 @@ class TubeAugmentation(object):
 
         aug_list = []
 
-        if self.do_photometric and input_type != 'flow':
+        if self.do_photometric and input_type!='flow':
             aug_list += [
                 ConvertFromInts(input_type=self.input_type, scale=0),
                 PhotometricDistort(self.input_type)
@@ -624,6 +619,7 @@ class TubeAugmentation(object):
 
     def __str__(self):
         return str(self.augment) + '\n'
+
 
 def base_transform(images, size, mean):
     T, w, h, c = images.shape

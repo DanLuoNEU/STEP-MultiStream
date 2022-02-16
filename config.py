@@ -129,8 +129,5 @@ def parse_config():
         args.scale_norm = 2
         args.means = (0,0,0)
         args.stds = (1,1,1)
-    if args.input_type == "rgb":     args.scale_norm = 2
-    elif args.input_type == 'flow':  args.scale_norm = 0
-    elif args.input_type == "2s":    args.scale_norm = 2
     
     return args

@@ -1,39 +1,43 @@
+# 02/09/2022,Dan
+# Two-Stream STEP classification training step
 """
-04/30/2020, Dan
 Copyright (C) 2019 NVIDIA Corporation.  All rights reserved.
 Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode).
 """
-
 import os
-import time
 import glob
+import time
 import numpy as np
 from datetime import datetime
 from collections import OrderedDict
 
+#args.device = torch.device("cuda:0" if args.cuda and torch.cuda.is_available() else "cpu")
+os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"]="0,1"  # specify which GPU(s) to be used
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.utils.data
 import torchvision
-#from tensorboardX import SummaryWriter
+from torch.utils.tensorboard import SummaryWriter
 
 from config import parse_config
-from models.networks_2S import BaseNet, ROINet 
-from models.two_branch_2S import TwoBranchNet, ContextNet
+from models.networks_multi_stream import BaseNet, ROINet
+from models.two_branch_multi_stream import TwoBranchNet, ContextNet
 from utils.utils import inference, train_select, AverageMeter, get_gpu_memory, select_proposals
 from utils.tube_utils import flatten_tubes, valid_tubes
 from utils.solver import WarmupCosineLR, WarmupStepLR, get_params
-from data.ava_cls_2S import AVADataset, detection_collate, WIDTH, HEIGHT
-from data.augmentations_2S import TubeAugmentation, BaseTransform
+from data.clasp_cls_multi_stream import CLASPDataset, detection_collate, WIDTH, HEIGHT
+from data.augmentations_multi_stream import TubeAugmentation, BaseTransform
 from utils.eval_utils import ava_evaluation
 from external.ActivityNet.Evaluation.get_ava_performance import read_labelmap
 
-
+# Arguments
 args = parse_config()
+args.image_size = (WIDTH, HEIGHT)
 args.max_iter = 1    # only 1 step for classification pretraining
-args.pret_rgb="/data/Dan/ava_v2_1/cache/Cls-max1-i3d-two_branch/checkpoint_best.pth"
-args.pret_of ="/data/Dan/ava_v2_1/cache/Cls_of-max1-i3d-two_branch/checkpoint_best.pth"
+args.pret_rgb="/data/Dan/CLASP_paper/exp_cache/20220127-STEP-rgb-kinetics400_KRImixed-no_context-3cls_tcmv-T3i1-fps10-max1-i3d-two_branch-max3-i3d-two_branch/checkpoint_best.pth"
+args.pret_of ="/data/Dan/CLASP_paper/exp_cache/20220215-STEP-flow-kinetics400_KRImixed-no_context-3cls_tcmv-T3i1-fps10-max1-i3d-two_branch-max3-i3d-two_branch/checkpoint_best.pth"
 
 try:
     import apex
@@ -44,36 +48,31 @@ except ImportError:
     args.fp16 = False
     pass
 
-args.image_size = (WIDTH, HEIGHT)
 label_dict = {}
 if args.num_classes != 80:
-    if args.num_classes == 3:
-        label_map = os.path.join(args.data_root, 'label/ava_finetune.pbtxt')
-    elif args.num_classes == 60:
+    if args.num_classes == 60: # ava-60
         label_map = os.path.join(args.data_root, 'label/ava_action_list_v2.1_for_activitynet_2018.pbtxt')
+    else: # CLASP
+        label_map = os.path.join(args.data_root, 'label/ava_finetune.pbtxt')
     categories, class_whitelist = read_labelmap(open(label_map, 'r'))
     classes = [(val['id'], val['name']) for val in categories]
-    id2class = {c[0]: c[1] for c in classes}    # gt class id (1~x) --> class name
+    id2class = {c[0]: c[1] for c in classes}    # gt class id (1~3) --> class name
     for i, c in enumerate(sorted(list(class_whitelist))):
         label_dict[i] = c
 else:
-    for i in range(80): # 80 classes
+    for i in range(80):
         label_dict[i] = i+1
-
 ## set random seeds
 np.random.seed(args.man_seed)
 torch.manual_seed(args.man_seed)
 if args.cuda:
     torch.cuda.manual_seed_all(args.man_seed)
 
-#args.device = torch.device("cuda:0" if args.cuda and torch.cuda.is_available() else "cpu")
-os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"]="2,3,4,7"  # specify which GPU(s) to be used
 gpu_count = torch.cuda.device_count()
 torch.backends.cudnn.benchmark=True
 
 def main():
-
+    # Exp Log
     args.exp_name = '{}-max{}-{}-{}'.format(args.name, args.max_iter, args.base_net, args.det_net)
     args.save_root = os.path.join(args.save_root, args.exp_name+'/')
     if not os.path.isdir(args.save_root):
@@ -82,26 +81,35 @@ def main():
     log_name = args.save_root+"training-"+datetime.strftime(datetime.now(), '%Y%m%d-%H%M%S')+".log"
     log_file = open(log_name, "w", 1)
     log_file.write(args.exp_name+'\n')
-
     ################ DataLoader setup #################
-
     print('Loading Dataset...')
-    augmentation = TubeAugmentation(args.image_size, scale=args.scale_norm, input_type=args.input_type,
-                                    do_flip=args.do_flip, do_crop=args.do_crop, do_photometric=args.do_photometric, do_erase=args.do_erase)
+    augmentation = TubeAugmentation(size=args.image_size, scale=args.scale_norm, input_type=args.input_type,
+                                    do_flip=args.do_flip, do_crop=args.do_crop,
+                                    do_photometric=args.do_photometric, do_erase=args.do_erase)
     log_file.write("Data augmentation: "+ str(augmentation))
-    train_dataset = AVADataset(args.data_root, 'train', args.input_type, args.T, args.NUM_CHUNKS[args.max_iter], args.fps, augmentation, stride=1, num_classes=args.num_classes, foreground_only=True)
-    val_dataset = AVADataset(args.data_root, 'val', args.input_type, args.T, args.NUM_CHUNKS[args.max_iter], args.fps, BaseTransform(size=args.image_size, scale=args.scale_norm, input_type='2s'), stride=1, num_classes=args.num_classes, foreground_only=True)
+    train_dataset = CLASPDataset(args.data_root, 'train', args.input_type,
+                                args.T, args.NUM_CHUNKS[args.max_iter], args.fps,
+                                augmentation, stride=1, num_classes=args.num_classes,
+                                foreground_only=True)
+    val_dataset = CLASPDataset(args.data_root, 'val', args.input_type, args.T,
+                                args.NUM_CHUNKS[args.max_iter], args.fps, 
+                                BaseTransform(size=args.image_size, scale=args.scale_norm,
+                                input_type=args.input_type), stride=1, num_classes=args.num_classes, 
+                                foreground_only=True)
 
     if args.milestones[0] == -1:
         args.milestones = [int(np.ceil(len(train_dataset) / args.batch_size) * args.max_epochs)]
 
     train_dataloader = torch.utils.data.DataLoader(train_dataset, args.batch_size, num_workers=args.num_workers,
                                   shuffle=True, collate_fn=detection_collate, pin_memory=True)
-    val_dataloader = torch.utils.data.DataLoader(val_dataset, args.batch_size, num_workers=args.num_workers,
+    val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=args.batch_size, num_workers=args.num_workers,
                                   shuffle=False, collate_fn=detection_collate, pin_memory=True)
     log_file.write("Training size: " + str(len(train_dataset)) + "\n")
     log_file.write("Validation size: " + str(len(val_dataset)) + "\n")
-    print('Training STEP on ', train_dataset.name)
+    if 'PVD' in args.exp_name:
+        print('Training STEP on ', train_dataset.name, 'PVD data')
+    else:
+        print('Training STEP on ', train_dataset.name, 'KRI data')
 
     ################ define models #################
 

@@ -1,4 +1,4 @@
-# Dan, 01/
+# Dan, 02/14/2022
 """
 Copyright (C) 2019 NVIDIA Corporation.  All rights reserved.
 Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode).
@@ -7,21 +7,19 @@ import os
 import os.path
 import cv2
 import glob
+import numpy as np
 import pickle
 import random
-import numpy as np
 import PIL.Image as PIL_Image
 
 import torch
 import torch.utils.data as data
 
 from .data_utils import generate_anchors
-from data.clasp_cls_multi_stream import readFlow
 from utils.tube_utils import scale_tubes, scale_tubes_abs
 from external.ActivityNet.Evaluation.get_ava_performance import read_labelmap
 WIDTH, HEIGHT = 400, 400
 TEM_REDUCE = 4    # 4 for I3D backbone
-
 
 def make_list(label_path, chunks=1, stride=1, foreground_only=True):
     """
@@ -134,7 +132,7 @@ def get_target_tubes(root, boxes, labels, num_classes=60):
     return gt
 
 
-def read_images(path, videoname, fid, num=36, fps=12, input_type='rgb'):
+def read_images(path, videoname, fid, num=36, fps=12):
     """
     Load images from disk for middel frame fid with given num and fps
 
@@ -152,7 +150,7 @@ def read_images(path, videoname, fid, num=36, fps=12, input_type='rgb'):
     while num_left > 0:
         img_path = os.path.join(path, videoname+'/{:05d}/'.format(max(0,fid-i)))
         images.extend(_load_images(img_path, num=min(num_left, fps), fps=fps,
-                                    direction='backward', input_type=input_type))
+                                    direction='backward'))
 
         num_left -= fps
         i += 1
@@ -165,7 +163,7 @@ def read_images(path, videoname, fid, num=36, fps=12, input_type='rgb'):
     while num_right > 0:
         img_path = os.path.join(path, videoname+'/{:05d}/'.format(min(fid+i,fid_max)))
         images.extend(_load_images(img_path, num=min(num_right, fps), fps=fps,
-                                    direction='forward', input_type=input_type))
+                                    direction='forward'))
 
         num_right -= fps
         i += 1
@@ -173,17 +171,12 @@ def read_images(path, videoname, fid, num=36, fps=12, input_type='rgb'):
     return np.stack(images, axis=0)
 
 
-def _load_images(path, num, fps=12, direction='forward', input_type='rgb'):
+def _load_images(path, num, fps=12, direction='forward'):
     """
     Load images in a folder with given num and fps, direction can be either 'forward' or 'backward'
     """
     img_names=[]
-    if input_type == 'rgb':
-        img_names = glob.glob(os.path.join(path, '*.jpg'))
-        if len(img_names) == 0:
-            img_names = glob.glob(os.path.join(path, '*.png'))
-    elif input_type == 'flow':
-        img_names = glob.glob(os.path.join(path, '*.flo'))
+    img_names = glob.glob(os.path.join(path, '*.jpg'))
     if len(img_names) == 0:
         raise ValueError("Image path {} not Found".format(path))
     img_names = sorted(img_names)
@@ -201,10 +194,8 @@ def _load_images(path, num, fps=12, direction='forward', input_type='rgb'):
     for idx in index:
         img_name = img_names[idx]
         if os.path.isfile(img_name):
-            if input_type=='rgb':
-                img = cv2.imread(img_name)
-            if input_type=='flow':
-                img = readFlow(img_name) # [-1,1]
+            # RGB and Optical Flow are both using jpg now, size: (H,W,3), range: [0,255]
+            img = cv2.imread(img_name)
             images.append(img)
         else:
             raise ValueError("Image not found!", img_name)
@@ -282,7 +273,7 @@ class CLASPDataset(data.Dataset):
         self.anchor_mode = anchor_mode
         self.foreground_only = foreground_only
         self.imgpath_rgb = os.path.join(root, 'frames/')
-        self.imgpath_of = os.path.join(root, 'flows/')
+        self.imgpath_of = os.path.join(root, f'flows/fps{fps}')
         if self.mode == 'train':
             self.label_path = os.path.join(root, 'label/train.pkl')
         elif self.mode == 'val':
@@ -329,24 +320,20 @@ class CLASPDataset(data.Dataset):
         if self.input_type == "2s":
             images = read_images(self.imgpath_rgb, videoname, fid,
                                 num=TEM_REDUCE*self.T*self.chunks,
-                                fps=self.fps, input_type='rgb')    # for i3d backbone
-            
-            # width and height of Flows is not the same as images
-            flows_ori = read_images(self.imgpath_of, videoname, fid,
+                                fps=self.fps)
+            flows = read_images(self.imgpath_of, videoname, fid,
                                 num=TEM_REDUCE*self.T*self.chunks,
-                                fps=self.fps, input_type='flow')
-            flows = np.zeros((images.shape[0],images.shape[1],images.shape[2],2))
-            # Concatenate along channel, (T, W, H, C)
-            for t in range(images.shape[0]):
-                flows[t,] = np.array(PIL_Image.fromarray(np.uint8(flows_ori[t,]*255)).resize((images.shape[2],images.shape[1])))/255.
-
+                                fps=self.fps)
+            # Concatenate along Channel dimmension
             images = np.concatenate((images,flows), axis=3)
         elif self.input_type == "rgb":
-            images = read_images(self.imgpath_rgb, videoname, fid, num=TEM_REDUCE*self.T*self.chunks,
-                                fps=self.fps, input_type='rgb')    # for i3d backbone
+            images = read_images(self.imgpath_rgb, videoname, fid,
+                                num=TEM_REDUCE*self.T*self.chunks,
+                                fps=self.fps)
         elif self.input_type == "flow":
-            images = read_images(self.imgpath_of, videoname, fid, num=TEM_REDUCE*self.T*self.chunks,
-                                fps=self.fps, input_type='flow')    # for i3d backbone
+            images = read_images(self.imgpath_of, videoname, fid,
+                                num=TEM_REDUCE*self.T*self.chunks,
+                                fps=self.fps)
         else:
             images = None
 
@@ -364,8 +351,12 @@ class CLASPDataset(data.Dataset):
         # BGR to RGB (for opencv)
         if self.input_type == 'rgb':
             images = images[:, :, :, (2,1,0)]
+        # BGR(0,v,u)-> (u,v)
+        elif self.input_type == 'flow':
+            images = images[:, :, :, (2,1)]
+        # (B_rgb,G_rgb,R_rgb,0,v_flow,u_flow) -> (B_rgb,G_rgb,R_rgb,u_flow,v_flow)
         elif self.input_type == '2s':
-            images = images[:, :, :, (2,1,0,3,4)]
+            images = images[:, :, :, (2,1,0,5,4)]
 
         # swap dimensions to [T, C, W, H]
         images = torch.from_numpy(images).permute(0,3,1,2)

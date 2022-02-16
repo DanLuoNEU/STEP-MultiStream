@@ -4,17 +4,15 @@
 Copyright (C) 2019 NVIDIA Corporation.  All rights reserved.
 Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode).
 """
-
 import os
 import glob
 import time
 import numpy as np
 from datetime import datetime
 from collections import OrderedDict
-
 #args.device = torch.device("cuda:0" if args.cuda and torch.cuda.is_available() else "cpu")
-os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"]="0,1"  # specify which GPU(s) to be used
+# os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+# os.environ["CUDA_VISIBLE_DEVICES"]="0,1"  # specify which GPU(s) to be used
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -23,7 +21,6 @@ from torch.utils.tensorboard import SummaryWriter
 import torchvision
 
 from config import parse_config
-from models import BaseNet, ROINet
 from models.networks_multi_stream import BaseNet, ROINet
 from models.two_branch_multi_stream import TwoBranchNet, ContextNet
 from utils.utils import inference, train_select, AverageMeter, get_gpu_memory, select_proposals
@@ -70,7 +67,6 @@ np.random.seed(args.man_seed)
 torch.manual_seed(args.man_seed)
 if args.cuda:
     torch.cuda.manual_seed_all(args.man_seed)
-
 gpu_count = torch.cuda.device_count()
 torch.backends.cudnn.benchmark=True
 
@@ -78,7 +74,6 @@ def main():
     # Exp Log
     args.exp_name = '{}-max{}-{}-{}'.format(args.name, args.max_iter, args.base_net, args.det_net)
     args.save_root = os.path.join(args.save_root, args.exp_name+'/')
-
     if not os.path.isdir(args.save_root):
         os.makedirs(args.save_root)
 
@@ -87,17 +82,17 @@ def main():
     log_file.write(args.exp_name+'\n')
     ################ DataLoader setup #################
     print('Loading Dataset...')
-    augmentation = TubeAugmentation(size=args.image_size, scale=args.scale_norm, input_type=args.input_type, 
-                                    do_flip=args.do_flip, do_crop=args.do_crop, 
+    augmentation = TubeAugmentation(size=args.image_size, scale=args.scale_norm, input_type=args.input_type,
+                                    do_flip=args.do_flip, do_crop=args.do_crop,
                                     do_photometric=args.do_photometric, do_erase=args.do_erase)
     log_file.write("Data augmentation: "+ str(augmentation))
 
-    train_dataset = CLASPDataset(args.data_root, 'train', args.input_type, 
+    train_dataset = CLASPDataset(args.data_root, 'train', args.input_type,
                                 args.T, args.NUM_CHUNKS[args.max_iter], args.fps,
                                 augmentation, stride=1, num_classes=args.num_classes,
                                 foreground_only=True)
     val_dataset = CLASPDataset(args.data_root, 'val', args.input_type, args.T,
-                                args.NUM_CHUNKS[args.max_iter], args.fps, 
+                                args.NUM_CHUNKS[args.max_iter], args.fps,
                                 BaseTransform(args.image_size, args.means, args.stds,
                                 args.scale_norm,args.input_type), stride=1, num_classes=args.num_classes, 
                                 foreground_only=True)
@@ -120,7 +115,7 @@ def main():
 
     nets = OrderedDict()
     # backbone network
-    nets['base_net'] = BaseNet(args)
+    nets['base_net'] = BaseNet(args, args.input_type)
     # ROI pooling
     nets['roi_net'] = ROINet(args.pool_mode, args.pool_size)
 
@@ -128,14 +123,14 @@ def main():
     ic_t = 0
     for i in range(args.max_iter):
         if args.det_net == "two_branch":
-            nets['det_net%d' % i] = TwoBranchNet(args, cls_only=True)
+            nets['det_net%d' % i] = TwoBranchNet(args, args.input_type, cls_only=True)
             ic_t = nets['det_net%d' % i].global_cls.in_channels
         else:
             raise NotImplementedError
     if not args.no_context:
         # context branch
-        nets['context_net'] = ContextNet(args)
-    
+        nets['context_net'] = ContextNet(args, args.input_type)
+    # Transfer model to GPU
     for key in nets:
         nets[key] = nets[key].cuda()
 

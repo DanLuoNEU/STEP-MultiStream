@@ -1,9 +1,9 @@
+# 01/27/2022, Dan
+# This file is used to Finetune Single Stream Network for CLASP Project
 """
 Copyright (C) 2019 NVIDIA Corporation.  All rights reserved.
 Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode).
 """
-# 01/27/2022, Dan
-# This file is used to Finetune Single Stream Network for CLASP Project
 import os
 import glob
 import time
@@ -83,11 +83,12 @@ def main():
     ################ DataLoader setup #################
     # Data Augmentation
     print('Loading Dataset...')
-    augmentation = TubeAugmentation(args.image_size, scale=args.scale_norm, input_type=args.input_type, do_flip=args.do_flip,
-                                    do_crop=args.do_crop, do_photometric=args.do_photometric, do_erase=args.do_erase)
+    augmentation = TubeAugmentation(args.image_size, scale=args.scale_norm, input_type=args.input_type,
+                                    do_flip=args.do_flip, do_crop=args.do_crop,
+                                    do_photometric=args.do_photometric, do_erase=args.do_erase)
     log_file.write("Data augmentation: "+ str(augmentation))
     # DataLoader
-    train_dataset = CLASPDataset(args.data_root, 'train', args.input_type, 
+    train_dataset = CLASPDataset(args.data_root, 'train', args.input_type,
                                 args.T, args.NUM_CHUNKS[args.max_iter], args.fps,
                                 augmentation, proposal_path=args.proposal_path_train,
                                 stride=1, anchor_mode=args.anchor_mode,
@@ -117,18 +118,18 @@ def main():
 
     nets = OrderedDict()
     # backbone network
-    nets['base_net'] = BaseNet(args)
+    nets['base_net'] = BaseNet(args, args.input_type)
     # ROI pooling
     nets['roi_net'] = ROINet(args.pool_mode, args.pool_size)
     # Detection network
     for i in range(args.max_iter):
         if args.det_net == "two_branch":
-            nets['det_net%d' % i] = TwoBranchNet(args)
+            nets['det_net%d' % i] = TwoBranchNet(args,args.input_type)
         else:
             raise NotImplementedError
     if not args.no_context:
         # context branch
-        nets['context_net'] = ContextNet(args)
+        nets['context_net'] = ContextNet(args, args.input_type)
     # Transfer model to GPU
     for key in nets:
         nets[key] = nets[key].cuda()

@@ -2,9 +2,9 @@
 # Copyright (C) 2019 NVIDIA Corporation.  All rights reserved.
 # Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode).
 cd ../
-name="20220127-STEP-flow-kinetics400_KRImixed-no_context-3cls_tcmv-T3i1-fps10-max1-i3d-two_branch"
+name="20220215-STEP-flow-kinetics400_KRImixed-no_context-3cls_tcmv-T3i1-fps10-max1-i3d-two_branch"
 # classification pretrain_path
-pretrain_path="/data/Dan/CLASP_paper/exp_cache/20220127-Cls-flow-kinetics400_KRImixed-no_context-3cls_tcmv-T3i1-fps10-max1-i3d-two_branch/checkpoint_best.pth"
+pretrain_path="/data/Dan/CLASP_paper/exp_cache/20220215-Cls-flow-kinetics400_KRImixed-no_context-3cls_tcmv-T3i1-fps10-max1-i3d-two_branch/checkpoint_best.pth"
 resume_path="Auto"
 input_type="flow"
 num_classes=3
@@ -50,7 +50,7 @@ topk=300
 evaluate_topk=300
 
 # data augmentation / normalization
-scale_norm=0    # for i3d
+scale_norm=2    # for i3d
 do_flip="True"
 do_crop="True"
 do_photometric="False"
@@ -59,9 +59,9 @@ freeze_affine="True" # do not update BN
 freeze_stats="True" # do not update BN statistics
 
 
-CUDA_VISIBLE_DEVICES=1,2 /home/dan/anaconda3/envs/py36pt110/bin/python train_single_stream.py --data_root $data_root --save_root $save_root \
+CUDA_VISIBLE_DEVICES=6,7 /home/dan/anaconda3/envs/py36pt110/bin/python train_single_stream.py --data_root $data_root --save_root $save_root \
     --kinetics_pretrain $kinetics_pretrain --pretrain_path $pretrain_path --resume_path $resume_path \
-    --name $name  --input_type $input_type --num_classes $num_classes \
+    --name $name --input_type $input_type --num_classes $num_classes \
     --base_net $base_net --det_net $det_net --max_iter $max_iter --T $T --fps $fps\
     --iterative_mode $iterative_mode --anchor_mode $anchor_mode --temporal_mode $temporal_mode \
     --pool_mode $pool_mode --pool_size $pool_size --save_step $save_step --topk $topk --evaluate_topk $evaluate_topk \

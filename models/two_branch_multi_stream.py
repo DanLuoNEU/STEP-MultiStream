@@ -34,7 +34,7 @@ def build_conv(base_name='i3d', input_type='rgb', kinetics_pretrain=None, mode='
 
         if kinetics_pretrain is not None:
             if os.path.isfile(kinetics_pretrain):
-                # print ("Loading I3D head pretrained on Kinetics dataset...")
+                print (f"Loading I3D head(TwoBranch) pretrained on Kinetics dataset {kinetics_pretrain}...")
                 pretrained_dict = torch.load(kinetics_pretrain)
                 pretrained_dict = {k:v for k,v in pretrained_dict.items() if k in model_dict}
                 model_dict.update(pretrained_dict)
@@ -172,7 +172,7 @@ class ContextNet(nn.Module):
 
 class TwoBranchNet(nn.Module):
 
-    def __init__(self, cfg, cls_only=False, input_type='rgb'):
+    def __init__(self, cfg, input_type='rgb', cls_only=False):
         super(TwoBranchNet, self).__init__()
 
         self.num_classes = cfg.num_classes

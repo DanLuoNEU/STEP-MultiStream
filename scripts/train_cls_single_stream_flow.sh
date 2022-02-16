@@ -5,7 +5,7 @@
 
 cd ../
 
-name="20220127-Cls-flow-kinetics400_KRImixed-no_context-3cls_tcmv-T3i1-fps10"
+name="20220215-Cls-flow-kinetics400_KRImixed-no_context-3cls_tcmv-T3i1-fps10"
 input_type="flow"
 num_classes=3
 fps=10
@@ -45,7 +45,7 @@ dropout=0.3
 fc_dim=256
 
 # data augmentation / normalization
-scale_norm=0    # [-1,1] for i3d, only matters in augmentation to get [-1,1] input images
+scale_norm=2    # [-1,1] for i3d, only matters in augmentation to get [-1,1] input images
                 # handled in augmentations_multi_stream with dignity, 0(best) or 2 doesn't matter when .flo saved in [-1,1]
 do_flip="True"
 do_crop="True"
@@ -55,7 +55,7 @@ freeze_affine="True"
 freeze_stats="True"
 
 
-/home/dan/anaconda3/envs/py36pt110/bin/python train_cls_single_stream.py --name $name \
+CUDA_VISIBLE_DEVICES=6,7 /home/dan/anaconda3/envs/py36pt110/bin/python train_cls_single_stream.py --name $name \
     --data_root $data_root --save_root $save_root \
     --resume_path $resume_path --kinetics_pretrain $kinetics_pretrain \
     --base_net $base_net --det_net $det_net \
